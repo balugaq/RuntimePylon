@@ -2,10 +2,16 @@ package com.balugaq.runtimepylon;
 
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
+import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
+import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
+
+import static com.balugaq.runtimepylon.GuiItem.*;
+import java.util.Map;
 
 public class Buttons <T extends PylonBlock & PylonGuiBlock> {
     public static <T extends PylonBlock & PylonGuiBlock> ClickHandler<T> deny() {
@@ -46,8 +52,24 @@ public class Buttons <T extends PylonBlock & PylonGuiBlock> {
     setItemGroup = create()
             .item()
             .click((block, clickType, player, event) -> {
-                if (!(block instanceof ItemGenerator data)) return;
+                var data = assertBlock(block, ItemHub.class);
 
-                data.itemId;
+                assertNotNull(data.itemId, "Not set item id");
+                assertNotNull(data.groupId, "Not set group id");
+
+                Map<NamespacedKey, SimpleStaticGuidePage> pages = RuntimePylon.getGuidePages();
+                SimpleStaticGuidePage page = assertNotNull(pages.get(data.groupId), "Unknown group");
+
+                assertNotNull(PylonRegistry.ITEMS.get(data.itemId), "Unknown item");
+                page.addItem(data.itemId);
+
+                done(player, "Added {} to {}", data.itemId, data.groupId);
+            }),
+
+    setRecipe = create()
+            .item()
+            .click((block, clickType, player, event) -> {
+                var data = assertBlock(block, WithRecipe.class);
+
             });
 }

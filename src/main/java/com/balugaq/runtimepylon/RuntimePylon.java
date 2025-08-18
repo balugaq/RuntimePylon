@@ -1,13 +1,22 @@
 package com.balugaq.runtimepylon;
 
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
+import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
+import io.github.pylonmc.pylon.core.guide.button.PageButton;
+import io.github.pylonmc.pylon.core.guide.pages.base.GuidePage;
+import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import lombok.Getter;
+import org.bukkit.Keyed;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
@@ -39,5 +48,20 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @Override
     public @NotNull Material getMaterial() {
         return Material.COPPER_INGOT;
+    }
+
+    @NotNull
+    public static Map<NamespacedKey, SimpleStaticGuidePage> getGuidePages() {
+        return PylonGuide.getRootPage().getButtons()
+                .stream()
+                .filter(button -> button instanceof PageButton)
+                .map(button -> ((PageButton) button).getPage())
+                .filter(page -> page instanceof SimpleStaticGuidePage)
+                .map(page -> (SimpleStaticGuidePage) page)
+                .collect(Collectors.toMap(
+                        Keyed::getKey,
+                        page -> page,
+                        (a, b) -> b
+                ));
     }
 }
