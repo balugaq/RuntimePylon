@@ -11,6 +11,7 @@ import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 
@@ -19,7 +20,7 @@ import static com.balugaq.runtimepylon.GuiItem.*;
 import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 
-public class Buttons <T extends PylonBlock & PylonGuiBlock> {
+public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
     public static <T extends PylonBlock & PylonGuiBlock> ClickHandler<T> deny() {
         return (data, clickType, player, event) -> {
             event.setCancelled(true);
@@ -31,7 +32,7 @@ public class Buttons <T extends PylonBlock & PylonGuiBlock> {
     }
 
     public T block;
-    public Buttons(@NotNull T block) {
+    public ButtonSet(@NotNull T block) {
         this.block = block;
     }
 
@@ -42,21 +43,24 @@ public class Buttons <T extends PylonBlock & PylonGuiBlock> {
     public final AbstractItem
 
     blackBackground = create()
-            .item(ItemStackBuilder.pylonItem(
+            .item(block -> ItemStackBuilder.pylonItem(
                     Material.BLACK_STAINED_GLASS_PANE,
                     Key.create("black_background")
             ))
             .click(deny()),
 
     grayBackground = create()
-            .item(ItemStackBuilder.pylonItem(
+            .item(block -> ItemStackBuilder.pylonItem(
                     Material.GRAY_STAINED_GLASS_PANE,
                     Key.create("gray_background")
             ))
             .click(deny()),
     
     setItemGroup = create()
-            .item(ItemStackBuilder.EMPTY)
+            .item(block -> ItemStackBuilder.pylonItem(
+                    Material.GREEN_STAINED_GLASS_PANE,
+                    Key.create("set_item_group")
+            ))
             .click((block, clickType, player, event) -> {
                 var data = assertBlock(block, WithGroup.class);
 
@@ -73,10 +77,14 @@ public class Buttons <T extends PylonBlock & PylonGuiBlock> {
             }),
 
     setRecipe = create()
-            .item(ItemStackBuilder.EMPTY)
+            .item(block -> ItemStackBuilder.pylonItem(
+                    Material.GREEN_STAINED_GLASS_PANE,
+                    Key.create("set_recipe")
+            ))
             .click((block, clickType, player, event) -> {
                 var data = assertBlock(block, WithRecipe.class);
                 assertNotNull(data.getItemId(), "Not set item id");
+                assertNotNull(data.getModel(), "Not set model");
                 assertNotNull(data.getRecipeTypeId(), "Not set recipe type id");
 
                 RecipeType<? extends PylonRecipe> recipeType = assertNotNull(PylonRegistry.RECIPE_TYPES.get(data.getRecipeTypeId()), "Unknown recipe type");
@@ -86,11 +94,14 @@ public class Buttons <T extends PylonBlock & PylonGuiBlock> {
 
                 Class<? extends PylonRecipe> pylonRecipeClass = (Class<? extends PylonRecipe>) pt.getActualTypeArguments()[0];
                 var adapter = assertNotNull(RecipeAdapter.find(recipeType, pylonRecipeClass), "Incompatible recipe type");
-                assertTrue(adapter.apply(data.getItemId(), data.getRecipe()), "Incompatible recipe");
+                assertTrue(adapter.apply(data.getItemId(), data.getModel(), data.getRecipe()), "Incompatible recipe");
             }),
 
     unsetItemGroup = create()
-        .item(ItemStackBuilder.EMPTY)
+        .item(block -> ItemStackBuilder.pylonItem(
+                Material.RED_STAINED_GLASS_PANE,
+                Key.create("unset_item_group")
+        ))
         .click((block, clickType, player, event) -> {
             var data = assertBlock(block, WithGroup.class);
             assertNotNull(data.getItemId(), "Not set item id");
@@ -110,7 +121,10 @@ public class Buttons <T extends PylonBlock & PylonGuiBlock> {
         }),
 
     unsetRecipe = create()
-        .item(ItemStackBuilder.EMPTY)
+        .item(block -> ItemStackBuilder.pylonItem(
+                Material.RED_STAINED_GLASS_PANE,
+                Key.create("unset_recipe")
+        ))
         .click((block, clickType, player, event) -> {
             var data = assertBlock(block, WithRecipe.class);
             assertNotNull(data.getItemId(), "Not set item id");
@@ -127,7 +141,10 @@ public class Buttons <T extends PylonBlock & PylonGuiBlock> {
         }),
 
     setId = create()
-            .item(ItemStackBuilder.EMPTY)
+            .item(block -> ItemStackBuilder.pylonItem(
+                    Material.BLUE_STAINED_GLASS_PANE,
+                    Key.create("set_id")
+            ))
             .click((block, clickType, player, event) -> {
                 var data = assertBlock(block, WithModel.class);
 
@@ -137,9 +154,14 @@ public class Buttons <T extends PylonBlock & PylonGuiBlock> {
             }),
 
     itemGroup = create()
-            .item(ItemStackBuilder.EMPTY)
+            .item(block -> ItemStackBuilder.pylonItem(
+                    Material.WHITE_STAINED_GLASS_PANE,
+                    Key.create("item_group")
+            ))
             .click((block, clickType, player, event) -> {
                 var data = assertBlock(block, WithGroup.class);
+
+                Inventory blockGui = player.getOpenInventory().getTopInventory();
 
                 if (clickType.isLeftClick()) {
                     if (clickType.isShiftClick()) {
@@ -147,7 +169,11 @@ public class Buttons <T extends PylonBlock & PylonGuiBlock> {
                             data.setGroupId(assertNotNull(toNamespacedKey(groupId), "Invalid group id"));
                         });
                     } else {
-                        SearchPages.GROUP.open(player, group -> data.setGroupId(group.getKey()));
+                        SearchPages.openGroupSearchPage(player, group -> {
+                            data.setGroupId(group.getKey());
+                            done(player, "Set group id to {}", group.getKey());
+                            player.openInventory(blockGui);
+                        });
                     }
                 } else if (clickType.isRightClick()) {
                     assertNotNull(data.getGroupId(), "Not set group id yet");

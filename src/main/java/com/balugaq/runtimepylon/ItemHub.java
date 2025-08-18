@@ -3,6 +3,7 @@ package com.balugaq.runtimepylon;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
@@ -13,6 +14,7 @@ import xyz.xenondevs.invui.gui.Gui;
 import java.util.HashMap;
 import java.util.Map;
 
+@Setter
 @Getter
 public class ItemHub extends PylonBlock implements
         PylonGuiBlock,
@@ -32,7 +34,7 @@ public class ItemHub extends PylonBlock implements
 
     @Override
     public @NotNull Gui createGui() {
-        Buttons buttons = new Buttons(this);
+        ButtonSet buttons = new ButtonSet(this);
         return Gui.normal()
                 .setStructure(
                         "x x x x x x x x x",
@@ -51,6 +53,15 @@ public class ItemHub extends PylonBlock implements
                 .addIngredient('g', buttons.itemGroup)
                 .addIngredient('t', buttons.recipeType)
                 .addIngredient('i', buttons.item)
+                .addIngredient('0', buttons.recipe(0))
+                .addIngredient('1', buttons.recipe(1))
+                .addIngredient('2', buttons.recipe(2))
+                .addIngredient('3', buttons.recipe(3))
+                .addIngredient('4', buttons.recipe(4))
+                .addIngredient('5', buttons.recipe(5))
+                .addIngredient('6', buttons.recipe(6))
+                .addIngredient('7', buttons.recipe(7))
+                .addIngredient('8', buttons.recipe(8))
                 .build();
     }
 }

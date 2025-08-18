@@ -1,10 +1,13 @@
 package com.balugaq.runtimepylon;
 
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
+import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
 import io.github.pylonmc.pylon.core.guide.pages.base.GuidePage;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
+import io.github.pylonmc.pylon.core.item.PylonItem;
+import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import lombok.Getter;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
@@ -30,6 +33,8 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         registerWithPylon();
 
         saveDefaultConfig();
+
+        PylonBlock.register(Key.create("item_hub"), Material.PURPUR_PILLAR, ItemHub.class);
     }
 
     @Override

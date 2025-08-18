@@ -16,40 +16,26 @@ import xyz.xenondevs.invui.item.ItemProvider;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Getter
 public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem {
-    private ItemProvider itemProvider;
+    private Function<T, ItemProvider> itemProvider;
     private ClickHandler<T> clickHandler;
     private final T data;
 
     public GuiItem(@NotNull T data) {
         this.data = data;
-        this.itemProvider = ItemProvider.EMPTY;
-        this.clickHandler = Buttons.deny();
-    }
-
-    public GuiItem(@NotNull T data, @NotNull ItemProvider itemProvider, @NotNull ClickHandler<T> clickHandler) {
-        this.data = data;
-        this.itemProvider = itemProvider;
-        this.clickHandler = clickHandler;
-    }
-
-    public static <T extends PylonBlock & PylonGuiBlock> GuiItem<T> create(@NotNull T data, @NotNull ItemProvider itemProvider, @NotNull ClickHandler<T> clickHandler) {
-        return new GuiItem<>(data, itemProvider, clickHandler);
+        this.itemProvider = block -> null;
+        this.clickHandler = ButtonSet.deny();
     }
 
     public static <T extends PylonBlock & PylonGuiBlock> GuiItem<T> create(@NotNull T  data) {
         return new GuiItem<>(data);
     }
 
-    public GuiItem<T> item(@NotNull ItemProvider itemProvider) {
+    public GuiItem<T> item(@NotNull Function<T, ItemProvider> itemProvider) {
         this.itemProvider = itemProvider;
-        return this;
-    }
-
-    public GuiItem<T> click(@NotNull Class<T> clazz, @NotNull ClickHandler<T> clickHandler) {
-        this.clickHandler = clickHandler;
         return this;
     }
 
@@ -60,7 +46,7 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
 
     @Override
     public ItemProvider getItemProvider() {
-        return itemProvider;
+        return itemProvider.apply(data);
     }
 
     @Override

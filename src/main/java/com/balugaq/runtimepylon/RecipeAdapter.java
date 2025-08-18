@@ -2,30 +2,147 @@ package com.balugaq.runtimepylon;
 
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
+import io.github.pylonmc.pylon.core.recipe.vanilla.BlastingRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.CampfireRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.FurnaceRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.ShapedRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.ShapelessRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.SmithingRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.SmokingRecipeWrapper;
 import lombok.Getter;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.BlastingRecipe;
+import org.bukkit.inventory.CampfireRecipe;
+import org.bukkit.inventory.FurnaceRecipe;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.RecipeChoice;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.SmithingTransformRecipe;
+import org.bukkit.inventory.SmithingTrimRecipe;
+import org.bukkit.inventory.SmokingRecipe;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 public record RecipeAdapter<T extends PylonRecipe>(
         RecipeType<T> recipeType,
-        BiFunction<NamespacedKey, Map<Integer, ItemStack>, T> mapper
+        RecipeResolver<T> mapper
 ) {
-    public static final Map<RecipeType<? extends PylonRecipe>, RecipeAdapter<? extends PylonRecipe>> adapters = new HashMap<>();
+    @Getter
+    private static final Map<RecipeType<? extends PylonRecipe>, RecipeAdapter<? extends PylonRecipe>> adapters = new HashMap<>();
 
-    public RecipeAdapter(@NotNull RecipeType<T> recipeType, @NotNull BiFunction<@NotNull NamespacedKey, @NotNull Map<Integer, ItemStack>, @Nullable T> mapper) {
+    static {
+        // @formatter:off
+        register(RecipeType.VANILLA_BLASTING, (key, model,recipe) ->
+            new BlastingRecipeWrapper(new BlastingRecipe(
+                    key,
+                    model,
+                    toChoice(find(recipe, 1)),
+                    experience,
+                    cookingTime
+            ))
+        );
+        register(RecipeType.VANILLA_CAMPFIRE, (key, model,recipe) ->
+            new CampfireRecipeWrapper(new CampfireRecipe(
+                    key,
+                    model,
+                    toChoice(find(recipe, 1)),
+                    experience,
+                    cookingTime
+            ))
+        );
+        register(RecipeType.VANILLA_FURNACE, (key, model,recipe) ->
+            new FurnaceRecipeWrapper(new FurnaceRecipe(
+                    key,
+                    model,
+                    toChoice(find(recipe, 1)),
+                    experience,
+                    cookingTime
+            ))
+        );
+        register(RecipeType.VANILLA_SMOKING, (key, model,recipe) ->
+            new SmokingRecipeWrapper(new SmokingRecipe(
+                    key,
+                    model,
+                    toChoice(find(recipe, 1)),
+                    experience,
+                    cookingTime
+            ))
+        );
+        register(RecipeType.VANILLA_SMITHING, (key, model,recipe) -> {return
+            recipe.size() >= 3 ?
+            new SmithingRecipeWrapper(new SmithingTransformRecipe(
+                    key,
+                    model,                        // result
+                    toChoice(find(recipe, 1)), // template
+                    toChoice(find(recipe, 2)), // base
+                    toChoice(find(recipe, 3))  // addition
+            )) :
+            new SmithingRecipeWrapper(new SmithingTrimRecipe(
+                    key,
+                    toChoice(find(recipe, 1)), // template
+                    toChoice(find(recipe, 2)), // base
+                    toChoice(find(recipe, 3))  // addition
+            ));
+        });
+        register(RecipeType.VANILLA_SHAPED, (key, model,recipe) -> {
+            ShapedRecipe r = new ShapedRecipe(key, model)
+                    .shape(
+                            "123",
+                            "456",
+                            "789"
+                    );
+            recipe.forEach((i, itemStack) ->
+                r.setIngredient(String.valueOf(i).charAt(0), itemStack)
+            );
+            return new ShapedRecipeWrapper(r);
+        });
+        register(RecipeType.VANILLA_SHAPELESS, (key, model,recipe) -> {
+            ShapelessRecipe r = new ShapelessRecipe(key, model);
+            for (ItemStack itemStack : recipe.values()) {
+                r.addIngredient(itemStack);
+            }
+            return new ShapelessRecipeWrapper(r);
+        });
+        // @formatter:on
+    }
+
+    public static ItemStack find(@NotNull Map<Integer, ItemStack> recipe, int n) {
+        int cnt = 0;
+        for (ItemStack itemStack : recipe.values()) {
+            if (itemStack != null && itemStack.getType() != Material.AIR && ++cnt == n) return itemStack;
+        }
+        throw new WrongStateException("#" + cnt + " item doesn't appear in recipe");
+    }
+
+    public static ItemStack findNullable(@NotNull Map<Integer, ItemStack> recipe, int n) {
+        int cnt = 0;
+        for (ItemStack itemStack : recipe.values()) {
+            if (++cnt == n) return itemStack;
+        }
+        return null;
+    }
+
+    public static RecipeChoice.ExactChoice toChoice(@NotNull ItemStack itemStack) {
+        return new RecipeChoice.ExactChoice(itemStack);
+    }
+
+    public static <T extends PylonRecipe> RecipeAdapter<? extends PylonRecipe> register(@NotNull RecipeType<T> recipeType, @NotNull RecipeResolver<T> mapper) {
+        return adapters.put(recipeType, new RecipeAdapter<>(recipeType, mapper));
+    }
+
+    public RecipeAdapter(@NotNull RecipeType<T> recipeType, @NotNull RecipeResolver<T> mapper) {
         this.recipeType = recipeType;
         this.mapper = mapper;
         adapters.put(recipeType, this);
     }
 
-    public boolean apply(@NotNull NamespacedKey key, @NotNull Map<Integer, ItemStack> recipe) {
-        T instance = mapper.apply(key, recipe);
+    public boolean apply(@NotNull NamespacedKey key, @NotNull ItemStack model, @NotNull Map<Integer, ItemStack> recipe) {
+        T instance = mapper.apply(key, model, recipe);
         if (instance == null) return false;
         recipeType.addRecipe(instance);
         return true;
@@ -38,5 +155,10 @@ public record RecipeAdapter<T extends PylonRecipe>(
     @Nullable
     public static <T extends PylonRecipe> RecipeAdapter<T> find(RecipeType<T> recipeType, Class<? extends PylonRecipe> pylonRecipeClass) {
         return (RecipeAdapter<T>) adapters.get(recipeType);
+    }
+
+    public interface RecipeResolver<T extends PylonRecipe> {
+        @Nullable
+        T apply(@NotNull NamespacedKey key, @NotNull ItemStack model, @NotNull Map<@NotNull Integer, @NotNull ItemStack> recipe);
     }
 }
