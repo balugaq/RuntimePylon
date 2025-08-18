@@ -1,5 +1,7 @@
-package com.balugaq.runtimepylon;
+package com.balugaq.runtimepylon.gui;
 
+import com.balugaq.runtimepylon.RuntimePylon;
+import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.guide.pages.base.SearchPage;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.papermc.paper.datacomponent.DataComponentTypes;

@@ -1,5 +1,11 @@
-package com.balugaq.runtimepylon;
+package com.balugaq.runtimepylon.gui;
 
+import com.balugaq.runtimepylon.util.Key;
+import com.balugaq.runtimepylon.util.RecipeAdapter;
+import com.balugaq.runtimepylon.RuntimePylon;
+import com.balugaq.runtimepylon.block.base.WithGroup;
+import com.balugaq.runtimepylon.block.base.WithModel;
+import com.balugaq.runtimepylon.block.base.WithRecipe;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.guide.button.ItemButton;
@@ -15,7 +21,7 @@ import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 
-import static com.balugaq.runtimepylon.GuiItem.*;
+import static com.balugaq.runtimepylon.gui.GuiItem.*;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.Map;

@@ -1,5 +1,6 @@
-package com.balugaq.runtimepylon;
+package com.balugaq.runtimepylon.util;
 
+import com.balugaq.runtimepylon.RuntimePylon;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 

@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon;
+package com.balugaq.runtimepylon.util;
 
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;

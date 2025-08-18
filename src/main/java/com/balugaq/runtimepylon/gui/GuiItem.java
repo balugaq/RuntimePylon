@@ -1,5 +1,6 @@
-package com.balugaq.runtimepylon;
+package com.balugaq.runtimepylon.gui;
 
+import com.balugaq.runtimepylon.util.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import lombok.Getter;

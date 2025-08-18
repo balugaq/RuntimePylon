@@ -1,5 +1,9 @@
-package com.balugaq.runtimepylon;
+package com.balugaq.runtimepylon.block;
 
+import com.balugaq.runtimepylon.block.base.WithGroup;
+import com.balugaq.runtimepylon.block.base.WithModel;
+import com.balugaq.runtimepylon.block.base.WithRecipe;
+import com.balugaq.runtimepylon.gui.ButtonSet;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import lombok.Getter;
@@ -38,9 +42,9 @@ public class ItemHub extends PylonBlock implements
         return Gui.normal()
                 .setStructure(
                         "x x x x x x x x x",
-                        ". k . e E 0 1 2 .",
-                        ". i . g t 3 4 5 .",
-                        ". . . d D 6 7 8 .",
+                        ". k . e E 1 2 3 .",
+                        ". i . g t 4 5 6 .",
+                        ". . . d D 7 8 9 .",
                         "x x x x x x x x x"
                 )
                 .addIngredient('x', buttons.blackBackground)
@@ -53,7 +57,6 @@ public class ItemHub extends PylonBlock implements
                 .addIngredient('g', buttons.itemGroup)
                 .addIngredient('t', buttons.recipeType)
                 .addIngredient('i', buttons.item)
-                .addIngredient('0', buttons.recipe(0))
                 .addIngredient('1', buttons.recipe(1))
                 .addIngredient('2', buttons.recipe(2))
                 .addIngredient('3', buttons.recipe(3))
@@ -62,6 +65,7 @@ public class ItemHub extends PylonBlock implements
                 .addIngredient('6', buttons.recipe(6))
                 .addIngredient('7', buttons.recipe(7))
                 .addIngredient('8', buttons.recipe(8))
+                .addIngredient('9', buttons.recipe(9))
                 .build();
     }
 }

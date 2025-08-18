@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon;
+package com.balugaq.runtimepylon.block.base;
 
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
