@@ -50,6 +50,7 @@ public class ItemHub extends PylonBlock implements
                 .addIngredient('k', buttons.setId)
                 .addIngredient('g', buttons.itemGroup)
                 .addIngredient('t', buttons.recipeType)
+                .addIngredient('i', buttons.item)
                 .build();
     }
 }

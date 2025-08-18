@@ -3,18 +3,19 @@ package com.balugaq.runtimepylon;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
 import xyz.xenondevs.invui.item.ItemProvider;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 
-import java.text.MessageFormat;
+import java.util.function.Consumer;
 
 @Getter
 public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem {
@@ -99,5 +100,18 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
         } else {
             throw new WrongStateException("Not " + expected.getSimpleName());
         }
+    }
+
+    @Nullable
+    public static NamespacedKey toNamespacedKey(@NotNull String string) {
+        return NamespacedKey.fromString(string);
+    }
+
+    public static void waitInput(@NotNull Player player, @NotNull String literal, @NotNull Consumer<String> consumer) {
+        waitInput(player, Component.text(literal), consumer);
+    }
+
+    public static void waitInput(@NotNull Player player, @NotNull ComponentLike component, @NotNull Consumer<String> consumer) {
+
     }
 }
