@@ -42,6 +42,7 @@ import static com.balugaq.runtimepylon.gui.GuiItem.*;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.Map;
+import java.util.Optional;
 
 @Getter
 public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
@@ -58,10 +59,10 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
 
     @NotNull
     public static Component displayName(@NotNull ItemStack itemStack) {
-        return itemStack.getData(DataComponentTypes.ITEM_NAME);
+        return Optional.ofNullable(itemStack.getData(DataComponentTypes.ITEM_NAME)).orElse(Component.text(""));
     }
 
-    public T block;
+    public final T block;
     public final AbstractItem
             blackBackground,
             grayBackground,
@@ -128,6 +129,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
 
                     Class<? extends PylonRecipe> pylonRecipeClass = (Class<? extends PylonRecipe>) pt.getActualTypeArguments()[0];
                     var adapter = assertNotNull(RecipeAdapter.find(recipeType, pylonRecipeClass), "Incompatible recipe type");
+                    assertTrue(adapter.noRecipe(data.getItemId(), data.getModel(), data.getRecipe()), "Recipe already exists");
                     assertTrue(adapter.apply(data.getItemId(), data.getModel(), data.getRecipe()), "Incompatible recipe");
                     return true;
                 });
@@ -304,10 +306,15 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 })
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithModel.class);
-                    data.setModel(event.getCursor());
-                    done(player, Component.text("Set item to ").append(displayName(event.getCursor())));
+                    event.setCancelled(true);
+                    ItemStack cursor = event.getCursor().clone();
+                    if (data.getModel() != null) {
+                        player.setItemOnCursor(data.getModel().clone());
+                    }
+                    data.setModel(cursor);
+                    done(player, Component.text("Set item to ").append(displayName(cursor)));
 
-                    PylonItem pylon = PylonItem.fromStack(event.getCursor());
+                    PylonItem pylon = PylonItem.fromStack(cursor);
                     if (pylon != null) {
                         data.setItemId(pylon.getKey());
                         done(player, "Set item id to {}", pylon.getKey());
@@ -323,7 +330,14 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
 
     public AbstractItem recipe(int n) {
         return create()
-                .item(block -> ItemStackBuilder.EMPTY)
+                .item(block -> {
+                    var data = assertBlock(block, WithRecipe.class);
+                    if (data.getRecipe().get(n) != null) {
+                        return ItemStackBuilder.of(data.getRecipe().get(n));
+                    } else {
+                        return ItemStackBuilder.EMPTY;
+                    }
+                })
                 .click((block, clickType, player, event) -> {
                     PylonItem stack = PylonItem.fromStack(event.getCurrentItem());
                     if (stack instanceof DataStack data) {
@@ -333,16 +347,20 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
 
                     var data = assertBlock(block, WithRecipe.class);
 
-                    var item = event.getCursor();
-                    if (item != null && item.getType() != Material.AIR) {
-                        data.getRecipe().put(n, item);
-                        done(player, Component.text("Set recipe #").append(Component.text(n)).append(Component.text(" to ")).append(displayName(item)));
+                    event.setCancelled(true);
+                    ItemStack cursor = event.getCursor().clone();
+                    if (data.getRecipe().get(n) != null) {
+                        player.setItemOnCursor(data.getRecipe().get(n).clone());
+                    }
+                    if (cursor != null && cursor.getType() != Material.AIR) {
+                        data.getRecipe().put(n, cursor);
+                        done(player, Component.text("Set recipe #").append(Component.text(n)).append(Component.text(" to ")).append(displayName(cursor)));
                     } else {
                         data.getRecipe().remove(n);
                         done(player, "Unset recipe #{}", n);
                     }
 
-                    return false;
+                    return true;
                 });
     }
 

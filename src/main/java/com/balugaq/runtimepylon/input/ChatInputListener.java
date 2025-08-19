@@ -20,6 +20,7 @@ public class ChatInputListener implements Listener {
     public void onChatInput(@NotNull AsyncPlayerChatEvent event) {
         Optional.ofNullable(callbacks.get(event.getPlayer().getUniqueId())).ifPresent(callback -> {
             callback.accept(event.getMessage());
+            event.setCancelled(true);
         });
     }
 

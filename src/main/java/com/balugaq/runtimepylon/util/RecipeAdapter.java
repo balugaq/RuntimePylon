@@ -14,6 +14,7 @@ import io.github.pylonmc.pylon.core.recipe.vanilla.ShapelessRecipeWrapper;
 import io.github.pylonmc.pylon.core.recipe.vanilla.SmithingRecipeWrapper;
 import io.github.pylonmc.pylon.core.recipe.vanilla.SmokingRecipeWrapper;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.BlastingRecipe;
@@ -197,6 +198,10 @@ public record RecipeAdapter<T extends PylonRecipe>(
         if (instance == null) return false;
         recipeType.addRecipe(instance);
         return true;
+    }
+
+    public boolean noRecipe(@NotNull NamespacedKey key, @NotNull ItemStack model, @NotNull Map<Integer, ItemStack> recipe) {
+        return Bukkit.getRecipe(key) == null;
     }
 
     public void removeRecipe(@NotNull NamespacedKey key) {
