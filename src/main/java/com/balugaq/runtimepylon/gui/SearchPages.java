@@ -4,6 +4,10 @@ import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.guide.pages.base.SearchPage;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
+import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
+import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
+import io.github.pylonmc.pylon.core.recipe.RecipeType;
+import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import kotlin.Pair;
 import lombok.Getter;
@@ -21,6 +25,10 @@ import java.util.function.Consumer;
 public class SearchPages {
     public static void openGroupSearchPage(@NotNull Player player, @NotNull Consumer<SimpleStaticGuidePage> consumer) {
         new GroupSearchPage(consumer).open(player);
+    }
+
+    public static void openRecipeTypeSearchPage(@NotNull Player player, @NotNull Consumer<RecipeType<? extends PylonRecipe>> consumer) {
+        new RecipeTypeSearchPage(consumer).open(player);
     }
 
     @Getter
@@ -50,11 +58,37 @@ public class SearchPages {
 
                         return new Pair<>(
                                 (Item) GuiItem.create(null)
-                                        .item(page.getItem())
+                                        .item(block -> page.getItem())
                                         .click((block, clickType, p2, event) -> {
                                             consumer.accept(page);
                                         }),
                                 name);
+                    })
+                    .toList();
+        }
+    }
+
+    @Getter
+    public static class RecipeTypeSearchPage extends SearchPage {
+        private final Consumer<RecipeType<? extends PylonRecipe>> consumer;
+        public RecipeTypeSearchPage(@NotNull Consumer<RecipeType<? extends PylonRecipe>> consumer) {
+            super(Key.create("group_search_page"), Material.STONE);
+            this.consumer = consumer;
+        }
+
+        @Override
+        public @NotNull List<Pair<Item, String>> getItemNamePairs(@NotNull Player player, @NotNull String search) {
+            return PylonRegistry.RECIPE_TYPES.getValues()
+                    .stream()
+                    .map(type -> {
+                        return new Pair<>(
+                                (Item) GuiItem.create(null)
+                                        .item(block -> ItemStackBuilder.of(Material.CRAFTING_TABLE)
+                                                .name(type.getKey().toString()))
+                                        .click((block, clickType, p2, event) -> {
+                                            consumer.accept(type);
+                                        }),
+                                type.getKey().toString());
                     })
                     .toList();
         }

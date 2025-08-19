@@ -15,10 +15,17 @@ import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
+import lombok.Getter;
+import lombok.Setter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 
 import static com.balugaq.runtimepylon.gui.GuiItem.*;
@@ -26,15 +33,22 @@ import static com.balugaq.runtimepylon.gui.GuiItem.*;
 import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 
+@Getter
 public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
     public static <T extends PylonBlock & PylonGuiBlock> ClickHandler<T> deny() {
         return (data, clickType, player, event) -> {
             event.setCancelled(true);
+            return false;
         };
     }
 
     public static <T extends PylonBlock & PylonGuiBlock> ClickHandler<T> allow() {
-        return (data, clickType, player, event) -> {};
+        return (data, clickType, player, event) -> false;
+    }
+
+    @NotNull
+    public static Component displayName(@NotNull ItemStack itemStack) {
+        return itemStack.displayName();
     }
 
     public T block;
@@ -61,7 +75,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     Key.create("gray_background")
             ))
             .click(deny()),
-    
+
     setItemGroup = create()
             .item(block -> ItemStackBuilder.pylonItem(
                     Material.GREEN_STAINED_GLASS_PANE,
@@ -80,6 +94,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 page.addItem(data.getItemId());
 
                 done(player, "Added {} to {}", data.getItemId(), data.getGroupId());
+                return true;
             }),
 
     setRecipe = create()
@@ -95,12 +110,13 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
 
                 RecipeType<? extends PylonRecipe> recipeType = assertNotNull(PylonRegistry.RECIPE_TYPES.get(data.getRecipeTypeId()), "Unknown recipe type");
                 if (!(recipeType.getClass().getGenericSuperclass() instanceof ParameterizedType pt)) {
-                    return;
+                    return false;
                 }
 
                 Class<? extends PylonRecipe> pylonRecipeClass = (Class<? extends PylonRecipe>) pt.getActualTypeArguments()[0];
                 var adapter = assertNotNull(RecipeAdapter.find(recipeType, pylonRecipeClass), "Incompatible recipe type");
                 assertTrue(adapter.apply(data.getItemId(), data.getModel(), data.getRecipe()), "Incompatible recipe");
+                return true;
             }),
 
     unsetItemGroup = create()
@@ -124,6 +140,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
 
                 return pylon.getKey().equals(data.getItemId());
             });
+            return true;
         }),
 
     unsetRecipe = create()
@@ -138,12 +155,14 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
 
             RecipeType<? extends PylonRecipe> recipeType = assertNotNull(PylonRegistry.RECIPE_TYPES.get(data.getRecipeTypeId()), "Unknown recipe type");
             if (!(recipeType.getClass().getGenericSuperclass() instanceof ParameterizedType pt)) {
-                return;
+                return false;
             }
 
             Class<? extends PylonRecipe> pylonRecipeClass = (Class<? extends PylonRecipe>) pt.getActualTypeArguments()[0];
             RecipeAdapter<? extends PylonRecipe> adapter = assertNotNull(RecipeAdapter.find(recipeType, pylonRecipeClass), "Incompatible recipe type");
             adapter.removeRecipe(data.getItemId());
+
+            return true;
         }),
 
     setId = create()
@@ -157,6 +176,8 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 waitInput(player, "Enter item id", itemId -> {
                     data.setItemId(assertNotNull(toNamespacedKey(itemId), "Invalid item id"));
                 });
+
+                return true;
             }),
 
     itemGroup = create()
@@ -183,6 +204,86 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     }
                 } else if (clickType.isRightClick()) {
                     assertNotNull(data.getGroupId(), "Not set group id yet");
+                    // copy id
+
+                    player.sendMessage(Component.text()
+                            .content("Copied group id")
+                            .hoverEvent(HoverEvent.showText(Component.text("Click to copy")))
+                            .clickEvent(ClickEvent.copyToClipboard(data.getGroupId().toString())));
                 }
+
+                return true;
+            }),
+
+    recipeType = create()
+            .item(block -> ItemStackBuilder.pylonItem(
+                    Material.WHITE_STAINED_GLASS_PANE,
+                    Key.create("recipe_type")
+            ))
+            .click((block, clickType, player, event) -> {
+                var data = assertBlock(block, WithRecipe.class);
+                Inventory blockGui = player.getOpenInventory().getTopInventory();
+                if (clickType.isLeftClick()) {
+                    if (clickType.isShiftClick()) {
+                        waitInput(player, "Enter recipe type id", recipeTypeId -> {
+                            data.setRecipeTypeId(assertNotNull(toNamespacedKey(recipeTypeId), "Invalid recipe type id"));
+                        });
+                    } else {
+                        SearchPages.openRecipeTypeSearchPage(player, recipeType -> {
+                            data.setRecipeTypeId(recipeType.getKey());
+                            done(player, "Set recipe type id to {}", recipeType.getKey());
+                            player.openInventory(blockGui);
+                        });
+                    }
+                } else if (clickType.isRightClick()) {
+                    assertNotNull(data.getRecipeTypeId(), "Not set recipe type id yet");
+                    // copy id
+
+                    player.sendMessage(Component.text()
+                            .content("Copied recipe type id")
+                            .hoverEvent(HoverEvent.showText(Component.text("Click to copy")))
+                            .clickEvent(ClickEvent.copyToClipboard(data.getRecipeTypeId().toString()))
+                    );
+                }
+
+                return true;
+            }),
+
+    item = create()
+            .item(block -> ItemStackBuilder.pylonItem(
+                    Material.WHITE_STAINED_GLASS_PANE,
+                    Key.create("item")
+            ))
+            .click((block, clickType, player, event) -> {
+                var data = assertBlock(block, WithModel.class);
+                data.setModel(event.getCursor());
+                done(player, "Set item to {}", displayName(event.getCursor()));
+
+                PylonItem pylon = PylonItem.fromStack(event.getCursor());
+                if (pylon != null) {
+                    data.setItemId(pylon.getKey());
+                    done(player, "Set item id to {}", pylon.getKey());
+                }
+
+                return true;
             });
+
+    public AbstractItem recipe(int n) {
+        return create()
+                .item(block -> ItemStackBuilder.EMPTY)
+                .click((block, clickType, player, event) -> {
+                    var data = assertBlock(block, WithRecipe.class);
+
+                    var item = event.getCursor();
+                    if (item != null && item.getType() != Material.AIR) {
+                        data.getRecipe().put(n, item);
+                        done(player, "Set recipe #{} to {}", n, displayName(item));
+                    } else {
+                        data.getRecipe().remove(n);
+                        done(player, "Unset recipe #{}", n);
+                    }
+
+                    return false;
+                });
+    }
 }

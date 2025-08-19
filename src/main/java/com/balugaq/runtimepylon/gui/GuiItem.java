@@ -53,7 +53,8 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
     @Override
     public void handleClick(@NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event) {
         try {
-            clickHandler.handleClick(data, clickType, player, event);
+            boolean updateWindow = clickHandler.handleClick(data, clickType, player, event);
+            if (updateWindow) notifyWindows();
         } catch (WrongStateException e) {
             player.sendMessage(e.getMessage());
             return;

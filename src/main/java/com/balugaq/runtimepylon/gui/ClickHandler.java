@@ -19,5 +19,5 @@ public interface ClickHandler<T extends PylonBlock & PylonGuiBlock> {
      * @param player    The {@link Player} who clicked on the {@link ItemStack}.
      * @param event     The {@link InventoryClickEvent} associated with this click.
      */
-    void handleClick(@NotNull T block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event);
+    boolean handleClick(@NotNull T block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event);
 }
