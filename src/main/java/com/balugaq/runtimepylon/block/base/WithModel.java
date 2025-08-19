@@ -7,7 +7,10 @@ import org.jetbrains.annotations.Nullable;
 
 public interface WithModel {
     @Nullable ItemStack getModel();
-    @Nullable NamespacedKey getItemId();
+
     @NotNull WithModel setModel(@Nullable ItemStack model);
+
+    @Nullable NamespacedKey getItemId();
+
     @NotNull WithModel setItemId(@Nullable NamespacedKey itemId);
 }

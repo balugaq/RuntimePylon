@@ -10,8 +10,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-public class StringStack extends PylonItem implements DataStack{
+public class StringStack extends PylonItem implements DataStack {
     public String internal;
+
     public StringStack(@NotNull ItemStack stack) {
         super(stack);
     }

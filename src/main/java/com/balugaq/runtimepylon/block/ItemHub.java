@@ -34,8 +34,7 @@ public class ItemHub extends PylonBlock implements
         PylonGuiBlock,
         WithModel,
         WithGroup,
-        WithRecipe
-{
+        WithRecipe {
     public @Nullable ItemStack model = null;
     public @Nullable NamespacedKey itemId = null;
     public @Nullable NamespacedKey groupId = null;
@@ -55,17 +54,7 @@ public class ItemHub extends PylonBlock implements
         recipe = fromArray(pdc, "recipe");
     }
 
-    @Override
-    public void write(@NotNull PersistentDataContainer pdc) {
-        super.write(pdc);
-        pdc.set(Key.create("model"), PersistentDataType.STRING, getBase64String(model));
-        if (itemId != null) pdc.set(Key.create("itemId"), PersistentDataType.STRING, itemId.toString());
-        if (groupId != null) pdc.set(Key.create("groupId"), PersistentDataType.STRING, groupId.toString());
-        if (recipeTypeId != null) pdc.set(Key.create("recipeTypeId"), PersistentDataType.STRING, recipeTypeId.toString());
-        recipe.forEach((key, value) -> pdc.set(Key.create("recipe" + key), PersistentDataType.STRING, getBase64String(value)));
-    }
-
-    public static Map<Integer, ItemStack> fromArray(PersistentDataContainer pdc, String key) {
+    public static @NotNull Map<Integer, ItemStack> fromArray(@NotNull PersistentDataContainer pdc, @NotNull String key) {
         return pdc.getKeys().stream().filter(k -> k.toString().startsWith(key))
                 .map(k -> new Pair<>(k, pdc.get(k, PersistentDataType.STRING)))
                 .collect(Collectors.toMap(
@@ -74,13 +63,13 @@ public class ItemHub extends PylonBlock implements
                 ));
     }
 
-    public static NamespacedKey getNamespacedKey(PersistentDataContainer pdc, String key) {
+    public static @Nullable NamespacedKey getNamespacedKey(@NotNull PersistentDataContainer pdc, @NotNull String key) {
         var s = pdc.get(Key.create(key), PersistentDataType.STRING);
         if (s == null) return null;
         return NamespacedKey.fromString(s);
     }
 
-    public static ItemStack getItemStack(PersistentDataContainer pdc, String key) {
+    public static @Nullable ItemStack getItemStack(@NotNull PersistentDataContainer pdc, @NotNull String key) {
         var s = pdc.get(Key.create(key), PersistentDataType.STRING);
         if (s == null) return null;
         return getItemStack(s);
@@ -100,7 +89,7 @@ public class ItemHub extends PylonBlock implements
     }
 
     @SuppressWarnings("deprecation")
-    public static ItemStack getItemStack(@NotNull String base64Str) {
+    public static @Nullable ItemStack getItemStack(@NotNull String base64Str) {
         ByteArrayInputStream stream = new ByteArrayInputStream(Base64Coder.decodeLines(base64Str));
         try {
             BukkitObjectInputStream bs = new BukkitObjectInputStream(stream);
@@ -111,6 +100,17 @@ public class ItemHub extends PylonBlock implements
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public void write(@NotNull PersistentDataContainer pdc) {
+        super.write(pdc);
+        pdc.set(Key.create("model"), PersistentDataType.STRING, getBase64String(model));
+        if (itemId != null) pdc.set(Key.create("itemId"), PersistentDataType.STRING, itemId.toString());
+        if (groupId != null) pdc.set(Key.create("groupId"), PersistentDataType.STRING, groupId.toString());
+        if (recipeTypeId != null)
+            pdc.set(Key.create("recipeTypeId"), PersistentDataType.STRING, recipeTypeId.toString());
+        recipe.forEach((key, value) -> pdc.set(Key.create("recipe" + key), PersistentDataType.STRING, getBase64String(value)));
     }
 
     @Override

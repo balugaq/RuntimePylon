@@ -11,8 +11,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-public class NumberStack extends PylonItem implements DataStack{
+public class NumberStack extends PylonItem implements DataStack {
     public String internal;
+
     public NumberStack(@NotNull ItemStack stack) {
         super(stack);
     }

@@ -6,5 +6,6 @@ import org.jetbrains.annotations.Nullable;
 
 public interface WithGroup extends WithModel {
     @Nullable NamespacedKey getGroupId();
+
     @NotNull WithGroup setGroupId(@NotNull NamespacedKey key);
 }

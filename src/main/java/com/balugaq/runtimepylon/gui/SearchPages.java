@@ -8,7 +8,6 @@ import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
-import io.papermc.paper.datacomponent.DataComponentTypes;
 import kotlin.Pair;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -33,7 +32,8 @@ public class SearchPages {
 
     @Getter
     public static class GroupSearchPage extends SearchPage {
-        private final Consumer<SimpleStaticGuidePage> consumer;
+        private final @NotNull Consumer<SimpleStaticGuidePage> consumer;
+
         public GroupSearchPage(@NotNull Consumer<SimpleStaticGuidePage> consumer) {
             super(Key.create("group_search_page"), Material.STONE);
             this.consumer = consumer;
@@ -64,7 +64,8 @@ public class SearchPages {
 
     @Getter
     public static class RecipeTypeSearchPage extends SearchPage {
-        private final Consumer<RecipeType<? extends PylonRecipe>> consumer;
+        private final @NotNull Consumer<RecipeType<? extends PylonRecipe>> consumer;
+
         public RecipeTypeSearchPage(@NotNull Consumer<RecipeType<? extends PylonRecipe>> consumer) {
             super(Key.create("recipe_type_search_page"), Material.STONE);
             this.consumer = consumer;

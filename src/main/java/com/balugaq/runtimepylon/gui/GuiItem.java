@@ -7,10 +7,8 @@ import com.balugaq.runtimepylon.util.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -26,9 +24,9 @@ import java.util.function.Function;
 
 @Getter
 public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem {
+    private final @NotNull T data;
     private Function<T, ItemProvider> itemProvider;
     private ClickHandler<T> clickHandler;
-    private final T data;
 
     public GuiItem(@NotNull T data) {
         this.data = data;
@@ -36,43 +34,16 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
         this.clickHandler = ButtonSet.deny();
     }
 
-    public static <T extends PylonBlock & PylonGuiBlock> GuiItem<T> create(@NotNull T data) {
+    public static <T extends PylonBlock & PylonGuiBlock> @NotNull GuiItem<T> create(@NotNull T data) {
         return new GuiItem<>(data);
     }
 
-    public GuiItem<T> item(@NotNull Function<T, ItemProvider> itemProvider) {
-        this.itemProvider = itemProvider;
-        return this;
-    }
-
-    public GuiItem<T> click(@NotNull ClickHandler<T> clickHandler) {
-        this.clickHandler = clickHandler;
-        return this;
-    }
-
-    @Override
-    public ItemProvider getItemProvider() {
-        return itemProvider.apply(data);
-    }
-
-    @Override
-    public void handleClick(@NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event) {
-        try {
-            boolean updateWindow = clickHandler.handleClick(data, clickType, player, event);
-            if (updateWindow) notifyWindows();
-        } catch (WrongStateException e) {
-            player.sendMessage(e.getMessage());
-            return;
-        } catch (PlaceholderException ignored) {
-        }
-    }
-
-    public static <T> T assertNotNull(@Nullable T o) {
+    public static <T> @NotNull T assertNotNull(@Nullable T o) {
         if (o == null) throw new PlaceholderException();
         return o;
     }
 
-    public static <T> T assertNotNull(@Nullable T o, @NotNull String message) {
+    public static <T> @NotNull T assertNotNull(@Nullable T o, @NotNull String message) {
         if (o == null) throw new WrongStateException(message);
         return o;
     }
@@ -93,7 +64,7 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
         player.sendMessage(component.asComponent());
     }
 
-    public static <T extends PylonBlock & PylonGuiBlock, K> K assertBlock(@NotNull T block, @NotNull Class<K> expected) {
+    public static <T extends PylonBlock & PylonGuiBlock, K> @NotNull K assertBlock(@NotNull T block, @NotNull Class<K> expected) {
         if (expected.isInstance(block)) {
             return expected.cast(block);
         } else {
@@ -114,5 +85,32 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
         player.sendMessage(component);
         player.closeInventory();
         ChatInputListener.waitInput(player.getUniqueId(), callback);
+    }
+
+    public @NotNull GuiItem<T> item(@NotNull Function<T, ItemProvider> itemProvider) {
+        this.itemProvider = itemProvider;
+        return this;
+    }
+
+    public @NotNull GuiItem<T> click(@NotNull ClickHandler<T> clickHandler) {
+        this.clickHandler = clickHandler;
+        return this;
+    }
+
+    @Override
+    public ItemProvider getItemProvider() {
+        return itemProvider.apply(data);
+    }
+
+    @Override
+    public void handleClick(@NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event) {
+        try {
+            boolean updateWindow = clickHandler.handleClick(data, clickType, player, event);
+            if (updateWindow) notifyWindows();
+        } catch (WrongStateException e) {
+            player.sendMessage(e.getMessage());
+            return;
+        } catch (PlaceholderException ignored) {
+        }
     }
 }

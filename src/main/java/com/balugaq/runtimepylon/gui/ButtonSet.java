@@ -1,14 +1,12 @@
 package com.balugaq.runtimepylon.gui;
 
-import com.balugaq.runtimepylon.item.DataStack;
-import com.balugaq.runtimepylon.item.NumberStack;
-import com.balugaq.runtimepylon.item.StringStack;
-import com.balugaq.runtimepylon.util.Key;
-import com.balugaq.runtimepylon.util.RecipeAdapter;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.block.base.WithGroup;
 import com.balugaq.runtimepylon.block.base.WithModel;
 import com.balugaq.runtimepylon.block.base.WithRecipe;
+import com.balugaq.runtimepylon.item.DataStack;
+import com.balugaq.runtimepylon.util.Key;
+import com.balugaq.runtimepylon.util.RecipeAdapter;
 import com.balugaq.runtimepylon.util.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
@@ -21,51 +19,32 @@ import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.Inventory;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper;
-import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 import xyz.xenondevs.invui.window.Window;
-
-import static com.balugaq.runtimepylon.gui.GuiItem.*;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.balugaq.runtimepylon.gui.GuiItem.*;
+
+@Slf4j
 @Getter
 public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
-    public static <T extends PylonBlock & PylonGuiBlock> ClickHandler<T> deny() {
-        return (data, clickType, player, event) -> {
-            event.setCancelled(true);
-            return false;
-        };
-    }
-
-    public static <T extends PylonBlock & PylonGuiBlock> ClickHandler<T> allow() {
-        return (data, clickType, player, event) -> false;
-    }
-
-    @NotNull
-    public static Component displayName(@NotNull ItemStack itemStack) {
-        return Optional.ofNullable(itemStack.getData(DataComponentTypes.ITEM_NAME)).orElse(Component.text(""));
-    }
-
-    public final T block;
-    public final AbstractItem
+    public final @NotNull T block;
+    public final @NotNull AbstractItem
             blackBackground,
             grayBackground,
             setItemGroup,
@@ -77,6 +56,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
             recipeType,
             item,
             register;
+
     public ButtonSet(@NotNull T b2) {
         this.block = b2;
         blackBackground = create()
@@ -207,6 +187,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                             throw new WrongStateException("Item id must be prefix with " + RuntimePylon.getInstance().getName().toLowerCase());
                         } else {
                             data.setItemId(assertNotNull(toNamespacedKey(itemId), "Invalid item id"));
+                            reopen(player);
                         }
                     });
 
@@ -312,22 +293,20 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     }
                 })
                 .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithModel.class);
-                    ItemStack cursor = event.getCursor().clone();
-                    event.setCancelled(true);
-                    if (data.getModel() != null) {
-                        player.setItemOnCursor(data.getModel().clone());
-                    } else {
-                        player.setItemOnCursor(null);
-                    }
-                    data.setModel(cursor);
-                    done(player, Component.text("Set item to ").append(displayName(cursor)));
+                    handleClick(event);
 
-                    PylonItem pylon = PylonItem.fromStack(cursor);
-                    if (pylon != null) {
-                        data.setItemId(pylon.getKey());
-                        done(player, "Set item id to {}", pylon.getKey());
-                    }
+                    RuntimePylon.runTaskLater(() -> {
+                        var data = assertBlock(block, WithModel.class);
+                        ItemStack currentItem = block.getGui().getItem(event.getSlot()).getItemProvider().get();
+                        data.setModel(currentItem);
+                        done(player, Component.text("Set item to ").append(displayName(currentItem)));
+
+                        PylonItem pylon = PylonItem.fromStack(currentItem);
+                        if (pylon != null) {
+                            data.setItemId(pylon.getKey());
+                            done(player, "Set item id to {}", pylon.getKey());
+                        }
+                    }, 1L);
 
                     return true;
                 });
@@ -349,7 +328,23 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 });
     }
 
-    public GuiItem<T> create() {
+    public static <T extends PylonBlock & PylonGuiBlock> @NotNull ClickHandler<T> deny() {
+        return (data, clickType, player, event) -> {
+            event.setCancelled(true);
+            return false;
+        };
+    }
+
+    public static <T extends PylonBlock & PylonGuiBlock> @NotNull ClickHandler<T> allow() {
+        return (data, clickType, player, event) -> false;
+    }
+
+    @NotNull
+    public static Component displayName(@NotNull ItemStack itemStack) {
+        return Optional.ofNullable(itemStack.getData(DataComponentTypes.ITEM_NAME)).orElse(Component.text(""));
+    }
+
+    public @NotNull GuiItem<T> create() {
         return GuiItem.create(block);
     }
 
@@ -364,30 +359,26 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     }
                 })
                 .click((block, clickType, player, event) -> {
-                    PylonItem stack = PylonItem.fromStack(event.getCurrentItem());
-                    if (stack instanceof DataStack data) {
-                        data.onClick(block, clickType, player, event, () -> reopen(player));
-                        return true;
-                    }
+                    handleClick(event);
 
-                    var data = assertBlock(block, WithRecipe.class);
+                    RuntimePylon.runTaskLater(() -> {
+                        ItemStack currentItem = block.getGui().getItem(event.getSlot()).getItemProvider().get();
+                        PylonItem stack = PylonItem.fromStack(currentItem);
+                        if (stack instanceof DataStack data) {
+                            data.onClick(block, clickType, player, event, () -> reopen(player));
+                            return;
+                        }
 
-                    event.setCancelled(true);
-                    ItemStack cursor = event.getCursor().clone();
-                    if (data.getRecipe().get(n) != null) {
-                        player.setItemOnCursor(data.getRecipe().get(n).clone());
-                    } else {
-                        player.setItemOnCursor(null);
-                    }
-                    if (cursor != null && cursor.getType() != Material.AIR) {
-                        data.getRecipe().put(n, cursor);
-                        done(player, Component.text("Set recipe #").append(Component.text(n)).append(Component.text(" to ")).append(displayName(cursor)));
-                    } else {
-                        data.getRecipe().remove(n);
-                        done(player, "Unset recipe #{}", n);
-                    }
+                        var data = assertBlock(block, WithRecipe.class);
 
-                    return true;
+                        if (currentItem != null && currentItem.getType() != Material.AIR) {
+                            data.getRecipe().put(n, currentItem.clone());
+                        } else {
+                            data.getRecipe().remove(n);
+                        }
+                    }, 1L);
+
+                    return false;
                 });
     }
 
@@ -398,5 +389,65 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 .setViewer(player)
                 .build()
                 .open();
+    }
+
+    public void handleClick(InventoryClickEvent event) {
+        event.setCancelled(true);
+        ItemStack current = event.getCurrentItem();
+        ItemStack cursor = event.getCursor();
+        Player player = (Player) event.getWhoClicked();
+        switch (event.getClick()) {
+            case ClickType.RIGHT -> {
+                if (current != null && cursor.isSimilar(current)) {
+                    if (current.getAmount() < current.getMaxStackSize()) {
+                        current.setAmount(current.getAmount() + 1);
+                        cursor.setAmount(cursor.getAmount() - 1);
+                    }
+                } else {
+                    // swap(current, cursor);
+                    ItemStack c = cursor.clone();
+                    event.setCursor(current);
+                    event.setCurrentItem(c);
+                }
+            }
+            case ClickType.MIDDLE -> {
+                if (cursor.getType().isAir()) {
+                    event.setCursor(current.clone().asQuantity(current.getMaxStackSize()));
+                }
+            }
+            case ClickType.CONTROL_DROP -> {
+                player.getWorld().dropItemNaturally(player.getEyeLocation(), current.clone());
+                event.setCurrentItem(ItemStackBuilder.EMPTY.get());
+            }
+            case ClickType.DROP -> {
+                player.getWorld().dropItemNaturally(player.getEyeLocation(), current.asOne());
+                current.setAmount(current.getAmount() - 1);
+            }
+            case ClickType.SWAP_OFFHAND -> {
+                // swap(current, offhand);
+                ItemStack offhand = player.getInventory().getItemInOffHand().clone();
+                player.getInventory().setItemInOffHand(current);
+                event.setCurrentItem(offhand);
+            }
+            case ClickType.SHIFT_LEFT, ClickType.SHIFT_RIGHT -> {
+                if (current != null) {
+                    player.getInventory().addItem(current);
+                }
+            }
+            default -> {
+                if (current != null && cursor.isSimilar(current)) {
+                    if (current.getAmount() < current.getMaxStackSize()) {
+                        int moved = Math.min(cursor.getAmount(), current.getMaxStackSize() - current.getAmount());
+                        current.setAmount(current.getAmount() + moved);
+                        cursor.setAmount(cursor.getAmount() - moved);
+                    }
+                } else {
+                    // swap(current, cursor);
+                    ItemStack c = cursor.clone();
+                    event.setCursor(current);
+                    event.setCurrentItem(c);
+                }
+            }
+        }
     }
 }

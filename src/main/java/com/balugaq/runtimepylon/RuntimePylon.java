@@ -30,6 +30,21 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @Getter
     private static RuntimePylon instance;
 
+    @NotNull
+    public static Map<NamespacedKey, SimpleStaticGuidePage> getGuidePages() {
+        return PylonGuide.getRootPage().getButtons()
+                .stream()
+                .filter(button -> button instanceof PageButton)
+                .map(button -> ((PageButton) button).getPage())
+                .filter(page -> page instanceof SimpleStaticGuidePage)
+                .map(page -> (SimpleStaticGuidePage) page)
+                .collect(Collectors.toMap(
+                        Keyed::getKey,
+                        page -> page,
+                        (a, b) -> b
+                ));
+    }
+
     @Override
     public void onEnable() {
         instance = this;
@@ -72,23 +87,12 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         return Material.COPPER_INGOT;
     }
 
-    @NotNull
-    public static Map<NamespacedKey, SimpleStaticGuidePage> getGuidePages() {
-        return PylonGuide.getRootPage().getButtons()
-                .stream()
-                .filter(button -> button instanceof PageButton)
-                .map(button -> ((PageButton) button).getPage())
-                .filter(page -> page instanceof SimpleStaticGuidePage)
-                .map(page -> (SimpleStaticGuidePage) page)
-                .collect(Collectors.toMap(
-                        Keyed::getKey,
-                        page -> page,
-                        (a, b) -> b
-                ));
-    }
-
     @Override
     public boolean suppressAddonNameWarning() {
         return true;
+    }
+
+    public static void runTaskLater(@NotNull Runnable runnable, long delay) {
+        Bukkit.getScheduler().runTaskLater(getInstance(), runnable, delay);
     }
 }
