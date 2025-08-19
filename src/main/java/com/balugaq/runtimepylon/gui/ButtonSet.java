@@ -1,11 +1,11 @@
 package com.balugaq.runtimepylon.gui;
 
+import com.balugaq.runtimepylon.RuntimeKeys;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.block.base.WithGroup;
 import com.balugaq.runtimepylon.block.base.WithModel;
 import com.balugaq.runtimepylon.block.base.WithRecipe;
 import com.balugaq.runtimepylon.item.DataStack;
-import com.balugaq.runtimepylon.util.Key;
 import com.balugaq.runtimepylon.util.RecipeAdapter;
 import com.balugaq.runtimepylon.util.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
@@ -40,6 +40,7 @@ import java.util.Optional;
 
 import static com.balugaq.runtimepylon.gui.GuiItem.*;
 
+@SuppressWarnings({"unchecked", "UnstableApiUsage"})
 @Slf4j
 @Getter
 public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
@@ -62,21 +63,21 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
         blackBackground = create()
                 .item(block -> ItemStackBuilder.pylonItem(
                         Material.BLACK_STAINED_GLASS_PANE,
-                        Key.create("black_background")
+                        RuntimeKeys.black_background
                 ))
                 .click(deny());
 
         grayBackground = create()
                 .item(block -> ItemStackBuilder.pylonItem(
                         Material.GRAY_STAINED_GLASS_PANE,
-                        Key.create("gray_background")
+                        RuntimeKeys.gray_background
                 ))
                 .click(deny());
 
         setItemGroup = create()
                 .item(block -> ItemStackBuilder.pylonItem(
                         Material.GREEN_STAINED_GLASS_PANE,
-                        Key.create("set_item_group")
+                        RuntimeKeys.set_item_group
                 ))
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithGroup.class);
@@ -97,7 +98,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
         setRecipe = create()
                 .item(block -> ItemStackBuilder.pylonItem(
                         Material.GREEN_STAINED_GLASS_PANE,
-                        Key.create("set_recipe")
+                        RuntimeKeys.set_recipe
                 ))
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithRecipe.class);
@@ -120,7 +121,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
         unsetItemGroup = create()
                 .item(block -> ItemStackBuilder.pylonItem(
                         Material.RED_STAINED_GLASS_PANE,
-                        Key.create("unset_item_group")
+                        RuntimeKeys.unset_item_group
                 ))
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithGroup.class);
@@ -144,7 +145,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
         unsetRecipe = create()
                 .item(block -> ItemStackBuilder.pylonItem(
                         Material.RED_STAINED_GLASS_PANE,
-                        Key.create("unset_recipe")
+                        RuntimeKeys.unset_recipe
                 ))
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithRecipe.class);
@@ -170,12 +171,12 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     if (itemId == null) {
                         return ItemStackBuilder.pylonItem(
                                 Material.BLUE_STAINED_GLASS_PANE,
-                                Key.create("set_id")
+                                RuntimeKeys.set_id
                         );
                     } else {
                         return ItemStackBuilder.pylonItem(
                                 Material.BLUE_STAINED_GLASS_PANE,
-                                Key.create("set_id")
+                                RuntimeKeys.set_id
                         ).lore("Current item id: " + data.getItemId());
                     }
                 })
@@ -200,7 +201,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     if (data.getGroupId() == null) {
                         return ItemStackBuilder.pylonItem(
                                 Material.WHITE_STAINED_GLASS_PANE,
-                                Key.create("item_group")
+                                RuntimeKeys.item_group
                         );
                     } else {
                         return RuntimePylon.getGuidePages().get(data.getGroupId()).getItem();
@@ -241,12 +242,12 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     if (data.getRecipeTypeId() == null) {
                         return ItemStackBuilder.pylonItem(
                                 Material.WHITE_STAINED_GLASS_PANE,
-                                Key.create("recipe_type")
+                                RuntimeKeys.recipe_type
                         );
                     } else {
                         return ItemStackBuilder.pylonItem(
                                 Material.CRAFTING_TABLE,
-                                Key.create("recipe_type")
+                                RuntimeKeys.recipe_type
                         ).lore("Current recipe type id: " + data.getRecipeTypeId());
                     }
                 })
@@ -284,10 +285,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     var model = data.getModel();
 
                     if (model == null || model.getType() == Material.AIR) {
-                        return ItemStackBuilder.pylonItem(
-                                Material.WHITE_STAINED_GLASS_PANE,
-                                Key.create("item")
-                        );
+                        return ItemStackBuilder.EMPTY;
                     } else {
                         return ItemStackBuilder.of(model);
                     }
@@ -295,18 +293,20 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 .click((block, clickType, player, event) -> {
                     handleClick(event);
 
-                    RuntimePylon.runTaskLater(() -> {
-                        var data = assertBlock(block, WithModel.class);
-                        ItemStack currentItem = block.getGui().getItem(event.getSlot()).getItemProvider().get();
-                        data.setModel(currentItem);
-                        done(player, Component.text("Set item to ").append(displayName(currentItem)));
+                    var data = assertBlock(block, WithModel.class);
+                    ItemStack currentItem = event.getCurrentItem();
+                    if (currentItem == null) {
+                        data.setModel(null);
+                        return true;
+                    }
+                    data.setModel(currentItem);
+                    done(player, Component.text("Set item to ").append(displayName(currentItem)));
 
-                        PylonItem pylon = PylonItem.fromStack(currentItem);
-                        if (pylon != null) {
-                            data.setItemId(pylon.getKey());
-                            done(player, "Set item id to {}", pylon.getKey());
-                        }
-                    }, 1L);
+                    PylonItem pylon = PylonItem.fromStack(currentItem);
+                    if (pylon != null) {
+                        data.setItemId(pylon.getKey());
+                        done(player, "Set item id to {}", pylon.getKey());
+                    }
 
                     return true;
                 });
@@ -314,7 +314,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
         register = create()
                 .item(block -> ItemStackBuilder.pylonItem(
                         Material.EMERALD_BLOCK,
-                        Key.create("register")
+                        RuntimeKeys.register
                 ))
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithModel.class);
@@ -355,30 +355,28 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     if (data.getRecipe().get(n) != null) {
                         return ItemStackBuilder.of(data.getRecipe().get(n));
                     } else {
+                        getItem().notifyWindows();
                         return ItemStackBuilder.EMPTY;
                     }
                 })
                 .click((block, clickType, player, event) -> {
                     handleClick(event);
 
-                    RuntimePylon.runTaskLater(() -> {
-                        ItemStack currentItem = block.getGui().getItem(event.getSlot()).getItemProvider().get();
-                        PylonItem stack = PylonItem.fromStack(currentItem);
-                        if (stack instanceof DataStack data) {
-                            data.onClick(block, clickType, player, event, () -> reopen(player));
-                            return;
-                        }
+                    ItemStack currentItem = event.getCurrentItem();
+                    PylonItem stack = PylonItem.fromStack(currentItem);
+                    if (stack instanceof DataStack data) {
+                        data.onClick(block, clickType, player, event, () -> reopen(player));
+                    }
 
-                        var data = assertBlock(block, WithRecipe.class);
+                    var data = assertBlock(block, WithRecipe.class);
 
-                        if (currentItem != null && currentItem.getType() != Material.AIR) {
-                            data.getRecipe().put(n, currentItem.clone());
-                        } else {
-                            data.getRecipe().remove(n);
-                        }
-                    }, 1L);
+                    if (currentItem != null && currentItem.getType() != Material.AIR) {
+                        data.getRecipe().put(n, currentItem.clone());
+                    } else {
+                        data.getRecipe().remove(n);
+                    }
 
-                    return false;
+                    return true;
                 });
     }
 
@@ -398,30 +396,39 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
         Player player = (Player) event.getWhoClicked();
         switch (event.getClick()) {
             case ClickType.RIGHT -> {
-                if (current != null && cursor.isSimilar(current)) {
-                    if (current.getAmount() < current.getMaxStackSize()) {
-                        current.setAmount(current.getAmount() + 1);
-                        cursor.setAmount(cursor.getAmount() - 1);
+                if (current != null) {
+                    if (cursor.isSimilar(current)) {
+                        if (current.getAmount() < current.getMaxStackSize()) {
+                            current.setAmount(current.getAmount() + 1);
+                            cursor.setAmount(cursor.getAmount() - 1);
+                        }
+                    } else if (cursor.getType().isAir()) {
+                        int a = current.getAmount() / 2; // ->current
+                        int b = current.getAmount() - a; // ->cursor
+                        event.setCurrentItem(current.asQuantity(a));
+                        player.setItemOnCursor(current.asQuantity(b));
                     }
                 } else {
-                    // swap(current, cursor);
-                    ItemStack c = cursor.clone();
-                    event.setCursor(current);
-                    event.setCurrentItem(c);
+                    event.setCurrentItem(cursor.asQuantity(1));
+                    cursor.setAmount(cursor.getAmount() - 1);
                 }
             }
             case ClickType.MIDDLE -> {
-                if (cursor.getType().isAir()) {
-                    event.setCursor(current.clone().asQuantity(current.getMaxStackSize()));
+                if (current != null && cursor.getType().isAir() && cursor.getType().isAir()) {
+                    player.setItemOnCursor(current.clone().asQuantity(current.getMaxStackSize()));
                 }
             }
             case ClickType.CONTROL_DROP -> {
-                player.getWorld().dropItemNaturally(player.getEyeLocation(), current.clone());
-                event.setCurrentItem(ItemStackBuilder.EMPTY.get());
+                if (current != null) {
+                    player.getWorld().dropItemNaturally(player.getEyeLocation(), current.clone());
+                    event.setCurrentItem(ItemStackBuilder.EMPTY.get());
+                }
             }
             case ClickType.DROP -> {
-                player.getWorld().dropItemNaturally(player.getEyeLocation(), current.asOne());
-                current.setAmount(current.getAmount() - 1);
+                if (current != null) {
+                    player.getWorld().dropItemNaturally(player.getEyeLocation(), current.asOne());
+                    current.setAmount(current.getAmount() - 1);
+                }
             }
             case ClickType.SWAP_OFFHAND -> {
                 // swap(current, offhand);
@@ -444,7 +451,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 } else {
                     // swap(current, cursor);
                     ItemStack c = cursor.clone();
-                    event.setCursor(current);
+                    player.setItemOnCursor(current);
                     event.setCurrentItem(c);
                 }
             }

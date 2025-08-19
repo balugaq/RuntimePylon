@@ -107,10 +107,16 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
         try {
             boolean updateWindow = clickHandler.handleClick(data, clickType, player, event);
             if (updateWindow) notifyWindows();
-        } catch (WrongStateException e) {
-            player.sendMessage(e.getMessage());
-            return;
-        } catch (PlaceholderException ignored) {
+        } catch (Exception e) {
+            if (e instanceof PlaceholderException) {
+                return;
+            }
+            if (e instanceof WrongStateException) {
+                player.sendMessage(e.getMessage());
+                return;
+            } else {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

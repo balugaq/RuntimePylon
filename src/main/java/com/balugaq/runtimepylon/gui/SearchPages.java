@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon.gui;
 
+import com.balugaq.runtimepylon.RuntimeKeys;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.guide.pages.base.SearchPage;
@@ -35,7 +36,7 @@ public class SearchPages {
         private final @NotNull Consumer<SimpleStaticGuidePage> consumer;
 
         public GroupSearchPage(@NotNull Consumer<SimpleStaticGuidePage> consumer) {
-            super(Key.create("group_search_page"), Material.STONE);
+            super(RuntimeKeys.group_search_page, Material.STONE);
             this.consumer = consumer;
         }
 
@@ -67,7 +68,7 @@ public class SearchPages {
         private final @NotNull Consumer<RecipeType<? extends PylonRecipe>> consumer;
 
         public RecipeTypeSearchPage(@NotNull Consumer<RecipeType<? extends PylonRecipe>> consumer) {
-            super(Key.create("recipe_type_search_page"), Material.STONE);
+            super(RuntimeKeys.recipe_type_search_page, Material.STONE);
             this.consumer = consumer;
         }
 

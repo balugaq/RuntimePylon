@@ -55,17 +55,17 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
         PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(
                 Material.PURPUR_PILLAR,
-                Key.create("item_hub")
+                RuntimeKeys.item_hub
         ).build());
         PylonItem.register(NumberStack.class, ItemStackBuilder.pylonItem(
                 Material.ENDER_EYE,
-                Key.create("number_stack")
+                RuntimeKeys.number_stack
         ).build());
         PylonItem.register(StringStack.class, ItemStackBuilder.pylonItem(
                 Material.HONEYCOMB,
-                Key.create("string_stack")
+                RuntimeKeys.string_stack
         ).build());
-        PylonBlock.register(Key.create("item_hub"), Material.PURPUR_PILLAR, ItemHub.class);
+        PylonBlock.register(RuntimeKeys.item_hub, Material.PURPUR_PILLAR, ItemHub.class);
         Bukkit.getServer().getPluginManager().registerEvents(new ChatInputListener(), this);
     }
 

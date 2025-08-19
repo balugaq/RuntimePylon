@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon.block;
 
+import com.balugaq.runtimepylon.RuntimeKeys;
 import com.balugaq.runtimepylon.block.base.WithGroup;
 import com.balugaq.runtimepylon.block.base.WithModel;
 import com.balugaq.runtimepylon.block.base.WithRecipe;
@@ -47,10 +48,10 @@ public class ItemHub extends PylonBlock implements
 
     public ItemHub(@NotNull Block block, @NotNull PersistentDataContainer pdc) {
         super(block, pdc);
-        model = getItemStack(pdc, "model");
-        itemId = getNamespacedKey(pdc, "itemId");
-        groupId = getNamespacedKey(pdc, "groupId");
-        recipeTypeId = getNamespacedKey(pdc, "recipeTypeId");
+        model = getItemStack(pdc, RuntimeKeys.model);
+        itemId = getNamespacedKey(pdc, RuntimeKeys.itemId);
+        groupId = getNamespacedKey(pdc, RuntimeKeys.groupId);
+        recipeTypeId = getNamespacedKey(pdc, RuntimeKeys.recipeTypeId);
         recipe = fromArray(pdc, "recipe");
     }
 
@@ -63,14 +64,14 @@ public class ItemHub extends PylonBlock implements
                 ));
     }
 
-    public static @Nullable NamespacedKey getNamespacedKey(@NotNull PersistentDataContainer pdc, @NotNull String key) {
-        var s = pdc.get(Key.create(key), PersistentDataType.STRING);
+    public static @Nullable NamespacedKey getNamespacedKey(@NotNull PersistentDataContainer pdc, @NotNull NamespacedKey key) {
+        var s = pdc.get(key, PersistentDataType.STRING);
         if (s == null) return null;
         return NamespacedKey.fromString(s);
     }
 
-    public static @Nullable ItemStack getItemStack(@NotNull PersistentDataContainer pdc, @NotNull String key) {
-        var s = pdc.get(Key.create(key), PersistentDataType.STRING);
+    public static @Nullable ItemStack getItemStack(@NotNull PersistentDataContainer pdc, @NotNull NamespacedKey key) {
+        var s = pdc.get(key, PersistentDataType.STRING);
         if (s == null) return null;
         return getItemStack(s);
     }
@@ -105,17 +106,17 @@ public class ItemHub extends PylonBlock implements
     @Override
     public void write(@NotNull PersistentDataContainer pdc) {
         super.write(pdc);
-        pdc.set(Key.create("model"), PersistentDataType.STRING, getBase64String(model));
-        if (itemId != null) pdc.set(Key.create("itemId"), PersistentDataType.STRING, itemId.toString());
-        if (groupId != null) pdc.set(Key.create("groupId"), PersistentDataType.STRING, groupId.toString());
+        pdc.set(RuntimeKeys.model, PersistentDataType.STRING, getBase64String(model));
+        if (itemId != null) pdc.set(RuntimeKeys.itemId, PersistentDataType.STRING, itemId.toString());
+        if (groupId != null) pdc.set(RuntimeKeys.groupId, PersistentDataType.STRING, groupId.toString());
         if (recipeTypeId != null)
-            pdc.set(Key.create("recipeTypeId"), PersistentDataType.STRING, recipeTypeId.toString());
+            pdc.set(RuntimeKeys.recipeTypeId, PersistentDataType.STRING, recipeTypeId.toString());
         recipe.forEach((key, value) -> pdc.set(Key.create("recipe" + key), PersistentDataType.STRING, getBase64String(value)));
     }
 
     @Override
     public @NotNull Gui createGui() {
-        ButtonSet buttons = new ButtonSet(this);
+        ButtonSet<?> buttons = new ButtonSet<>(this);
         return Gui.normal()
                 .setStructure(
                         "x x x x x x x x x",
