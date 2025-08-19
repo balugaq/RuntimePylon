@@ -1,6 +1,7 @@
 package com.balugaq.runtimepylon.gui;
 
 import com.balugaq.runtimepylon.input.ChatInputListener;
+import com.balugaq.runtimepylon.util.PlaceholderException;
 import com.balugaq.runtimepylon.util.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
@@ -61,7 +62,13 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
         } catch (WrongStateException e) {
             player.sendMessage(e.getMessage());
             return;
+        } catch (PlaceholderException ignored) {
         }
+    }
+
+    public static <T> T assertNotNull(@Nullable T o) {
+        if (o == null) throw new PlaceholderException();
+        return o;
     }
 
     public static <T> T assertNotNull(@Nullable T o, @NotNull String message) {

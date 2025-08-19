@@ -66,7 +66,7 @@ public class SearchPages {
     public static class RecipeTypeSearchPage extends SearchPage {
         private final Consumer<RecipeType<? extends PylonRecipe>> consumer;
         public RecipeTypeSearchPage(@NotNull Consumer<RecipeType<? extends PylonRecipe>> consumer) {
-            super(Key.create("group_search_page"), Material.STONE);
+            super(Key.create("recipe_type_search_page"), Material.STONE);
             this.consumer = consumer;
         }
 

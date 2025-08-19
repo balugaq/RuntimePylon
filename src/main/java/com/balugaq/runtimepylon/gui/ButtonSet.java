@@ -29,11 +29,14 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
+import xyz.xenondevs.invui.window.Window;
 
 import static com.balugaq.runtimepylon.gui.GuiItem.*;
 
@@ -176,10 +179,21 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 });
 
         setId = create()
-                .item(block -> ItemStackBuilder.pylonItem(
-                        Material.BLUE_STAINED_GLASS_PANE,
-                        Key.create("set_id")
-                ))
+                .item(block -> {
+                    var data = assertBlock(block, WithModel.class);
+                    var itemId = data.getItemId();
+                    if (itemId == null) {
+                        return ItemStackBuilder.pylonItem(
+                                Material.BLUE_STAINED_GLASS_PANE,
+                                Key.create("set_id")
+                        );
+                    } else {
+                        return ItemStackBuilder.pylonItem(
+                                Material.BLUE_STAINED_GLASS_PANE,
+                                Key.create("set_id")
+                        ).lore("Current item id: " + data.getItemId());
+                    }
+                })
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithModel.class);
 
@@ -191,14 +205,19 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 });
 
         itemGroup = create()
-                .item(block -> ItemStackBuilder.pylonItem(
-                        Material.WHITE_STAINED_GLASS_PANE,
-                        Key.create("item_group")
-                ))
+                .item(block -> {
+                    var data = assertBlock(block, WithGroup.class);
+                    if (data.getGroupId() == null) {
+                        return ItemStackBuilder.pylonItem(
+                                Material.WHITE_STAINED_GLASS_PANE,
+                                Key.create("item_group")
+                        );
+                    } else {
+                        return RuntimePylon.getGuidePages().get(data.getGroupId()).getItem();
+                    }
+                })
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithGroup.class);
-
-                    Inventory blockGui = player.getOpenInventory().getTopInventory();
 
                     if (clickType.isLeftClick()) {
                         if (clickType.isShiftClick()) {
@@ -209,7 +228,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                             SearchPages.openGroupSearchPage(player, group -> {
                                 data.setGroupId(group.getKey());
                                 done(player, "Set group id to {}", group.getKey());
-                                player.openInventory(blockGui);
+                                reopen(player);
                             });
                         }
                     } else if (clickType.isRightClick()) {
@@ -226,13 +245,23 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 });
 
         recipeType = create()
-                .item(block -> ItemStackBuilder.pylonItem(
-                        Material.WHITE_STAINED_GLASS_PANE,
-                        Key.create("recipe_type")
-                ))
+                .item(block -> {
+                    var data = assertBlock(block, WithRecipe.class);
+
+                    if (data.getRecipeTypeId() == null) {
+                        return ItemStackBuilder.pylonItem(
+                                Material.WHITE_STAINED_GLASS_PANE,
+                                Key.create("recipe_type")
+                        );
+                    } else {
+                        return ItemStackBuilder.pylonItem(
+                                Material.CRAFTING_TABLE,
+                                Key.create("recipe_type")
+                        ).lore("Current recipe type id: " + data.getRecipeTypeId());
+                    }
+                })
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithRecipe.class);
-                    Inventory blockGui = player.getOpenInventory().getTopInventory();
                     if (clickType.isLeftClick()) {
                         if (clickType.isShiftClick()) {
                             waitInput(player, "Enter recipe type id", recipeTypeId -> {
@@ -242,7 +271,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                             SearchPages.openRecipeTypeSearchPage(player, recipeType -> {
                                 data.setRecipeTypeId(recipeType.getKey());
                                 done(player, "Set recipe type id to {}", recipeType.getKey());
-                                player.openInventory(blockGui);
+                                reopen(player);
                             });
                         }
                     } else if (clickType.isRightClick()) {
@@ -260,14 +289,23 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 });
 
         item = create()
-                .item(block -> ItemStackBuilder.pylonItem(
-                        Material.WHITE_STAINED_GLASS_PANE,
-                        Key.create("item")
-                ))
+                .item(block -> {
+                    var data = assertBlock(block, WithModel.class);
+                    var model = data.getModel();
+
+                    if (model == null || model.getType() == Material.AIR) {
+                        return ItemStackBuilder.pylonItem(
+                                Material.WHITE_STAINED_GLASS_PANE,
+                                Key.create("item")
+                        );
+                    } else {
+                        return ItemStackBuilder.of(model);
+                    }
+                })
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithModel.class);
                     data.setModel(event.getCursor());
-                    done(player, "Set item to {}", displayName(event.getCursor()));
+                    done(player, Component.text("Set item to ").append(displayName(event.getCursor())));
 
                     PylonItem pylon = PylonItem.fromStack(event.getCursor());
                     if (pylon != null) {
@@ -298,7 +336,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     var item = event.getCursor();
                     if (item != null && item.getType() != Material.AIR) {
                         data.getRecipe().put(n, item);
-                        done(player, "Set recipe #{} to {}", n, displayName(item));
+                        done(player, Component.text("Set recipe #").append(Component.text(n)).append(Component.text(" to ")).append(displayName(item)));
                     } else {
                         data.getRecipe().remove(n);
                         done(player, "Unset recipe #{}", n);
@@ -306,5 +344,14 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
 
                     return false;
                 });
+    }
+
+    public void reopen(@NotNull Player player) {
+        Window.single()
+                .setGui(getBlock().getGui())
+                .setTitle(new AdventureComponentWrapper(getBlock().getName()))
+                .setViewer(player)
+                .build()
+                .open();
     }
 }
