@@ -41,15 +41,8 @@ public class SearchPages {
 
         @Override
         public @NotNull List<Pair<Item, String>> getItemNamePairs(@NotNull Player player, @NotNull String search) {
-            Component target = Component.text(search);
             return RuntimePylon.getGuidePages().values()
                     .stream()
-                    .filter(page -> {
-                        Component title1 = page.getTitle();
-                        if (title1.contains(target)) return true;
-                        Component title2 = page.getItem().get().getData(DataComponentTypes.ITEM_NAME);
-                        return title2 != null && title2.contains(target);
-                    })
                     .map(page -> {
                         String name = PlainTextComponentSerializer.plainText().serialize(GlobalTranslator.render(
                                 Component.translatable("pylon.${item.namespace}.item.${item.key}.name"),

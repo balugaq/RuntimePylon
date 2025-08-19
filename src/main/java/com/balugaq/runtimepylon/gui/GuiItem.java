@@ -5,6 +5,7 @@ import com.balugaq.runtimepylon.util.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -33,7 +34,7 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
         this.clickHandler = ButtonSet.deny();
     }
 
-    public static <T extends PylonBlock & PylonGuiBlock> GuiItem<T> create(@NotNull T  data) {
+    public static <T extends PylonBlock & PylonGuiBlock> GuiItem<T> create(@NotNull T data) {
         return new GuiItem<>(data);
     }
 
@@ -104,8 +105,6 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
     public static void waitInput(@NotNull Player player, @NotNull ComponentLike component, @NotNull Consumer<String> callback) {
         player.sendMessage(component);
         player.closeInventory();
-        ChatInputListener.waitInput(player.getUniqueId(), c -> {
-            callback.accept(PlainTextComponentSerializer.plainText().serialize(c));
-        });
+        ChatInputListener.waitInput(player.getUniqueId(), callback);
     }
 }

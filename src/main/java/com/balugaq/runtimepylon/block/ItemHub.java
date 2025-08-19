@@ -6,11 +6,13 @@ import com.balugaq.runtimepylon.block.base.WithRecipe;
 import com.balugaq.runtimepylon.gui.ButtonSet;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
+import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
+import io.github.pylonmc.pylon.core.item.PylonItem;
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.xenondevs.invui.gui.Gui;
@@ -31,8 +33,12 @@ public class ItemHub extends PylonBlock implements
     public @Nullable NamespacedKey recipeTypeId = null;
     public @NotNull Map<Integer, ItemStack> recipe = new HashMap<>();
 
-    public ItemHub(@NotNull Block block) {
-        super(block);
+    public ItemHub(@NotNull Block block, @NotNull BlockCreateContext context) {
+        super(block, context);
+    }
+
+    public ItemHub(@NotNull Block block, @NotNull PersistentDataContainer pdc) {
+        super(block, pdc);
     }
 
     @Override
