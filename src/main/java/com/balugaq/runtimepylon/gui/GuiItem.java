@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon.gui;
 
+import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.input.ChatInputListener;
 import com.balugaq.runtimepylon.util.PlaceholderException;
 import com.balugaq.runtimepylon.util.WrongStateException;
@@ -81,7 +82,7 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
     }
 
     public static void assertFalse(boolean stmt, @NotNull String message) {
-        if (stmt) throw new WrongStateException(message);
+        assertTrue(!stmt, message);
     }
 
     public static void done(@NotNull Player player, @NotNull String literal, @NotNull Object... args) {
@@ -102,7 +103,7 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
 
     @Nullable
     public static NamespacedKey toNamespacedKey(@NotNull String string) {
-        return NamespacedKey.fromString(string);
+        return NamespacedKey.fromString(string, RuntimePylon.getInstance());
     }
 
     public static void waitInput(@NotNull Player player, @NotNull String literal, @NotNull Consumer<String> callback) {

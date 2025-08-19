@@ -25,9 +25,11 @@ public class StringStack extends PylonItem implements DataStack{
     }
 
     @Override
-    public <T extends PylonBlock & PylonGuiBlock> void onClick(@NotNull T block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event) {
+    public <T extends PylonBlock & PylonGuiBlock> void onClick(@NotNull T block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event, @NotNull Runnable callback) {
+        player.closeInventory();
         GuiItem.waitInput(player, "Enter a string", s -> {
             internal = s;
+            callback.run();
         });
     }
 }

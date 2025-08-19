@@ -9,6 +9,7 @@ import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.block.base.WithGroup;
 import com.balugaq.runtimepylon.block.base.WithModel;
 import com.balugaq.runtimepylon.block.base.WithRecipe;
+import com.balugaq.runtimepylon.util.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.guide.button.ItemButton;
@@ -30,6 +31,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -73,7 +75,8 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
             setId,
             itemGroup,
             recipeType,
-            item;
+            item,
+            register;
     public ButtonSet(@NotNull T b2) {
         this.block = b2;
         blackBackground = create()
@@ -118,8 +121,8 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 ))
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithRecipe.class);
-                    assertNotNull(data.getItemId(), "Not set item id");
-                    assertNotNull(data.getModel(), "Not set model");
+                    assertNotNull(data.getItemId(), "Not set recipe id (item id)");
+                    assertNotNull(data.getModel(), "Not set result (model)");
                     assertNotNull(data.getRecipeTypeId(), "Not set recipe type id");
 
                     RecipeType<? extends PylonRecipe> recipeType = assertNotNull(PylonRegistry.RECIPE_TYPES.get(data.getRecipeTypeId()), "Unknown recipe type");
@@ -200,7 +203,11 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     var data = assertBlock(block, WithModel.class);
 
                     waitInput(player, "Enter item id", itemId -> {
-                        data.setItemId(assertNotNull(toNamespacedKey(itemId), "Invalid item id"));
+                        if (itemId.contains(":") && !itemId.startsWith(RuntimePylon.getInstance().getName().toLowerCase())) {
+                            throw new WrongStateException("Item id must be prefix with " + RuntimePylon.getInstance().getName().toLowerCase());
+                        } else {
+                            data.setItemId(assertNotNull(toNamespacedKey(itemId), "Invalid item id"));
+                        }
                     });
 
                     return true;
@@ -306,10 +313,12 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 })
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithModel.class);
-                    event.setCancelled(true);
                     ItemStack cursor = event.getCursor().clone();
+                    event.setCancelled(true);
                     if (data.getModel() != null) {
                         player.setItemOnCursor(data.getModel().clone());
+                    } else {
+                        player.setItemOnCursor(null);
                     }
                     data.setModel(cursor);
                     done(player, Component.text("Set item to ").append(displayName(cursor)));
@@ -319,6 +328,22 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                         data.setItemId(pylon.getKey());
                         done(player, "Set item id to {}", pylon.getKey());
                     }
+
+                    return true;
+                });
+
+        register = create()
+                .item(block -> ItemStackBuilder.pylonItem(
+                        Material.EMERALD_BLOCK,
+                        Key.create("register")
+                ))
+                .click((block, clickType, player, event) -> {
+                    var data = assertBlock(block, WithModel.class);
+                    assertNotNull(data.getModel(), "Not set item yet");
+                    assertTrue(!data.getModel().getType().isAir(), "Not set item yet");
+                    assertNotNull(data.getItemId(), "Not set item id yet");
+                    PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build());
+                    done(player, "Registered item {}", data.getItemId());
 
                     return true;
                 });
@@ -341,7 +366,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 .click((block, clickType, player, event) -> {
                     PylonItem stack = PylonItem.fromStack(event.getCurrentItem());
                     if (stack instanceof DataStack data) {
-                        data.onClick(block, clickType, player, event);
+                        data.onClick(block, clickType, player, event, () -> reopen(player));
                         return true;
                     }
 
@@ -351,6 +376,8 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     ItemStack cursor = event.getCursor().clone();
                     if (data.getRecipe().get(n) != null) {
                         player.setItemOnCursor(data.getRecipe().get(n).clone());
+                    } else {
+                        player.setItemOnCursor(null);
                     }
                     if (cursor != null && cursor.getType() != Material.AIR) {
                         data.getRecipe().put(n, cursor);

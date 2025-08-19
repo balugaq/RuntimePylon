@@ -101,15 +101,24 @@ public record RecipeAdapter<T extends PylonRecipe>(
                             "456",
                             "789"
                     );
-            recipe.forEach((i, itemStack) ->
-                r.setIngredient(String.valueOf(i).charAt(0), itemStack)
-            );
+            recipe.forEach((i, itemStack) -> {
+                if (itemStack != null && itemStack.getType() != Material.AIR) {
+                    r.setIngredient(String.valueOf(i).charAt(0), itemStack);
+                }
+            });
             return new ShapedRecipeWrapper(r);
         });
         register(RecipeType.VANILLA_SHAPELESS, (key, model,recipe) -> {
             ShapelessRecipe r = new ShapelessRecipe(key, model);
+            int cnt = 0;
             for (ItemStack itemStack : recipe.values()) {
-                r.addIngredient(itemStack);
+                if (itemStack != null && itemStack.getType() != Material.AIR) {
+                    cnt += itemStack.getAmount();
+                    if (cnt > 9) {
+                        throw new WrongStateException("Cannot place more than 9 items");
+                    }
+                    r.addIngredient(itemStack.clone());
+                }
             }
             return new ShapelessRecipeWrapper(r);
         });

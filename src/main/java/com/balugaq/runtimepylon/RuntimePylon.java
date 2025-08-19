@@ -86,4 +86,9 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
                         (a, b) -> b
                 ));
     }
+
+    @Override
+    public boolean suppressAddonNameWarning() {
+        return true;
+    }
 }

@@ -4,20 +4,30 @@ import com.balugaq.runtimepylon.block.base.WithGroup;
 import com.balugaq.runtimepylon.block.base.WithModel;
 import com.balugaq.runtimepylon.block.base.WithRecipe;
 import com.balugaq.runtimepylon.gui.ButtonSet;
+import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
+import kotlin.Pair;
 import lombok.Getter;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.io.BukkitObjectInputStream;
+import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 import xyz.xenondevs.invui.gui.Gui;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Getter
 public class ItemHub extends PylonBlock implements
@@ -38,6 +48,69 @@ public class ItemHub extends PylonBlock implements
 
     public ItemHub(@NotNull Block block, @NotNull PersistentDataContainer pdc) {
         super(block, pdc);
+        model = getItemStack(pdc, "model");
+        itemId = getNamespacedKey(pdc, "itemId");
+        groupId = getNamespacedKey(pdc, "groupId");
+        recipeTypeId = getNamespacedKey(pdc, "recipeTypeId");
+        recipe = fromArray(pdc, "recipe");
+    }
+
+    @Override
+    public void write(@NotNull PersistentDataContainer pdc) {
+        super.write(pdc);
+        pdc.set(Key.create("model"), PersistentDataType.STRING, getBase64String(model));
+        if (itemId != null) pdc.set(Key.create("itemId"), PersistentDataType.STRING, itemId.toString());
+        if (groupId != null) pdc.set(Key.create("groupId"), PersistentDataType.STRING, groupId.toString());
+        if (recipeTypeId != null) pdc.set(Key.create("recipeTypeId"), PersistentDataType.STRING, recipeTypeId.toString());
+        recipe.forEach((key, value) -> pdc.set(Key.create("recipe" + key), PersistentDataType.STRING, getBase64String(value)));
+    }
+
+    public static Map<Integer, ItemStack> fromArray(PersistentDataContainer pdc, String key) {
+        return pdc.getKeys().stream().filter(k -> k.toString().startsWith(key))
+                .map(k -> new Pair<>(k, pdc.get(k, PersistentDataType.STRING)))
+                .collect(Collectors.toMap(
+                        p -> Integer.parseInt(p.getFirst().toString().substring(key.length())),
+                        p -> getItemStack(p.getSecond())
+                ));
+    }
+
+    public static NamespacedKey getNamespacedKey(PersistentDataContainer pdc, String key) {
+        var s = pdc.get(Key.create(key), PersistentDataType.STRING);
+        if (s == null) return null;
+        return NamespacedKey.fromString(s);
+    }
+
+    public static ItemStack getItemStack(PersistentDataContainer pdc, String key) {
+        var s = pdc.get(Key.create(key), PersistentDataType.STRING);
+        if (s == null) return null;
+        return getItemStack(s);
+    }
+
+    @SuppressWarnings("deprecation")
+    public static @NotNull String getBase64String(ItemStack item) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        try {
+            BukkitObjectOutputStream bs = new BukkitObjectOutputStream(stream);
+            bs.writeObject(item);
+            bs.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return Base64Coder.encodeLines(stream.toByteArray());
+    }
+
+    @SuppressWarnings("deprecation")
+    public static ItemStack getItemStack(@NotNull String base64Str) {
+        ByteArrayInputStream stream = new ByteArrayInputStream(Base64Coder.decodeLines(base64Str));
+        try {
+            BukkitObjectInputStream bs = new BukkitObjectInputStream(stream);
+            ItemStack re = (ItemStack) bs.readObject();
+            bs.close();
+            return re;
+        } catch (ClassNotFoundException | IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -48,7 +121,7 @@ public class ItemHub extends PylonBlock implements
                         "x x x x x x x x x",
                         ". k . e E 1 2 3 .",
                         ". i . g t 4 5 6 .",
-                        ". . . d D 7 8 9 .",
+                        ". s . d D 7 8 9 .",
                         "x x x x x x x x x"
                 )
                 .addIngredient('x', buttons.blackBackground)
@@ -70,6 +143,7 @@ public class ItemHub extends PylonBlock implements
                 .addIngredient('7', buttons.recipe(7))
                 .addIngredient('8', buttons.recipe(8))
                 .addIngredient('9', buttons.recipe(9))
+                .addIngredient('s', buttons.register)
                 .build();
     }
 

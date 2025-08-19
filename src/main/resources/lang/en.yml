@@ -21,6 +21,10 @@ item:
     name: "Item Group"
   item:
     name: "Item"
+  register:
+    name: "Register"
+  item_hub:
+    name: "<white>Item Hub"
 
 guide:
   page:
