@@ -18,7 +18,6 @@ import xyz.xenondevs.invui.gui.Gui;
 import java.util.HashMap;
 import java.util.Map;
 
-@Setter
 @Getter
 public class ItemHub extends PylonBlock implements
         PylonGuiBlock,
@@ -67,5 +66,35 @@ public class ItemHub extends PylonBlock implements
                 .addIngredient('8', buttons.recipe(8))
                 .addIngredient('9', buttons.recipe(9))
                 .build();
+    }
+
+    @Override
+    public @NotNull WithGroup setGroupId(@NotNull NamespacedKey key) {
+        this.groupId = key;
+        return this;
+    }
+
+    @Override
+    public @NotNull WithRecipe setRecipeTypeId(@Nullable NamespacedKey recipeTypeId) {
+        this.recipeTypeId = recipeTypeId;
+        return this;
+    }
+
+    @Override
+    public @NotNull WithRecipe setRecipe(@NotNull Map<Integer, ItemStack> recipe) {
+        this.recipe = recipe;
+        return this;
+    }
+
+    @Override
+    public @NotNull WithModel setModel(@Nullable ItemStack model) {
+        this.model = model;
+        return this;
+    }
+
+    @Override
+    public @NotNull WithModel setItemId(@Nullable NamespacedKey itemId) {
+        this.itemId = itemId;
+        return this;
     }
 }

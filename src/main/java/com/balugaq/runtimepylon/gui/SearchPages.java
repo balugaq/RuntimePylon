@@ -61,6 +61,7 @@ public class SearchPages {
                                         .item(block -> page.getItem())
                                         .click((block, clickType, p2, event) -> {
                                             consumer.accept(page);
+                                            return true;
                                         }),
                                 name);
                     })
@@ -87,6 +88,7 @@ public class SearchPages {
                                                 .name(type.getKey().toString()))
                                         .click((block, clickType, p2, event) -> {
                                             consumer.accept(type);
+                                            return true;
                                         }),
                                 type.getKey().toString());
                     })

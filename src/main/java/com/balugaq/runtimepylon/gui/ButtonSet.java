@@ -1,5 +1,8 @@
 package com.balugaq.runtimepylon.gui;
 
+import com.balugaq.runtimepylon.item.DataStack;
+import com.balugaq.runtimepylon.item.NumberStack;
+import com.balugaq.runtimepylon.item.StringStack;
 import com.balugaq.runtimepylon.util.Key;
 import com.balugaq.runtimepylon.util.RecipeAdapter;
 import com.balugaq.runtimepylon.RuntimePylon;
@@ -18,6 +21,7 @@ import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Material;
@@ -272,6 +276,12 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
         return create()
                 .item(block -> ItemStackBuilder.EMPTY)
                 .click((block, clickType, player, event) -> {
+                    PylonItem stack = PylonItem.fromStack(event.getCurrentItem());
+                    if (stack instanceof DataStack data) {
+                        data.onClick(block, clickType, player, event);
+                        return true;
+                    }
+
                     var data = assertBlock(block, WithRecipe.class);
 
                     var item = event.getCursor();

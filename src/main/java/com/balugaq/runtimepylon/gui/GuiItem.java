@@ -1,11 +1,13 @@
 package com.balugaq.runtimepylon.gui;
 
+import com.balugaq.runtimepylon.input.ChatInputListener;
 import com.balugaq.runtimepylon.util.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -95,11 +97,15 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
         return NamespacedKey.fromString(string);
     }
 
-    public static void waitInput(@NotNull Player player, @NotNull String literal, @NotNull Consumer<String> consumer) {
-        waitInput(player, Component.text(literal), consumer);
+    public static void waitInput(@NotNull Player player, @NotNull String literal, @NotNull Consumer<String> callback) {
+        waitInput(player, Component.text(literal), callback);
     }
 
-    public static void waitInput(@NotNull Player player, @NotNull ComponentLike component, @NotNull Consumer<String> consumer) {
-
+    public static void waitInput(@NotNull Player player, @NotNull ComponentLike component, @NotNull Consumer<String> callback) {
+        player.sendMessage(component);
+        player.closeInventory();
+        ChatInputListener.waitInput(player.getUniqueId(), c -> {
+            callback.accept(PlainTextComponentSerializer.plainText().serialize(c));
+        });
     }
 }

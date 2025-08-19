@@ -1,5 +1,9 @@
 package com.balugaq.runtimepylon.util;
 
+import com.balugaq.runtimepylon.item.DataStack;
+import com.balugaq.runtimepylon.item.NumberStack;
+import com.balugaq.runtimepylon.item.StringStack;
+import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.recipe.vanilla.BlastingRecipeWrapper;
@@ -42,8 +46,8 @@ public record RecipeAdapter<T extends PylonRecipe>(
                     key,
                     model,
                     toChoice(find(recipe, 1)),
-                    experience,
-                    cookingTime
+                    findFloat(recipe, 1),
+                    findInt(recipe, 1)
             ))
         );
         register(RecipeType.VANILLA_CAMPFIRE, (key, model,recipe) ->
@@ -51,8 +55,8 @@ public record RecipeAdapter<T extends PylonRecipe>(
                     key,
                     model,
                     toChoice(find(recipe, 1)),
-                    experience,
-                    cookingTime
+                    findFloat(recipe, 1),
+                    findInt(recipe, 1)
             ))
         );
         register(RecipeType.VANILLA_FURNACE, (key, model,recipe) ->
@@ -60,8 +64,8 @@ public record RecipeAdapter<T extends PylonRecipe>(
                     key,
                     model,
                     toChoice(find(recipe, 1)),
-                    experience,
-                    cookingTime
+                    findFloat(recipe, 1),
+                    findInt(recipe, 1)
             ))
         );
         register(RecipeType.VANILLA_SMOKING, (key, model,recipe) ->
@@ -69,8 +73,8 @@ public record RecipeAdapter<T extends PylonRecipe>(
                     key,
                     model,
                     toChoice(find(recipe, 1)),
-                    experience,
-                    cookingTime
+                    findFloat(recipe, 1),
+                    findInt(recipe, 1)
             ))
         );
         register(RecipeType.VANILLA_SMITHING, (key, model,recipe) -> {return
@@ -117,6 +121,53 @@ public record RecipeAdapter<T extends PylonRecipe>(
             if (itemStack != null && itemStack.getType() != Material.AIR && ++cnt == n) return itemStack;
         }
         throw new WrongStateException("#" + cnt + " item doesn't appear in recipe");
+    }
+
+    public static int findInt(@NotNull Map<Integer, ItemStack> recipe, int n) {
+        int cnt = 0;
+        for (ItemStack itemStack : recipe.values()) {
+            if (PylonItem.fromStack(itemStack) instanceof NumberStack intStack && ++cnt == n) return intStack.toInt();
+        }
+        throw new WrongStateException("#" + cnt + " int doesn't appear in recipe");
+    }
+
+    public static float findFloat(@NotNull Map<Integer, ItemStack> recipe, int n) {
+        int cnt = 0;
+        for (ItemStack itemStack : recipe.values()) {
+            if (PylonItem.fromStack(itemStack) instanceof NumberStack intStack && ++cnt == n) return intStack.toFloat();
+        }
+        throw new WrongStateException("#" + cnt + " float doesn't appear in recipe");
+    }
+
+    public static double findDouble(@NotNull Map<Integer, ItemStack> recipe, int n) {
+        int cnt = 0;
+        for (ItemStack itemStack : recipe.values()) {
+            if (PylonItem.fromStack(itemStack) instanceof NumberStack intStack && ++cnt == n) return intStack.toDouble();
+        }
+        throw new WrongStateException("#" + cnt + " double doesn't appear in recipe");
+    }
+
+    public static boolean findBoolean(@NotNull Map<Integer, ItemStack> recipe, int n) {
+        int cnt = 0;
+        for (ItemStack itemStack : recipe.values()) {
+            PylonItem pylon = PylonItem.fromStack(itemStack);
+            if ((pylon instanceof DataStack)) {
+                if (pylon instanceof StringStack string) {
+                    if (++cnt == n) return string.toBoolean();
+                    } else if (pylon instanceof NumberStack number) {
+                    if (++cnt == n) return number.toBoolean();
+                }
+            }
+        }
+        throw new WrongStateException("#" + cnt + " boolean doesn't appear in recipe");
+    }
+
+    public static String findString(@NotNull Map<Integer, ItemStack> recipe, int n) {
+        int cnt = 0;
+        for (ItemStack itemStack : recipe.values()) {
+            if (PylonItem.fromStack(itemStack) instanceof StringStack string && ++cnt == n) return string.get();
+        }
+        throw new WrongStateException("#" + cnt + " string doesn't appear in recipe");
     }
 
     public static ItemStack findNullable(@NotNull Map<Integer, ItemStack> recipe, int n) {

@@ -1,6 +1,7 @@
 package com.balugaq.runtimepylon;
 
 import com.balugaq.runtimepylon.block.ItemHub;
+import com.balugaq.runtimepylon.input.ChatInputListener;
 import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
@@ -8,6 +9,7 @@ import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -33,6 +35,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         saveDefaultConfig();
 
         PylonBlock.register(Key.create("item_hub"), Material.PURPUR_PILLAR, ItemHub.class);
+        Bukkit.getServer().getPluginManager().registerEvents(new ChatInputListener(), this);
     }
 
     @Override
