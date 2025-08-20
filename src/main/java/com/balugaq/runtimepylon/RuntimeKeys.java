@@ -4,6 +4,7 @@ import org.bukkit.NamespacedKey;
 import static com.balugaq.runtimepylon.util.Key.*;
 
 public class RuntimeKeys {
+    // @formatter:off
     public static final NamespacedKey
 
     item_hub = create("item_hub"),
@@ -19,12 +20,15 @@ public class RuntimeKeys {
     item_group = create("item_group"),
     recipe_type = create("recipe_type"),
     item = create("item"),
-    register = create("register"),
+    register_item = create("register_item"),
     group_search_page = create("group_search_page"),
     recipe_type_search_page = create("recipe_type_search_page"),
     model = create("model"),
     itemId = create("itemId"),
     groupId = create("groupId"),
-    recipeTypeId = create("recipeTypeId")
-    ;
+    recipeTypeId = create("recipeTypeId"),
+    placeable = create("placeable"),
+    placeable_active = create("placeable_active"),
+    placeable_inactive = create("placeable_inactive")
+    ;// @formatter:on
 }

@@ -9,23 +9,17 @@ import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
+import io.github.pylonmc.pylon.core.datatypes.PylonSerializers;
 import kotlin.Pair;
 import lombok.Getter;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.util.io.BukkitObjectInputStream;
-import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 import xyz.xenondevs.invui.gui.Gui;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,6 +30,7 @@ public class ItemHub extends PylonBlock implements
         WithModel,
         WithGroup,
         WithRecipe {
+    public boolean placeable = false;
     public @Nullable ItemStack model = null;
     public @Nullable NamespacedKey itemId = null;
     public @Nullable NamespacedKey groupId = null;
@@ -48,70 +43,32 @@ public class ItemHub extends PylonBlock implements
 
     public ItemHub(@NotNull Block block, @NotNull PersistentDataContainer pdc) {
         super(block, pdc);
-        model = getItemStack(pdc, RuntimeKeys.model);
-        itemId = getNamespacedKey(pdc, RuntimeKeys.itemId);
-        groupId = getNamespacedKey(pdc, RuntimeKeys.groupId);
-        recipeTypeId = getNamespacedKey(pdc, RuntimeKeys.recipeTypeId);
+        placeable = pdc.get(RuntimeKeys.placeable, PylonSerializers.BOOLEAN);
+        model = pdc.get(RuntimeKeys.model, PylonSerializers.ITEM_STACK);
+        itemId = pdc.get(RuntimeKeys.itemId, PylonSerializers.NAMESPACED_KEY);
+        groupId = pdc.get(RuntimeKeys.groupId, PylonSerializers.NAMESPACED_KEY);
+        recipeTypeId = pdc.get(RuntimeKeys.recipeTypeId, PylonSerializers.NAMESPACED_KEY);
         recipe = fromArray(pdc, "recipe");
     }
 
     public static @NotNull Map<Integer, ItemStack> fromArray(@NotNull PersistentDataContainer pdc, @NotNull String key) {
         return pdc.getKeys().stream().filter(k -> k.toString().startsWith(key))
-                .map(k -> new Pair<>(k, pdc.get(k, PersistentDataType.STRING)))
+                .map(k -> new Pair<>(k, pdc.get(k, PylonSerializers.ITEM_STACK)))
                 .collect(Collectors.toMap(
                         p -> Integer.parseInt(p.getFirst().toString().substring(key.length())),
-                        p -> getItemStack(p.getSecond())
+                        Pair::getSecond
                 ));
-    }
-
-    public static @Nullable NamespacedKey getNamespacedKey(@NotNull PersistentDataContainer pdc, @NotNull NamespacedKey key) {
-        var s = pdc.get(key, PersistentDataType.STRING);
-        if (s == null) return null;
-        return NamespacedKey.fromString(s);
-    }
-
-    public static @Nullable ItemStack getItemStack(@NotNull PersistentDataContainer pdc, @NotNull NamespacedKey key) {
-        var s = pdc.get(key, PersistentDataType.STRING);
-        if (s == null) return null;
-        return getItemStack(s);
-    }
-
-    @SuppressWarnings("deprecation")
-    public static @NotNull String getBase64String(ItemStack item) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        try {
-            BukkitObjectOutputStream bs = new BukkitObjectOutputStream(stream);
-            bs.writeObject(item);
-            bs.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return Base64Coder.encodeLines(stream.toByteArray());
-    }
-
-    @SuppressWarnings("deprecation")
-    public static @Nullable ItemStack getItemStack(@NotNull String base64Str) {
-        ByteArrayInputStream stream = new ByteArrayInputStream(Base64Coder.decodeLines(base64Str));
-        try {
-            BukkitObjectInputStream bs = new BukkitObjectInputStream(stream);
-            ItemStack re = (ItemStack) bs.readObject();
-            bs.close();
-            return re;
-        } catch (ClassNotFoundException | IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     @Override
     public void write(@NotNull PersistentDataContainer pdc) {
         super.write(pdc);
-        pdc.set(RuntimeKeys.model, PersistentDataType.STRING, getBase64String(model));
-        if (itemId != null) pdc.set(RuntimeKeys.itemId, PersistentDataType.STRING, itemId.toString());
-        if (groupId != null) pdc.set(RuntimeKeys.groupId, PersistentDataType.STRING, groupId.toString());
-        if (recipeTypeId != null)
-            pdc.set(RuntimeKeys.recipeTypeId, PersistentDataType.STRING, recipeTypeId.toString());
-        recipe.forEach((key, value) -> pdc.set(Key.create("recipe" + key), PersistentDataType.STRING, getBase64String(value)));
+        pdc.set(RuntimeKeys.placeable, PylonSerializers.BOOLEAN, placeable);
+        if (model != null) pdc.set(RuntimeKeys.model, PylonSerializers.ITEM_STACK, model);
+        if (itemId != null) pdc.set(RuntimeKeys.itemId, PylonSerializers.NAMESPACED_KEY, itemId);
+        if (groupId != null) pdc.set(RuntimeKeys.groupId, PylonSerializers.NAMESPACED_KEY, groupId);
+        if (recipeTypeId != null) pdc.set(RuntimeKeys.recipeTypeId, PylonSerializers.NAMESPACED_KEY, recipeTypeId);
+        recipe.forEach((key, value) -> pdc.set(Key.create("recipe" + key), PylonSerializers.ITEM_STACK, value));
     }
 
     @Override
@@ -122,7 +79,7 @@ public class ItemHub extends PylonBlock implements
                         "x x x x x x x x x",
                         ". k . e E 1 2 3 .",
                         ". i . g t 4 5 6 .",
-                        ". s . d D 7 8 9 .",
+                        "p s . d D 7 8 9 .",
                         "x x x x x x x x x"
                 )
                 .addIngredient('x', buttons.blackBackground)
@@ -144,7 +101,8 @@ public class ItemHub extends PylonBlock implements
                 .addIngredient('7', buttons.recipe(7))
                 .addIngredient('8', buttons.recipe(8))
                 .addIngredient('9', buttons.recipe(9))
-                .addIngredient('s', buttons.register)
+                .addIngredient('s', buttons.registerItem)
+                .addIngredient('p', buttons.placeable)
                 .build();
     }
 
@@ -175,6 +133,12 @@ public class ItemHub extends PylonBlock implements
     @Override
     public @NotNull WithModel setItemId(@Nullable NamespacedKey itemId) {
         this.itemId = itemId;
+        return this;
+    }
+
+    @Override
+    public @NotNull WithModel setPlaceable(boolean placeable) {
+        this.placeable = placeable;
         return this;
     }
 }

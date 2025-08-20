@@ -21,10 +21,14 @@ item:
     name: "Item Group"
   item:
     name: "Item"
-  register:
-    name: "Register"
+  register_item:
+    name: "Register Item"
   item_hub:
-    name: "<white>Item Hub"
+    name: "<yellow>Item Hub"
+  placeable_active:
+    name: "Placeable Active"
+  placeable_inactive:
+    name: "Placeable Inactive"
 
 guide:
   page:

@@ -56,7 +56,9 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
             itemGroup,
             recipeType,
             item,
-            register;
+            registerItem,
+            placeable
+    ;
 
     public ButtonSet(@NotNull T b2) {
         this.block = b2;
@@ -311,17 +313,45 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     return true;
                 });
 
-        register = create()
+        placeable = create()
+                .item(block -> {
+                    var data = assertBlock(block, WithModel.class);
+                    if (data.isPlaceable()) {
+                        return ItemStackBuilder.pylonItem(
+                                Material.LIME_STAINED_GLASS_PANE,
+                                RuntimeKeys.placeable_active
+                        );
+                    } else {
+                        return ItemStackBuilder.pylonItem(
+                                Material.RED_STAINED_GLASS_PANE,
+                                RuntimeKeys.placeable_inactive
+                        );
+                    }
+                })
+                .click((block, clickType, player, event) -> {
+                    var data = assertBlock(block, WithModel.class);
+                    data.setPlaceable(!data.isPlaceable());
+                    done(player, "Set placeable to {}", data.isPlaceable());
+                    return true;
+                });
+
+        registerItem = create()
                 .item(block -> ItemStackBuilder.pylonItem(
                         Material.EMERALD_BLOCK,
-                        RuntimeKeys.register
+                        RuntimeKeys.register_item
                 ))
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithModel.class);
                     assertNotNull(data.getModel(), "Not set item yet");
                     assertTrue(!data.getModel().getType().isAir(), "Not set item yet");
                     assertNotNull(data.getItemId(), "Not set item id yet");
-                    PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build());
+                    if (data.isPlaceable()) {
+                        assertTrue(data.getModel().getType().isBlock(), "Item is not a block but placeable");
+                        PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build(), data.getItemId());
+                        PylonBlock.register(data.getItemId(), data.getModel().getType(), PylonBlock.class);
+                    } else {
+                        PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build());
+                    }
                     done(player, "Registered item {}", data.getItemId());
 
                     return true;
@@ -381,12 +411,14 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
     }
 
     public void reopen(@NotNull Player player) {
-        Window.single()
+        RuntimePylon.runTaskLater(() -> {
+            Window.single()
                 .setGui(getBlock().getGui())
-                .setTitle(new AdventureComponentWrapper(getBlock().getName()))
+                .setTitle(new AdventureComponentWrapper(PylonRegistry.ITEMS.get(getBlock().getKey()).getItemStack().displayName()))
                 .setViewer(player)
                 .build()
                 .open();
+        }, 1L);
     }
 
     public void handleClick(InventoryClickEvent event) {

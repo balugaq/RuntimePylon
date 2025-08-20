@@ -53,10 +53,14 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
         saveDefaultConfig();
 
-        PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(
-                Material.PURPUR_PILLAR,
-                RuntimeKeys.item_hub
-        ).build());
+        PylonItem.register(
+                PylonItem.class,
+                ItemStackBuilder.pylonItem(
+                        Material.PURPUR_PILLAR,
+                        RuntimeKeys.item_hub
+                ).build(),
+                RuntimeKeys.item_hub // block signature
+        );
         PylonItem.register(NumberStack.class, ItemStackBuilder.pylonItem(
                 Material.ENDER_EYE,
                 RuntimeKeys.number_stack
