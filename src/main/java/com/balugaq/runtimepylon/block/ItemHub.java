@@ -8,6 +8,7 @@ import com.balugaq.runtimepylon.gui.ButtonSet;
 import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
+import io.github.pylonmc.pylon.core.block.base.PylonTickingBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
 import io.github.pylonmc.pylon.core.datatypes.PylonSerializers;
 import kotlin.Pair;
@@ -29,7 +30,8 @@ public class ItemHub extends PylonBlock implements
         PylonGuiBlock,
         WithModel,
         WithGroup,
-        WithRecipe {
+        WithRecipe
+{
     public boolean placeable = false;
     public @Nullable ItemStack model = null;
     public @Nullable NamespacedKey itemId = null;
