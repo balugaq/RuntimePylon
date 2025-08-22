@@ -1,0 +1,55 @@
+package com.balugaq.runtimepylon.item.fluid;
+
+import io.github.pylonmc.pylon.core.block.PylonBlock;
+import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
+import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
+import io.github.pylonmc.pylon.core.item.PylonItem;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.ItemLore;
+import lombok.Setter;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+
+import static com.balugaq.runtimepylon.gui.ButtonSet.done;
+
+public class FluidTemperatureHolder extends PylonItem implements PylonFluidTagHolder<FluidTemperature> {
+    public FluidTemperatureHolder(@NotNull ItemStack stack) {
+        super(stack);
+    }
+
+    @Setter
+    public FluidTemperature temperature = FluidTemperature.NORMAL;
+
+    @Override
+    public <K extends PylonBlock & PylonGuiBlock> void onClick(@NotNull K block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event, @NotNull Runnable callback) {
+        if (clickType.isLeftClick()) {
+            if (clickType.isShiftClick()) {
+                switch (temperature) {
+                    case COLD -> temperature = FluidTemperature.HOT;
+                    case NORMAL -> temperature = FluidTemperature.COLD;
+                    case HOT -> temperature = FluidTemperature.NORMAL;
+                }
+            } else {
+                switch (temperature) {
+                    case COLD -> temperature = FluidTemperature.NORMAL;
+                    case NORMAL -> temperature = FluidTemperature.HOT;
+                    case HOT -> temperature = FluidTemperature.COLD;
+                }
+            }
+            getStack().setData(DataComponentTypes.LORE, ItemLore.lore(List.of(temperature.getDisplayText())));
+            done(player, "Set temperature to {}", temperature.getDisplayText());
+        }
+
+        callback.run();
+    }
+
+    @Override
+    public @NotNull FluidTemperature getTag() {
+        return temperature;
+    }
+}

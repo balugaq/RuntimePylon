@@ -1,10 +1,11 @@
 package com.balugaq.runtimepylon;
 
+import com.balugaq.runtimepylon.block.FluidHub;
 import com.balugaq.runtimepylon.block.ItemHub;
 import com.balugaq.runtimepylon.input.ChatInputListener;
 import com.balugaq.runtimepylon.item.NumberStack;
 import com.balugaq.runtimepylon.item.StringStack;
-import com.balugaq.runtimepylon.util.Key;
+import com.balugaq.runtimepylon.item.fluid.FluidTemperatureHolder;
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
@@ -61,15 +62,38 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
                 ).build(),
                 RuntimeKeys.item_hub // block signature
         );
+        RuntimePages.MAIN.addItem(RuntimeKeys.item_hub);
+
+        PylonItem.register(
+                PylonItem.class,
+                ItemStackBuilder.pylonItem(
+                        Material.LAPIS_BLOCK,
+                        RuntimeKeys.fluid_hub
+                ).build(),
+                RuntimeKeys.fluid_hub
+        );
+        RuntimePages.MAIN.addItem(RuntimeKeys.fluid_hub);
+
         PylonItem.register(NumberStack.class, ItemStackBuilder.pylonItem(
                 Material.ENDER_EYE,
                 RuntimeKeys.number_stack
         ).build());
+        RuntimePages.MAIN.addItem(RuntimeKeys.number_stack);
+
         PylonItem.register(StringStack.class, ItemStackBuilder.pylonItem(
                 Material.HONEYCOMB,
                 RuntimeKeys.string_stack
         ).build());
+        RuntimePages.MAIN.addItem(RuntimeKeys.string_stack);
+
+        PylonItem.register(FluidTemperatureHolder.class, ItemStackBuilder.pylonItem(
+                Material.DRAGON_BREATH,
+                RuntimeKeys.fluid_temperature_holder
+        ).build());
+        RuntimePages.MAIN.addItem(RuntimeKeys.fluid_temperature_holder);
+
         PylonBlock.register(RuntimeKeys.item_hub, Material.PURPUR_PILLAR, ItemHub.class);
+        PylonBlock.register(RuntimeKeys.fluid_hub, Material.LAPIS_BLOCK, FluidHub.class);
         Bukkit.getServer().getPluginManager().registerEvents(new ChatInputListener(), this);
     }
 

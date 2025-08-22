@@ -3,16 +3,19 @@ package com.balugaq.runtimepylon.block;
 import com.balugaq.runtimepylon.RuntimeKeys;
 import com.balugaq.runtimepylon.block.base.WithGroup;
 import com.balugaq.runtimepylon.block.base.WithModel;
+import com.balugaq.runtimepylon.block.base.WithPlaceable;
 import com.balugaq.runtimepylon.block.base.WithRecipe;
 import com.balugaq.runtimepylon.gui.ButtonSet;
 import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
-import io.github.pylonmc.pylon.core.block.base.PylonTickingBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
 import io.github.pylonmc.pylon.core.datatypes.PylonSerializers;
+import io.github.pylonmc.pylon.core.item.PylonItem;
+import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import kotlin.Pair;
 import lombok.Getter;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
@@ -20,6 +23,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.xenondevs.invui.gui.Gui;
+import xyz.xenondevs.invui.item.impl.AbstractItem;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +34,8 @@ public class ItemHub extends PylonBlock implements
         PylonGuiBlock,
         WithModel,
         WithGroup,
-        WithRecipe
+        WithRecipe,
+        WithPlaceable
 {
     public boolean placeable = false;
     public @Nullable ItemStack model = null;
@@ -45,11 +50,11 @@ public class ItemHub extends PylonBlock implements
 
     public ItemHub(@NotNull Block block, @NotNull PersistentDataContainer pdc) {
         super(block, pdc);
-        placeable = pdc.get(RuntimeKeys.placeable, PylonSerializers.BOOLEAN);
+        placeable = Boolean.TRUE.equals(pdc.get(RuntimeKeys.placeable, PylonSerializers.BOOLEAN));
         model = pdc.get(RuntimeKeys.model, PylonSerializers.ITEM_STACK);
-        itemId = pdc.get(RuntimeKeys.itemId, PylonSerializers.NAMESPACED_KEY);
-        groupId = pdc.get(RuntimeKeys.groupId, PylonSerializers.NAMESPACED_KEY);
-        recipeTypeId = pdc.get(RuntimeKeys.recipeTypeId, PylonSerializers.NAMESPACED_KEY);
+        itemId = pdc.get(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY);
+        groupId = pdc.get(RuntimeKeys.group_id, PylonSerializers.NAMESPACED_KEY);
+        recipeTypeId = pdc.get(RuntimeKeys.recipeType_id, PylonSerializers.NAMESPACED_KEY);
         recipe = fromArray(pdc, "recipe");
     }
 
@@ -67,15 +72,15 @@ public class ItemHub extends PylonBlock implements
         super.write(pdc);
         pdc.set(RuntimeKeys.placeable, PylonSerializers.BOOLEAN, placeable);
         if (model != null) pdc.set(RuntimeKeys.model, PylonSerializers.ITEM_STACK, model);
-        if (itemId != null) pdc.set(RuntimeKeys.itemId, PylonSerializers.NAMESPACED_KEY, itemId);
-        if (groupId != null) pdc.set(RuntimeKeys.groupId, PylonSerializers.NAMESPACED_KEY, groupId);
-        if (recipeTypeId != null) pdc.set(RuntimeKeys.recipeTypeId, PylonSerializers.NAMESPACED_KEY, recipeTypeId);
+        if (itemId != null) pdc.set(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY, itemId);
+        if (groupId != null) pdc.set(RuntimeKeys.group_id, PylonSerializers.NAMESPACED_KEY, groupId);
+        if (recipeTypeId != null) pdc.set(RuntimeKeys.recipeType_id, PylonSerializers.NAMESPACED_KEY, recipeTypeId);
         recipe.forEach((key, value) -> pdc.set(Key.create("recipe" + key), PylonSerializers.ITEM_STACK, value));
     }
 
     @Override
     public @NotNull Gui createGui() {
-        ButtonSet<?> buttons = new ButtonSet<>(this);
+        ItemHubButtonSet<?> buttons = new ItemHubButtonSet<>(this);
         return Gui.normal()
                 .setStructure(
                         "x x x x x x x x x",
@@ -139,8 +144,60 @@ public class ItemHub extends PylonBlock implements
     }
 
     @Override
-    public @NotNull WithModel setPlaceable(boolean placeable) {
+    public @NotNull WithPlaceable setPlaceable(boolean placeable) {
         this.placeable = placeable;
         return this;
+    }
+
+    @Getter
+    public static class ItemHubButtonSet<T extends ItemHub> extends ButtonSet<T> {
+        public final @NotNull AbstractItem
+                registerItem,
+                placeable
+        ;
+
+        public ItemHubButtonSet(@NotNull T b2) {
+            super(b2);
+            placeable = create()
+                    .item(data -> {
+                        if (data.isPlaceable()) {
+                            return ItemStackBuilder.pylonItem(
+                                    Material.LIME_STAINED_GLASS_PANE,
+                                    RuntimeKeys.placeable_active
+                            );
+                        } else {
+                            return ItemStackBuilder.pylonItem(
+                                    Material.RED_STAINED_GLASS_PANE,
+                                    RuntimeKeys.placeable_inactive
+                            );
+                        }
+                    })
+                    .click((data, clickType, player, event) -> {
+                        data.setPlaceable(!data.isPlaceable());
+                        done(player, "Set placeable to {}", data.isPlaceable());
+                        return true;
+                    });
+
+            registerItem = create()
+                    .item(data -> ItemStackBuilder.pylonItem(
+                            Material.EMERALD_BLOCK,
+                            RuntimeKeys.register_item
+                    ))
+                    .click((data, clickType, player, event) -> {
+                        assertNotNull(data.getModel(), "Not set item yet");
+                        assertTrue(!data.getModel().getType().isAir(), "Not set item yet");
+                        assertNotNull(data.getItemId(), "Not set item id yet");
+                        if (assertBlock(data, WithPlaceable.class).isPlaceable()) {
+                            assertTrue(data.getModel().getType().isBlock(), "Item is not a block but placeable");
+                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build(), data.getItemId());
+                            register(data.getItemId(), data.getModel().getType(), PylonBlock.class);
+                        } else {
+                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build());
+                        }
+                        done(player, "Registered item {}", data.getItemId());
+
+                        return true;
+                    });
+        }
     }
 }

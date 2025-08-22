@@ -4,8 +4,10 @@ import com.balugaq.runtimepylon.RuntimeKeys;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.block.base.WithGroup;
 import com.balugaq.runtimepylon.block.base.WithModel;
+import com.balugaq.runtimepylon.block.base.WithPlaceable;
 import com.balugaq.runtimepylon.block.base.WithRecipe;
 import com.balugaq.runtimepylon.item.DataStack;
+import com.balugaq.runtimepylon.util.PlaceholderException;
 import com.balugaq.runtimepylon.util.RecipeAdapter;
 import com.balugaq.runtimepylon.util.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
@@ -21,6 +23,7 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Material;
@@ -30,6 +33,8 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.helpers.MessageFormatter;
 import xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 import xyz.xenondevs.invui.window.Window;
@@ -41,13 +46,14 @@ import java.util.Optional;
 import static com.balugaq.runtimepylon.gui.GuiItem.*;
 
 @SuppressWarnings({"unchecked", "UnstableApiUsage"})
-@Slf4j
 @Getter
 public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
     public final @NotNull T block;
-    public final @NotNull AbstractItem
+    public @NotNull AbstractItem
             blackBackground,
             grayBackground,
+            inputBorder,
+            outputBorder,
             setItemGroup,
             setRecipe,
             unsetItemGroup,
@@ -55,9 +61,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
             setId,
             itemGroup,
             recipeType,
-            item,
-            registerItem,
-            placeable
+            item
     ;
 
     public ButtonSet(@NotNull T b2) {
@@ -73,6 +77,20 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 .item(block -> ItemStackBuilder.pylonItem(
                         Material.GRAY_STAINED_GLASS_PANE,
                         RuntimeKeys.gray_background
+                ))
+                .click(deny());
+
+        inputBorder = create()
+                .item(block -> ItemStackBuilder.pylonItem(
+                        Material.BLUE_STAINED_GLASS_PANE,
+                        RuntimeKeys.input_border
+                ))
+                .click(deny());
+
+        outputBorder = create()
+                .item(block -> ItemStackBuilder.pylonItem(
+                        Material.ORANGE_STAINED_GLASS_PANE,
+                        RuntimeKeys.output_border
                 ))
                 .click(deny());
 
@@ -312,50 +330,6 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
 
                     return true;
                 });
-
-        placeable = create()
-                .item(block -> {
-                    var data = assertBlock(block, WithModel.class);
-                    if (data.isPlaceable()) {
-                        return ItemStackBuilder.pylonItem(
-                                Material.LIME_STAINED_GLASS_PANE,
-                                RuntimeKeys.placeable_active
-                        );
-                    } else {
-                        return ItemStackBuilder.pylonItem(
-                                Material.RED_STAINED_GLASS_PANE,
-                                RuntimeKeys.placeable_inactive
-                        );
-                    }
-                })
-                .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithModel.class);
-                    data.setPlaceable(!data.isPlaceable());
-                    done(player, "Set placeable to {}", data.isPlaceable());
-                    return true;
-                });
-
-        registerItem = create()
-                .item(block -> ItemStackBuilder.pylonItem(
-                        Material.EMERALD_BLOCK,
-                        RuntimeKeys.register_item
-                ))
-                .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithModel.class);
-                    assertNotNull(data.getModel(), "Not set item yet");
-                    assertTrue(!data.getModel().getType().isAir(), "Not set item yet");
-                    assertNotNull(data.getItemId(), "Not set item id yet");
-                    if (data.isPlaceable()) {
-                        assertTrue(data.getModel().getType().isBlock(), "Item is not a block but placeable");
-                        PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build(), data.getItemId());
-                        PylonBlock.register(data.getItemId(), data.getModel().getType(), PylonBlock.class);
-                    } else {
-                        PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build());
-                    }
-                    done(player, "Registered item {}", data.getItemId());
-
-                    return true;
-                });
     }
 
     public static <T extends PylonBlock & PylonGuiBlock> @NotNull ClickHandler<T> deny() {
@@ -488,5 +462,37 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 }
             }
         }
+    }
+
+    public static <T> @NotNull T assertNotNull(@Nullable T o) {
+        return GuiItem.assertNotNull(o);
+    }
+
+    public static <T> @NotNull T assertNotNull(@Nullable T o, @NotNull String message) {
+        return GuiItem.assertNotNull(o, message);
+    }
+
+    public static void assertTrue(boolean stmt, @NotNull String message) {
+        GuiItem.assertTrue(stmt, message);
+    }
+
+    public static void assertFalse(boolean stmt, @NotNull String message) {
+        GuiItem.assertFalse(stmt, message);
+    }
+
+    public static void done(@NotNull Player player, @NotNull String literal, @NotNull Object... args) {
+        GuiItem.done(player, literal, args);
+    }
+
+    public static void done(@NotNull Player player, @NotNull ComponentLike component) {
+        GuiItem.done(player, component);
+    }
+
+    public static <T extends PylonBlock & PylonGuiBlock, K> @NotNull K assertBlock(@NotNull T block, @NotNull Class<K> expected) {
+        return GuiItem.assertBlock(block, expected);
+    }
+
+    public static boolean isOutput(int n) {
+        return n > 1000;
     }
 }

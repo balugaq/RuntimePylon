@@ -13,8 +13,4 @@ public interface WithModel {
     @Nullable NamespacedKey getItemId();
 
     @NotNull WithModel setItemId(@Nullable NamespacedKey itemId);
-
-    boolean isPlaceable();
-
-    @NotNull WithModel setPlaceable(boolean placeable);
 }

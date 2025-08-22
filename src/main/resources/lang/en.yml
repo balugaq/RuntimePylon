@@ -24,13 +24,34 @@ item:
   register_item:
     name: "Register Item"
   item_hub:
-    name: "<yellow>Item Hub"
+    name: "<gold>Item Hub"
   placeable_active:
     name: "Placeable Active"
   placeable_inactive:
     name: "Placeable Inactive"
+  fluid_hub:
+    name: "<gold>Fluid Hub"
+  input_border:
+    name: "Input →"
+  output_border:
+    name: "Output →"
+  set_tag:
+    name: "Set Tag"
+  unset_tag:
+    name: "Unset Tag"
+  fluid_temperature_holder:
+    name: "Fluid Temperature Holder"
+  number_stack:
+    name: "Number Stack"
+  string_stack:
+    name: "String Stack"
+  register_fluid:
+    name: "Register Fluid"
+  tag:
+    name: "Tag"
 
 guide:
   page:
+    main: "Runtime Pylon"
     group_search_page: "Search for a group"
     recipe_type_search_page: "Search for a recipe type"
