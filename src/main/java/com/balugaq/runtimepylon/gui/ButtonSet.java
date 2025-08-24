@@ -385,7 +385,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
         return GuiItem.create(block);
     }
 
-    public AbstractItem recipe(int n) {
+    public @NotNull AbstractItem recipe(int n) {
         return create()
                 .item(block -> {
                     var data = assertBlock(block, WithRecipe.class);
@@ -428,7 +428,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
         }, 1L);
     }
 
-    public void handleClick(InventoryClickEvent event) {
+    public void handleClick(@NotNull InventoryClickEvent event) {
         event.setCancelled(true);
         ItemStack current = event.getCurrentItem();
         ItemStack cursor = event.getCursor();

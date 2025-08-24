@@ -20,7 +20,7 @@ import static com.balugaq.runtimepylon.gui.ButtonSet.done;
 
 public class FluidTemperatureHolder extends PylonItem implements PylonFluidTagHolder<FluidTemperature> {
     @Setter
-    public FluidTemperature temperature = FluidTemperature.NORMAL;
+    public @NotNull FluidTemperature temperature = FluidTemperature.NORMAL;
 
     public FluidTemperatureHolder(@NotNull ItemStack stack) {
         super(stack);
