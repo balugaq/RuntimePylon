@@ -2,6 +2,7 @@ package com.balugaq.runtimepylon;
 
 import com.balugaq.runtimepylon.block.FluidHub;
 import com.balugaq.runtimepylon.block.ItemHub;
+import com.balugaq.runtimepylon.block.PageHub;
 import com.balugaq.runtimepylon.input.ChatInputListener;
 import com.balugaq.runtimepylon.item.NumberStack;
 import com.balugaq.runtimepylon.item.StringStack;
@@ -46,6 +47,10 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
                 ));
     }
 
+    public static void runTaskLater(@NotNull Runnable runnable, long delay) {
+        Bukkit.getScheduler().runTaskLater(getInstance(), runnable, delay);
+    }
+
     @Override
     public void onEnable() {
         instance = this;
@@ -74,6 +79,16 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         );
         RuntimePages.MAIN.addItem(RuntimeKeys.fluid_hub);
 
+        PylonItem.register(
+                PylonItem.class,
+                ItemStackBuilder.pylonItem(
+                        Material.QUARTZ_BLOCK,
+                        RuntimeKeys.page_hub
+                ).build(),
+                RuntimeKeys.page_hub
+        );
+        RuntimePages.MAIN.addItem(RuntimeKeys.page_hub);
+
         PylonItem.register(NumberStack.class, ItemStackBuilder.pylonItem(
                 Material.ENDER_EYE,
                 RuntimeKeys.number_stack
@@ -94,6 +109,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
         PylonBlock.register(RuntimeKeys.item_hub, Material.PURPUR_PILLAR, ItemHub.class);
         PylonBlock.register(RuntimeKeys.fluid_hub, Material.LAPIS_BLOCK, FluidHub.class);
+        PylonBlock.register(RuntimeKeys.page_hub, Material.QUARTZ_BLOCK, PageHub.class);
         Bukkit.getServer().getPluginManager().registerEvents(new ChatInputListener(), this);
     }
 
@@ -118,9 +134,5 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @Override
     public boolean suppressAddonNameWarning() {
         return true;
-    }
-
-    public static void runTaskLater(@NotNull Runnable runnable, long delay) {
-        Bukkit.getScheduler().runTaskLater(getInstance(), runnable, delay);
     }
 }

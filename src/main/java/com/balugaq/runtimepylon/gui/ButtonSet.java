@@ -2,12 +2,10 @@ package com.balugaq.runtimepylon.gui;
 
 import com.balugaq.runtimepylon.RuntimeKeys;
 import com.balugaq.runtimepylon.RuntimePylon;
-import com.balugaq.runtimepylon.block.base.WithGroup;
 import com.balugaq.runtimepylon.block.base.WithModel;
-import com.balugaq.runtimepylon.block.base.WithPlaceable;
+import com.balugaq.runtimepylon.block.base.WithPage;
 import com.balugaq.runtimepylon.block.base.WithRecipe;
 import com.balugaq.runtimepylon.item.DataStack;
-import com.balugaq.runtimepylon.util.PlaceholderException;
 import com.balugaq.runtimepylon.util.RecipeAdapter;
 import com.balugaq.runtimepylon.util.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
@@ -21,7 +19,6 @@ import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -34,7 +31,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.helpers.MessageFormatter;
 import xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 import xyz.xenondevs.invui.window.Window;
@@ -43,7 +39,9 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.balugaq.runtimepylon.gui.GuiItem.*;
+import static com.balugaq.runtimepylon.Lang.*;
+import static com.balugaq.runtimepylon.gui.GuiItem.toNamespacedKey;
+import static com.balugaq.runtimepylon.gui.GuiItem.waitInput;
 
 @SuppressWarnings({"unchecked", "UnstableApiUsage"})
 @Getter
@@ -54,15 +52,14 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
             grayBackground,
             inputBorder,
             outputBorder,
-            setItemGroup,
+            setPage,
             setRecipe,
-            unsetItemGroup,
+            unsetPage,
             unsetRecipe,
             setId,
-            itemGroup,
+            page,
             recipeType,
-            item
-    ;
+            item;
 
     public ButtonSet(@NotNull T b2) {
         this.block = b2;
@@ -94,24 +91,24 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 ))
                 .click(deny());
 
-        setItemGroup = create()
+        setPage = create()
                 .item(block -> ItemStackBuilder.pylonItem(
                         Material.GREEN_STAINED_GLASS_PANE,
-                        RuntimeKeys.set_item_group
+                        RuntimeKeys.set_page
                 ))
                 .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithGroup.class);
+                    var data = assertBlock(block, WithPage.class);
 
-                    assertNotNull(data.getItemId(), "Not set item id");
-                    assertNotNull(data.getGroupId(), "Not set group id");
+                    assertNotNull(data.getItemId(), set_page_1);
+                    assertNotNull(data.getPageId(), set_page_2);
 
                     Map<NamespacedKey, SimpleStaticGuidePage> pages = RuntimePylon.getGuidePages();
-                    SimpleStaticGuidePage page = assertNotNull(pages.get(data.getGroupId()), "Unknown group");
+                    SimpleStaticGuidePage page = assertNotNull(pages.get(data.getPageId()), set_page_3);
 
-                    assertNotNull(PylonRegistry.ITEMS.get(data.getItemId()), "Unknown item");
+                    assertNotNull(PylonRegistry.ITEMS.get(data.getItemId()), set_page_4);
                     page.addItem(data.getItemId());
 
-                    done(player, "Added {} to {}", data.getItemId(), data.getGroupId());
+                    done(player, set_page_5, data.getItemId(), data.getPageId());
                     return true;
                 });
 
@@ -122,33 +119,34 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 ))
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithRecipe.class);
-                    assertNotNull(data.getItemId(), "Not set recipe id (item id)");
-                    assertNotNull(data.getModel(), "Not set result (model)");
-                    assertNotNull(data.getRecipeTypeId(), "Not set recipe type id");
+                    assertNotNull(data.getItemId(), set_recipe_1);
+                    assertNotNull(data.getModel(), set_recipe_2);
+                    assertNotNull(data.getRecipeTypeId(), set_recipe_3);
 
-                    RecipeType<? extends PylonRecipe> recipeType = assertNotNull(PylonRegistry.RECIPE_TYPES.get(data.getRecipeTypeId()), "Unknown recipe type");
+                    RecipeType<? extends PylonRecipe> recipeType = assertNotNull(PylonRegistry.RECIPE_TYPES.get(data.getRecipeTypeId()), set_recipe_4);
                     if (!(recipeType.getClass().getGenericSuperclass() instanceof ParameterizedType pt)) {
                         return false;
                     }
 
                     Class<? extends PylonRecipe> pylonRecipeClass = (Class<? extends PylonRecipe>) pt.getActualTypeArguments()[0];
-                    var adapter = assertNotNull(RecipeAdapter.find(recipeType, pylonRecipeClass), "Incompatible recipe type");
-                    assertTrue(adapter.noRecipe(data.getItemId(), data.getModel(), data.getRecipe()), "Recipe already exists");
-                    assertTrue(adapter.apply(data.getItemId(), data.getModel(), data.getRecipe()), "Incompatible recipe");
+                    var adapter = assertNotNull(RecipeAdapter.find(recipeType, pylonRecipeClass), set_recipe_5);
+                    assertTrue(adapter.noRecipe(data.getItemId(), data.getModel(), data.getRecipe()), set_recipe_6);
+                    assertTrue(adapter.apply(data.getItemId(), data.getModel(), data.getRecipe()), set_recipe_7);
+                    done(player, Component.text(set_recipe_8).append(data.getModel().displayName()));
                     return true;
                 });
 
-        unsetItemGroup = create()
+        unsetPage = create()
                 .item(block -> ItemStackBuilder.pylonItem(
                         Material.RED_STAINED_GLASS_PANE,
-                        RuntimeKeys.unset_item_group
+                        RuntimeKeys.unset_page
                 ))
                 .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithGroup.class);
-                    assertNotNull(data.getItemId(), "Not set item id");
-                    assertNotNull(data.getGroupId(), "Not set group id");
+                    var data = assertBlock(block, WithPage.class);
+                    assertNotNull(data.getItemId(), unset_page_1);
+                    assertNotNull(data.getPageId(), unset_page_2);
                     Map<NamespacedKey, SimpleStaticGuidePage> pages = RuntimePylon.getGuidePages();
-                    SimpleStaticGuidePage page = assertNotNull(pages.get(data.getGroupId()), "Unknown group");
+                    SimpleStaticGuidePage page = assertNotNull(pages.get(data.getPageId()), unset_page_3);
                     page.getButtons().removeIf(item -> {
                         if (!(item instanceof ItemButton button)) {
                             return false;
@@ -159,6 +157,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
 
                         return pylon.getKey().equals(data.getItemId());
                     });
+                    done(player, unset_page_4, data.getItemId(), data.getPageId());
                     return true;
                 });
 
@@ -169,17 +168,18 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 ))
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithRecipe.class);
-                    assertNotNull(data.getItemId(), "Not set item id");
-                    assertNotNull(data.getRecipeTypeId(), "Not set recipe type id");
+                    assertNotNull(data.getItemId(), unset_recipe_1);
+                    assertNotNull(data.getRecipeTypeId(), unset_recipe_2);
 
-                    RecipeType<? extends PylonRecipe> recipeType = assertNotNull(PylonRegistry.RECIPE_TYPES.get(data.getRecipeTypeId()), "Unknown recipe type");
+                    RecipeType<? extends PylonRecipe> recipeType = assertNotNull(PylonRegistry.RECIPE_TYPES.get(data.getRecipeTypeId()), unset_recipe_3);
                     if (!(recipeType.getClass().getGenericSuperclass() instanceof ParameterizedType pt)) {
                         return false;
                     }
 
                     Class<? extends PylonRecipe> pylonRecipeClass = (Class<? extends PylonRecipe>) pt.getActualTypeArguments()[0];
-                    RecipeAdapter<? extends PylonRecipe> adapter = assertNotNull(RecipeAdapter.find(recipeType, pylonRecipeClass), "Incompatible recipe type");
+                    RecipeAdapter<? extends PylonRecipe> adapter = assertNotNull(RecipeAdapter.find(recipeType, pylonRecipeClass), unset_recipe_4);
                     adapter.removeRecipe(data.getItemId());
+                    done(player, unset_recipe_5, data.getItemId(), data.getRecipeTypeId());
 
                     return true;
                 });
@@ -197,17 +197,17 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                         return ItemStackBuilder.pylonItem(
                                 Material.BLUE_STAINED_GLASS_PANE,
                                 RuntimeKeys.set_id
-                        ).lore("Current item id: " + data.getItemId());
+                        ).lore(set_id_1 + data.getItemId());
                     }
                 })
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithModel.class);
 
-                    waitInput(player, "Enter item id", itemId -> {
+                    waitInput(player, set_id_2, itemId -> {
                         if (itemId.contains(":") && !itemId.startsWith(RuntimePylon.getInstance().getName().toLowerCase())) {
-                            throw new WrongStateException("Item id must be prefix with " + RuntimePylon.getInstance().getName().toLowerCase());
+                            throw new WrongStateException(set_id_3 + RuntimePylon.getInstance().getName().toLowerCase());
                         } else {
-                            data.setItemId(assertNotNull(toNamespacedKey(itemId), "Invalid item id"));
+                            data.setItemId(assertNotNull(toNamespacedKey(itemId), set_id_4));
                             reopen(player);
                         }
                     });
@@ -215,41 +215,41 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     return true;
                 });
 
-        itemGroup = create()
+        page = create()
                 .item(block -> {
-                    var data = assertBlock(block, WithGroup.class);
-                    if (data.getGroupId() == null) {
+                    var data = assertBlock(block, WithPage.class);
+                    if (data.getPageId() == null) {
                         return ItemStackBuilder.pylonItem(
                                 Material.WHITE_STAINED_GLASS_PANE,
-                                RuntimeKeys.item_group
+                                RuntimeKeys.page
                         );
                     } else {
-                        return RuntimePylon.getGuidePages().get(data.getGroupId()).getItem();
+                        return RuntimePylon.getGuidePages().get(data.getPageId()).getItem();
                     }
                 })
                 .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithGroup.class);
+                    var data = assertBlock(block, WithPage.class);
 
                     if (clickType.isLeftClick()) {
                         if (clickType.isShiftClick()) {
-                            waitInput(player, "Enter group id", groupId -> {
-                                data.setGroupId(assertNotNull(toNamespacedKey(groupId), "Invalid group id"));
+                            waitInput(player, page_1, pageId -> {
+                                data.setPageId(assertNotNull(toNamespacedKey(pageId), page_2));
                             });
                         } else {
-                            SearchPages.openGroupSearchPage(player, group -> {
-                                data.setGroupId(group.getKey());
-                                done(player, "Set group id to {}", group.getKey());
+                            SearchPages.openPageSearchPage(player, page -> {
+                                data.setPageId(page.getKey());
+                                done(player, page_3, page.getKey());
                                 reopen(player);
                             });
                         }
                     } else if (clickType.isRightClick()) {
-                        assertNotNull(data.getGroupId(), "Not set group id yet");
+                        assertNotNull(data.getPageId(), page_4);
                         // copy id
 
                         player.sendMessage(Component.text()
-                                .content("Copied group id")
-                                .hoverEvent(HoverEvent.showText(Component.text("Click to copy")))
-                                .clickEvent(ClickEvent.copyToClipboard(data.getGroupId().toString())));
+                                .content(page_5)
+                                .hoverEvent(HoverEvent.showText(Component.text(page_6)))
+                                .clickEvent(ClickEvent.copyToClipboard(data.getPageId().toString())));
                     }
 
                     return true;
@@ -268,30 +268,30 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                         return ItemStackBuilder.pylonItem(
                                 Material.CRAFTING_TABLE,
                                 RuntimeKeys.recipe_type
-                        ).lore("Current recipe type id: " + data.getRecipeTypeId());
+                        ).lore(recipe_type_1 + data.getRecipeTypeId());
                     }
                 })
                 .click((block, clickType, player, event) -> {
                     var data = assertBlock(block, WithRecipe.class);
                     if (clickType.isLeftClick()) {
                         if (clickType.isShiftClick()) {
-                            waitInput(player, "Enter recipe type id", recipeTypeId -> {
-                                data.setRecipeTypeId(assertNotNull(toNamespacedKey(recipeTypeId), "Invalid recipe type id"));
+                            waitInput(player, recipe_type_2, recipeTypeId -> {
+                                data.setRecipeTypeId(assertNotNull(toNamespacedKey(recipeTypeId), recipe_type_3));
                             });
                         } else {
                             SearchPages.openRecipeTypeSearchPage(player, recipeType -> {
                                 data.setRecipeTypeId(recipeType.getKey());
-                                done(player, "Set recipe type id to {}", recipeType.getKey());
+                                done(player, recipe_type_4, recipeType.getKey());
                                 reopen(player);
                             });
                         }
                     } else if (clickType.isRightClick()) {
-                        assertNotNull(data.getRecipeTypeId(), "Not set recipe type id yet");
+                        assertNotNull(data.getRecipeTypeId(), recipe_type_5);
                         // copy id
 
                         player.sendMessage(Component.text()
-                                .content("Copied recipe type id")
-                                .hoverEvent(HoverEvent.showText(Component.text("Click to copy")))
+                                .content(recipe_type_6)
+                                .hoverEvent(HoverEvent.showText(Component.text(recipe_type_7)))
                                 .clickEvent(ClickEvent.copyToClipboard(data.getRecipeTypeId().toString()))
                         );
                     }
@@ -320,12 +320,12 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                         return true;
                     }
                     data.setModel(currentItem);
-                    done(player, Component.text("Set item to ").append(displayName(currentItem)));
+                    done(player, Component.text(item_1).append(displayName(currentItem)));
 
                     PylonItem pylon = PylonItem.fromStack(currentItem);
                     if (pylon != null) {
                         data.setItemId(pylon.getKey());
-                        done(player, "Set item id to {}", pylon.getKey());
+                        done(player, item_2, pylon.getKey());
                     }
 
                     return true;
@@ -346,6 +346,38 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
     @NotNull
     public static Component displayName(@NotNull ItemStack itemStack) {
         return Optional.ofNullable(itemStack.getData(DataComponentTypes.ITEM_NAME)).orElse(Component.text(""));
+    }
+
+    public static <T> @NotNull T assertNotNull(@Nullable T o) {
+        return GuiItem.assertNotNull(o);
+    }
+
+    public static <T> @NotNull T assertNotNull(@Nullable T o, @NotNull String message) {
+        return GuiItem.assertNotNull(o, message);
+    }
+
+    public static void assertTrue(boolean stmt, @NotNull String message) {
+        GuiItem.assertTrue(stmt, message);
+    }
+
+    public static void assertFalse(boolean stmt, @NotNull String message) {
+        GuiItem.assertFalse(stmt, message);
+    }
+
+    public static void done(@NotNull Player player, @NotNull String literal, @NotNull Object... args) {
+        GuiItem.done(player, literal, args);
+    }
+
+    public static void done(@NotNull Player player, @NotNull ComponentLike component) {
+        GuiItem.done(player, component);
+    }
+
+    public static <T extends PylonBlock & PylonGuiBlock, K> @NotNull K assertBlock(@NotNull T block, @NotNull Class<K> expected) {
+        return GuiItem.assertBlock(block, expected);
+    }
+
+    public static boolean isOutput(int n) {
+        return n > 1000;
     }
 
     public @NotNull GuiItem<T> create() {
@@ -387,11 +419,11 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
     public void reopen(@NotNull Player player) {
         RuntimePylon.runTaskLater(() -> {
             Window.single()
-                .setGui(getBlock().getGui())
-                .setTitle(new AdventureComponentWrapper(PylonRegistry.ITEMS.get(getBlock().getKey()).getItemStack().displayName()))
-                .setViewer(player)
-                .build()
-                .open();
+                    .setGui(getBlock().getGui())
+                    .setTitle(new AdventureComponentWrapper(PylonRegistry.ITEMS.get(getBlock().getKey()).getItemStack().displayName()))
+                    .setViewer(player)
+                    .build()
+                    .open();
         }, 1L);
     }
 
@@ -462,37 +494,5 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 }
             }
         }
-    }
-
-    public static <T> @NotNull T assertNotNull(@Nullable T o) {
-        return GuiItem.assertNotNull(o);
-    }
-
-    public static <T> @NotNull T assertNotNull(@Nullable T o, @NotNull String message) {
-        return GuiItem.assertNotNull(o, message);
-    }
-
-    public static void assertTrue(boolean stmt, @NotNull String message) {
-        GuiItem.assertTrue(stmt, message);
-    }
-
-    public static void assertFalse(boolean stmt, @NotNull String message) {
-        GuiItem.assertFalse(stmt, message);
-    }
-
-    public static void done(@NotNull Player player, @NotNull String literal, @NotNull Object... args) {
-        GuiItem.done(player, literal, args);
-    }
-
-    public static void done(@NotNull Player player, @NotNull ComponentLike component) {
-        GuiItem.done(player, component);
-    }
-
-    public static <T extends PylonBlock & PylonGuiBlock, K> @NotNull K assertBlock(@NotNull T block, @NotNull Class<K> expected) {
-        return GuiItem.assertBlock(block, expected);
-    }
-
-    public static boolean isOutput(int n) {
-        return n > 1000;
     }
 }

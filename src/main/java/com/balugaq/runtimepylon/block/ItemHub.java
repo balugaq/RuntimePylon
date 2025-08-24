@@ -1,8 +1,8 @@
 package com.balugaq.runtimepylon.block;
 
 import com.balugaq.runtimepylon.RuntimeKeys;
-import com.balugaq.runtimepylon.block.base.WithGroup;
 import com.balugaq.runtimepylon.block.base.WithModel;
+import com.balugaq.runtimepylon.block.base.WithPage;
 import com.balugaq.runtimepylon.block.base.WithPlaceable;
 import com.balugaq.runtimepylon.block.base.WithRecipe;
 import com.balugaq.runtimepylon.gui.ButtonSet;
@@ -29,18 +29,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.balugaq.runtimepylon.Lang.*;
+
 @Getter
 public class ItemHub extends PylonBlock implements
         PylonGuiBlock,
         WithModel,
-        WithGroup,
+        WithPage,
         WithRecipe,
-        WithPlaceable
-{
+        WithPlaceable {
     public boolean placeable = false;
     public @Nullable ItemStack model = null;
     public @Nullable NamespacedKey itemId = null;
-    public @Nullable NamespacedKey groupId = null;
+    public @Nullable NamespacedKey pageId = null;
     public @Nullable NamespacedKey recipeTypeId = null;
     public @NotNull Map<Integer, ItemStack> recipe = new HashMap<>();
 
@@ -53,7 +54,7 @@ public class ItemHub extends PylonBlock implements
         placeable = Boolean.TRUE.equals(pdc.get(RuntimeKeys.placeable, PylonSerializers.BOOLEAN));
         model = pdc.get(RuntimeKeys.model, PylonSerializers.ITEM_STACK);
         itemId = pdc.get(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY);
-        groupId = pdc.get(RuntimeKeys.group_id, PylonSerializers.NAMESPACED_KEY);
+        pageId = pdc.get(RuntimeKeys.page_id, PylonSerializers.NAMESPACED_KEY);
         recipeTypeId = pdc.get(RuntimeKeys.recipeType_id, PylonSerializers.NAMESPACED_KEY);
         recipe = fromArray(pdc, "recipe");
     }
@@ -73,7 +74,7 @@ public class ItemHub extends PylonBlock implements
         pdc.set(RuntimeKeys.placeable, PylonSerializers.BOOLEAN, placeable);
         if (model != null) pdc.set(RuntimeKeys.model, PylonSerializers.ITEM_STACK, model);
         if (itemId != null) pdc.set(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY, itemId);
-        if (groupId != null) pdc.set(RuntimeKeys.group_id, PylonSerializers.NAMESPACED_KEY, groupId);
+        if (pageId != null) pdc.set(RuntimeKeys.page_id, PylonSerializers.NAMESPACED_KEY, pageId);
         if (recipeTypeId != null) pdc.set(RuntimeKeys.recipeType_id, PylonSerializers.NAMESPACED_KEY, recipeTypeId);
         recipe.forEach((key, value) -> pdc.set(Key.create("recipe" + key), PylonSerializers.ITEM_STACK, value));
     }
@@ -91,12 +92,12 @@ public class ItemHub extends PylonBlock implements
                 )
                 .addIngredient('x', buttons.blackBackground)
                 .addIngredient('.', buttons.grayBackground)
-                .addIngredient('e', buttons.setItemGroup)
+                .addIngredient('e', buttons.setPage)
                 .addIngredient('E', buttons.setRecipe)
-                .addIngredient('d', buttons.unsetItemGroup)
+                .addIngredient('d', buttons.unsetPage)
                 .addIngredient('D', buttons.unsetRecipe)
                 .addIngredient('k', buttons.setId)
-                .addIngredient('g', buttons.itemGroup)
+                .addIngredient('g', buttons.page)
                 .addIngredient('t', buttons.recipeType)
                 .addIngredient('i', buttons.item)
                 .addIngredient('1', buttons.recipe(1))
@@ -114,8 +115,8 @@ public class ItemHub extends PylonBlock implements
     }
 
     @Override
-    public @NotNull WithGroup setGroupId(@NotNull NamespacedKey key) {
-        this.groupId = key;
+    public @NotNull WithPage setPageId(@NotNull NamespacedKey key) {
+        this.pageId = key;
         return this;
     }
 
@@ -153,8 +154,7 @@ public class ItemHub extends PylonBlock implements
     public static class ItemHubButtonSet<T extends ItemHub> extends ButtonSet<T> {
         public final @NotNull AbstractItem
                 registerItem,
-                placeable
-        ;
+                placeable;
 
         public ItemHubButtonSet(@NotNull T b2) {
             super(b2);
@@ -174,7 +174,7 @@ public class ItemHub extends PylonBlock implements
                     })
                     .click((data, clickType, player, event) -> {
                         data.setPlaceable(!data.isPlaceable());
-                        done(player, "Set placeable to {}", data.isPlaceable());
+                        done(player, placeable_1, data.isPlaceable());
                         return true;
                     });
 
@@ -184,17 +184,17 @@ public class ItemHub extends PylonBlock implements
                             RuntimeKeys.register_item
                     ))
                     .click((data, clickType, player, event) -> {
-                        assertNotNull(data.getModel(), "Not set item yet");
-                        assertTrue(!data.getModel().getType().isAir(), "Not set item yet");
-                        assertNotNull(data.getItemId(), "Not set item id yet");
+                        assertNotNull(data.getModel(), register_item_1);
+                        assertTrue(!data.getModel().getType().isAir(), register_item_2);
+                        assertNotNull(data.getItemId(), register_item_3);
                         if (assertBlock(data, WithPlaceable.class).isPlaceable()) {
-                            assertTrue(data.getModel().getType().isBlock(), "Item is not a block but placeable");
+                            assertTrue(data.getModel().getType().isBlock(), register_item_4);
                             PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build(), data.getItemId());
                             register(data.getItemId(), data.getModel().getType(), PylonBlock.class);
                         } else {
                             PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build());
                         }
-                        done(player, "Registered item {}", data.getItemId());
+                        done(player, register_item_5, data.getItemId());
 
                         return true;
                     });

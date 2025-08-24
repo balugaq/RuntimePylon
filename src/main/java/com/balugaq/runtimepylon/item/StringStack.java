@@ -10,6 +10,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import static com.balugaq.runtimepylon.Lang.string_input_1;
+
 public class StringStack extends PylonItem implements DataStack {
     public String internal;
 
@@ -28,7 +30,7 @@ public class StringStack extends PylonItem implements DataStack {
     @Override
     public <T extends PylonBlock & PylonGuiBlock> void onClick(@NotNull T block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event, @NotNull Runnable callback) {
         player.closeInventory();
-        GuiItem.waitInput(player, "Enter a string", s -> {
+        GuiItem.waitInput(player, string_input_1, s -> {
             internal = s;
             callback.run();
         });

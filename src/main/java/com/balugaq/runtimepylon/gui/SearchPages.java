@@ -2,7 +2,6 @@ package com.balugaq.runtimepylon.gui;
 
 import com.balugaq.runtimepylon.RuntimeKeys;
 import com.balugaq.runtimepylon.RuntimePylon;
-import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.guide.pages.base.SearchPage;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
@@ -23,8 +22,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class SearchPages {
-    public static void openGroupSearchPage(@NotNull Player player, @NotNull Consumer<SimpleStaticGuidePage> consumer) {
-        new GroupSearchPage(consumer).open(player);
+    public static void openPageSearchPage(@NotNull Player player, @NotNull Consumer<SimpleStaticGuidePage> consumer) {
+        new PageSearchPage(consumer).open(player);
     }
 
     public static void openRecipeTypeSearchPage(@NotNull Player player, @NotNull Consumer<RecipeType<? extends PylonRecipe>> consumer) {
@@ -32,11 +31,11 @@ public class SearchPages {
     }
 
     @Getter
-    public static class GroupSearchPage extends SearchPage {
+    public static class PageSearchPage extends SearchPage {
         private final @NotNull Consumer<SimpleStaticGuidePage> consumer;
 
-        public GroupSearchPage(@NotNull Consumer<SimpleStaticGuidePage> consumer) {
-            super(RuntimeKeys.group_search_page, Material.STONE);
+        public PageSearchPage(@NotNull Consumer<SimpleStaticGuidePage> consumer) {
+            super(RuntimeKeys.page_search_page, Material.STONE);
             this.consumer = consumer;
         }
 

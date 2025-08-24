@@ -5,7 +5,6 @@ import com.balugaq.runtimepylon.block.base.WithFluidTag;
 import com.balugaq.runtimepylon.block.base.WithModel;
 import com.balugaq.runtimepylon.block.base.WithRecipe;
 import com.balugaq.runtimepylon.gui.ButtonSet;
-import com.balugaq.runtimepylon.item.DataStack;
 import com.balugaq.runtimepylon.item.fluid.PylonFluidTagHolder;
 import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
@@ -33,13 +32,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.balugaq.runtimepylon.Lang.*;
+
+// todo: page.addFluid
 @Getter
 public class FluidHub extends PylonBlock implements
         PylonGuiBlock,
         WithModel,
         WithRecipe,
-        WithFluidTag
-{
+        WithFluidTag {
     public @Nullable ItemStack model = null;
     public @Nullable ItemStack tag = null;
     public @Nullable NamespacedKey itemId = null;
@@ -153,8 +154,7 @@ public class FluidHub extends PylonBlock implements
                 registerFluid,
                 tag,
                 setTag,
-                unsetTag
-        ;
+                unsetTag;
 
         public FluidHubButtonSet(@NotNull T b2) {
             super(b2);
@@ -164,12 +164,12 @@ public class FluidHub extends PylonBlock implements
                             RuntimeKeys.register_fluid
                     ))
                     .click((data, clickType, player, event) -> {
-                        assertNotNull(data.getItemId(), "Item ID is null");
-                        assertNotNull(data.getModel(), "Model is null");
-                        assertTrue(!data.getModel().getType().isAir(), "Model is air");
+                        assertNotNull(data.getItemId(), register_fluid_1);
+                        assertNotNull(data.getModel(), register_fluid_2);
+                        assertTrue(!data.getModel().getType().isAir(), register_fluid_3);
 
                         new PylonFluid(data.getItemId(), data.getModel().getType()).register();
-                        done(player, "Registered fluid {}", data.getItemId());
+                        done(player, register_fluid_4, data.getItemId());
                         return false;
                     });
             tag = create()
@@ -195,11 +195,11 @@ public class FluidHub extends PylonBlock implements
                             RuntimeKeys.set_tag
                     ))
                     .click((data, clickType, player, event) -> {
-                        assertNotNull(data.getItemId(), "Item ID is null");
-                        PylonFluid fluid = assertNotNull(PylonRegistry.FLUIDS.get(data.getItemId()), "Unknown fluid");
-                        PylonFluidTag tag = assertNotNull(parseTag(data.getTag()), "Invalid tag");
+                        assertNotNull(data.getItemId(), set_tag_1);
+                        PylonFluid fluid = assertNotNull(PylonRegistry.FLUIDS.get(data.getItemId()), set_tag_2);
+                        PylonFluidTag tag = assertNotNull(parseTag(data.getTag()), set_tag_3);
                         fluid.addTag(tag);
-                        done(player, "Added tag {} to fluid {}", tag.getDisplayText(), data.getItemId());
+                        done(player, set_tag_4, tag.getDisplayText(), data.getItemId());
                         return false;
                     });
             unsetTag = create()
@@ -208,18 +208,18 @@ public class FluidHub extends PylonBlock implements
                             RuntimeKeys.unset_tag
                     ))
                     .click((data, clickType, player, event) -> {
-                        assertNotNull(data.getItemId(), "Item ID is null");
-                        PylonFluid fluid = assertNotNull(PylonRegistry.FLUIDS.get(data.getItemId()), "Unknown fluid");
-                        PylonFluidTag tag = assertNotNull(parseTag(data.getTag()), "Invalid tag");
+                        assertNotNull(data.getItemId(), unset_tag_1);
+                        PylonFluid fluid = assertNotNull(PylonRegistry.FLUIDS.get(data.getItemId()), unset_tag_2);
+                        PylonFluidTag tag = assertNotNull(parseTag(data.getTag()), unset_tag_3);
                         fluid.removeTag(tag);
-                        done(player, "Removed tag {} from fluid {}", tag.getDisplayText(), data.getItemId());
+                        done(player, unset_tag_4, tag.getDisplayText(), data.getItemId());
                         return false;
                     });
         }
 
         public static @NotNull PylonFluidTag parseTag(@Nullable ItemStack tagItem) {
-            PylonItem pylon = assertNotNull(PylonItem.fromStack(tagItem), "Not a valid fluid tag");
-            assertTrue(pylon instanceof PylonFluidTagHolder<?>, "Not a PylonFluidTagHolder");
+            PylonItem pylon = assertNotNull(PylonItem.fromStack(tagItem), parse_tag_1);
+            assertTrue(pylon instanceof PylonFluidTagHolder<?>, parse_tag_2);
             return ((PylonFluidTagHolder<?>) pylon).getTag();
         }
     }

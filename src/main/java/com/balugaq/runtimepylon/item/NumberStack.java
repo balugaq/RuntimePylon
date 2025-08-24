@@ -11,6 +11,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import static com.balugaq.runtimepylon.Lang.*;
+
 public class NumberStack extends PylonItem implements DataStack {
     public String internal;
 
@@ -22,7 +24,7 @@ public class NumberStack extends PylonItem implements DataStack {
         try {
             return Integer.parseInt(internal);
         } catch (NumberFormatException e) {
-            throw new WrongStateException("NumberStack is not a int");
+            throw new WrongStateException(number_err_1);
         }
     }
 
@@ -30,7 +32,7 @@ public class NumberStack extends PylonItem implements DataStack {
         try {
             return Double.parseDouble(internal);
         } catch (NumberFormatException e) {
-            throw new WrongStateException("NumberStack is not a double");
+            throw new WrongStateException(number_err_2);
         }
     }
 
@@ -38,7 +40,7 @@ public class NumberStack extends PylonItem implements DataStack {
         try {
             return Float.parseFloat(internal);
         } catch (NumberFormatException e) {
-            throw new WrongStateException("NumberStack is not a float");
+            throw new WrongStateException(number_err_3);
         }
     }
 
@@ -53,7 +55,7 @@ public class NumberStack extends PylonItem implements DataStack {
     @Override
     public <T extends PylonBlock & PylonGuiBlock> void onClick(@NotNull T block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event, @NotNull Runnable callback) {
         player.closeInventory();
-        GuiItem.waitInput(player, "Enter a number", s -> {
+        GuiItem.waitInput(player, number_input_1, s -> {
             internal = s;
             callback.run();
         });

@@ -3,22 +3,22 @@ addon: "RuntimePylon"
 item:
   set_id:
     name: "Set ID"
-  set_item_group:
-    name: "Set Item Group"
+  set_page:
+    name: "Set Item Page"
   set_recipe:
     name: "Set Recipe"
   black_background:
     name: " "
   gray_background:
     name: " "
-  unset_item_group:
-    name: "Unset Item Group"
+  unset_page:
+    name: "Unset Item Page"
   unset_recipe:
     name: "Unset Recipe"
   recipe_type:
     name: "Recipe Type"
-  item_group:
-    name: "Item Group"
+  page:
+    name: "Item Page"
   item:
     name: "Item"
   register_item:
@@ -53,5 +53,5 @@ item:
 guide:
   page:
     main: "Runtime Pylon"
-    group_search_page: "Search for a group"
+    page_search_page: "Search for a page"
     recipe_type_search_page: "Search for a recipe type"

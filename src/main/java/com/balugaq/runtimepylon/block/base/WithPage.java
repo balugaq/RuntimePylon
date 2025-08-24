@@ -4,8 +4,8 @@ import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface WithGroup extends WithModel {
-    @Nullable NamespacedKey getGroupId();
+public interface WithPage extends WithModel {
+    @Nullable NamespacedKey getPageId();
 
-    @NotNull WithGroup setGroupId(@NotNull NamespacedKey key);
+    @NotNull WithPage setPageId(@NotNull NamespacedKey key);
 }

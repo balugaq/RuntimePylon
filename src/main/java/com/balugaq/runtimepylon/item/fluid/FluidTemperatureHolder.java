@@ -15,15 +15,16 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+import static com.balugaq.runtimepylon.Lang.set_temperature_1;
 import static com.balugaq.runtimepylon.gui.ButtonSet.done;
 
 public class FluidTemperatureHolder extends PylonItem implements PylonFluidTagHolder<FluidTemperature> {
+    @Setter
+    public FluidTemperature temperature = FluidTemperature.NORMAL;
+
     public FluidTemperatureHolder(@NotNull ItemStack stack) {
         super(stack);
     }
-
-    @Setter
-    public FluidTemperature temperature = FluidTemperature.NORMAL;
 
     @Override
     public <K extends PylonBlock & PylonGuiBlock> void onClick(@NotNull K block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event, @NotNull Runnable callback) {
@@ -42,7 +43,7 @@ public class FluidTemperatureHolder extends PylonItem implements PylonFluidTagHo
                 }
             }
             getStack().setData(DataComponentTypes.LORE, ItemLore.lore(List.of(temperature.getDisplayText())));
-            done(player, "Set temperature to {}", temperature.getDisplayText());
+            done(player, set_temperature_1, temperature.getDisplayText());
         }
 
         callback.run();

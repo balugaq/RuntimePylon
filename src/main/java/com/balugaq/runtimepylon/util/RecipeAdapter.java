@@ -33,6 +33,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.balugaq.runtimepylon.Lang.*;
+
 public record RecipeAdapter<T extends PylonRecipe>(
         RecipeType<T> recipeType,
         RecipeResolver<T> mapper
@@ -115,7 +117,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
                 if (itemStack != null && itemStack.getType() != Material.AIR) {
                     cnt += itemStack.getAmount();
                     if (cnt > 9) {
-                        throw new WrongStateException("Cannot place more than 9 items");
+                        throw new WrongStateException(recipe_err_1);
                     }
                     r.addIngredient(itemStack.clone());
                 }
@@ -136,7 +138,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
         for (ItemStack itemStack : recipe.values()) {
             if (itemStack != null && itemStack.getType() != Material.AIR && ++cnt == n) return itemStack;
         }
-        throw new WrongStateException("#" + cnt + " item doesn't appear in recipe");
+        throw new WrongStateException("#" + cnt + recipe_err_2);
     }
 
     public static int findInt(@NotNull Map<Integer, ItemStack> recipe, int n) {
@@ -144,7 +146,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
         for (ItemStack itemStack : recipe.values()) {
             if (PylonItem.fromStack(itemStack) instanceof NumberStack intStack && ++cnt == n) return intStack.toInt();
         }
-        throw new WrongStateException("#" + cnt + " int doesn't appear in recipe");
+        throw new WrongStateException("#" + cnt + recipe_err_3);
     }
 
     public static float findFloat(@NotNull Map<Integer, ItemStack> recipe, int n) {
@@ -152,7 +154,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
         for (ItemStack itemStack : recipe.values()) {
             if (PylonItem.fromStack(itemStack) instanceof NumberStack intStack && ++cnt == n) return intStack.toFloat();
         }
-        throw new WrongStateException("#" + cnt + " float doesn't appear in recipe");
+        throw new WrongStateException("#" + cnt + recipe_err_4);
     }
 
     public static double findDouble(@NotNull Map<Integer, ItemStack> recipe, int n) {
@@ -161,7 +163,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
             if (PylonItem.fromStack(itemStack) instanceof NumberStack intStack && ++cnt == n)
                 return intStack.toDouble();
         }
-        throw new WrongStateException("#" + cnt + " double doesn't appear in recipe");
+        throw new WrongStateException("#" + cnt + recipe_err_5);
     }
 
     public static boolean findBoolean(@NotNull Map<Integer, ItemStack> recipe, int n) {
@@ -176,7 +178,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
                 }
             }
         }
-        throw new WrongStateException("#" + cnt + " boolean doesn't appear in recipe");
+        throw new WrongStateException("#" + cnt + recipe_err_6);
     }
 
     public static String findString(@NotNull Map<Integer, ItemStack> recipe, int n) {
@@ -184,7 +186,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
         for (ItemStack itemStack : recipe.values()) {
             if (PylonItem.fromStack(itemStack) instanceof StringStack string && ++cnt == n) return string.get();
         }
-        throw new WrongStateException("#" + cnt + " string doesn't appear in recipe");
+        throw new WrongStateException("#" + cnt + recipe_err_7);
     }
 
     public static @Nullable ItemStack findNullable(@NotNull Map<Integer, ItemStack> recipe, int n) {

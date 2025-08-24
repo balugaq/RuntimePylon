@@ -22,6 +22,8 @@ import xyz.xenondevs.invui.item.impl.AbstractItem;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static com.balugaq.runtimepylon.Lang.gui_err_1;
+
 @Getter
 public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem {
     private final @NotNull T data;
@@ -68,7 +70,7 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
         if (expected.isInstance(block)) {
             return expected.cast(block);
         } else {
-            throw new WrongStateException("Not " + expected.getSimpleName());
+            throw new WrongStateException(gui_err_1 + expected.getSimpleName());
         }
     }
 

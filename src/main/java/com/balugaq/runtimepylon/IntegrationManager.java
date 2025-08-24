@@ -2,6 +2,7 @@ package com.balugaq.runtimepylon;
 
 import org.bukkit.Bukkit;
 
+// todo: apply
 public class IntegrationManager {
     public IsEnabled isEnabled;
 
