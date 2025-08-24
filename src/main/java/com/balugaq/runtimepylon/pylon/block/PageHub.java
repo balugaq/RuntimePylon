@@ -124,7 +124,7 @@ public class PageHub extends MyBlock implements
                                     RuntimeKeys.nested_page
                             );
                         } else {
-                            return RuntimePylon.getGuidePages().get(data.getPageId()).getItem();
+                            return RuntimePylon.getGuidePages().get(data.getNestedPageId()).getItem();
                         }
                     })
                     .click((data, clickType, player, event) -> {

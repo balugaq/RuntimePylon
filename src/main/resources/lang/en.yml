@@ -49,6 +49,16 @@ item:
     name: "Register Fluid"
   tag:
     name: "Tag"
+  page_hub:
+    name: "<gold>Page Hub"
+  set_nested_page:
+    name: "Set Nested Page"
+  nested_page:
+    name: "Nested Page"
+  unset_nested_page:
+    name: "Unset Nested Page"
+  register_page:
+    name: "Register Page"
 
 guide:
   page:

@@ -3,7 +3,7 @@ package com.balugaq.runtimepylon.pylon;
 import com.balugaq.runtimepylon.pylon.item.NumberStack;
 import com.balugaq.runtimepylon.pylon.item.StringStack;
 import com.balugaq.runtimepylon.pylon.item.fluid.FluidTemperatureHolder;
-import com.balugaq.runtimepylon.pylon.page.RuntimePages;
+import com.balugaq.runtimepylon.pylon.page.MainPage;
 import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import org.bukkit.Material;
@@ -24,7 +24,7 @@ public class RuntimeItems {
                 item_hub,
                 RuntimeKeys.item_hub // block signature
         );
-        RuntimePages.MAIN.addItem(RuntimeKeys.item_hub);
+        MainPage.addItem(RuntimeKeys.item_hub);
     }
 
     public static final ItemStack fluid_hub = ItemStackBuilder.pylonItem(
@@ -37,7 +37,7 @@ public class RuntimeItems {
                 fluid_hub,
                 RuntimeKeys.fluid_hub
         );
-        RuntimePages.MAIN.addItem(RuntimeKeys.fluid_hub);
+        MainPage.addItem(RuntimeKeys.fluid_hub);
     }
 
     public static final ItemStack page_hub = ItemStackBuilder.pylonItem(
@@ -50,7 +50,7 @@ public class RuntimeItems {
                 page_hub,
                 RuntimeKeys.page_hub
         );
-        RuntimePages.MAIN.addItem(RuntimeKeys.page_hub);
+        MainPage.addItem(RuntimeKeys.page_hub);
     }
 
     public static final ItemStack number_stack = ItemStackBuilder.pylonItem(
@@ -59,7 +59,7 @@ public class RuntimeItems {
     ).build();
     static {
         PylonItem.register(NumberStack.class, number_stack);
-        RuntimePages.MAIN.addItem(RuntimeKeys.number_stack);
+        MainPage.addItem(RuntimeKeys.number_stack);
     }
 
     public static final ItemStack string_stack = ItemStackBuilder.pylonItem(
@@ -68,7 +68,7 @@ public class RuntimeItems {
     ).build();
     static {
         PylonItem.register(StringStack.class, string_stack);
-        RuntimePages.MAIN.addItem(RuntimeKeys.string_stack);
+        MainPage.addItem(RuntimeKeys.string_stack);
     }
 
     public static final ItemStack fluid_temperature_holder = ItemStackBuilder.pylonItem(
@@ -77,6 +77,6 @@ public class RuntimeItems {
     ).build();
     static {
         PylonItem.register(FluidTemperatureHolder.class, fluid_temperature_holder);
-        RuntimePages.MAIN.addItem(RuntimeKeys.fluid_temperature_holder);
+        MainPage.addItem(RuntimeKeys.fluid_temperature_holder);
     }
 }
