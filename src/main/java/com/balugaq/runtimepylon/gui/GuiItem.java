@@ -1,9 +1,9 @@
 package com.balugaq.runtimepylon.gui;
 
 import com.balugaq.runtimepylon.RuntimePylon;
-import com.balugaq.runtimepylon.input.ChatInputListener;
-import com.balugaq.runtimepylon.util.PlaceholderException;
-import com.balugaq.runtimepylon.util.WrongStateException;
+import com.balugaq.runtimepylon.gui.interact.IgnorableException;
+import com.balugaq.runtimepylon.gui.interact.WrongStateException;
+import com.balugaq.runtimepylon.listener.ChatInputListener;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import lombok.Getter;
@@ -22,7 +22,7 @@ import xyz.xenondevs.invui.item.impl.AbstractItem;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static com.balugaq.runtimepylon.Lang.gui_err_1;
+import static com.balugaq.runtimepylon.util.Lang.gui_err_1;
 
 @Getter
 public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem {
@@ -41,7 +41,7 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
     }
 
     public static <T> @NotNull T assertNotNull(@Nullable T o) {
-        if (o == null) throw new PlaceholderException();
+        if (o == null) throw new IgnorableException();
         return o;
     }
 
@@ -110,7 +110,7 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
             boolean updateWindow = clickHandler.handleClick(data, clickType, player, event);
             if (updateWindow) notifyWindows();
         } catch (Exception e) {
-            if (e instanceof PlaceholderException) {
+            if (e instanceof IgnorableException) {
                 return;
             }
             if (e instanceof WrongStateException) {

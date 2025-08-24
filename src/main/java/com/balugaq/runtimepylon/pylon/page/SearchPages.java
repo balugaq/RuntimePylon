@@ -1,6 +1,7 @@
-package com.balugaq.runtimepylon.gui;
+package com.balugaq.runtimepylon.pylon.page;
 
-import com.balugaq.runtimepylon.RuntimeKeys;
+import com.balugaq.runtimepylon.gui.GuiItem;
+import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import com.balugaq.runtimepylon.RuntimePylon;
 import io.github.pylonmc.pylon.core.guide.pages.base.SearchPage;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
@@ -50,7 +51,7 @@ public class SearchPages {
                         ));
 
                         return new Pair<>(
-                                (Item) GuiItem.create(null)
+                                (Item) GuiItem.create(null) // unused null
                                         .item(block -> page.getItem())
                                         .click((block, clickType, p2, event) -> {
                                             consumer.accept(page);
@@ -75,17 +76,15 @@ public class SearchPages {
         public @NotNull List<Pair<Item, String>> getItemNamePairs(@NotNull Player player, @NotNull String search) {
             return PylonRegistry.RECIPE_TYPES.getValues()
                     .stream()
-                    .map(type -> {
-                        return new Pair<>(
-                                (Item) GuiItem.create(null)
-                                        .item(block -> ItemStackBuilder.of(Material.CRAFTING_TABLE)
-                                                .name(type.getKey().toString()))
-                                        .click((block, clickType, p2, event) -> {
-                                            consumer.accept(type);
-                                            return true;
-                                        }),
-                                type.getKey().toString());
-                    })
+                    .map(type -> new Pair<>(
+                            (Item) GuiItem.create(null) // unused null
+                                    .item(block -> ItemStackBuilder.of(Material.CRAFTING_TABLE)
+                                            .name(type.getKey().toString()))
+                                    .click((block, clickType, p2, event) -> {
+                                        consumer.accept(type);
+                                        return true;
+                                    }),
+                            type.getKey().toString()))
                     .toList();
         }
     }

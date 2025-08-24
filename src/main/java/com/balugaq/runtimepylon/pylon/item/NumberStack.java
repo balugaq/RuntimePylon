@@ -1,7 +1,7 @@
-package com.balugaq.runtimepylon.item;
+package com.balugaq.runtimepylon.pylon.item;
 
 import com.balugaq.runtimepylon.gui.GuiItem;
-import com.balugaq.runtimepylon.util.WrongStateException;
+import com.balugaq.runtimepylon.gui.interact.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.item.PylonItem;
@@ -11,7 +11,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import static com.balugaq.runtimepylon.Lang.*;
+import static com.balugaq.runtimepylon.util.Lang.*;
 
 public class NumberStack extends PylonItem implements DataStack {
     public String internal;

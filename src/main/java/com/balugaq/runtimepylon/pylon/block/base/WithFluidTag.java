@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon.block.base;
+package com.balugaq.runtimepylon.pylon.block.base;
 
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;

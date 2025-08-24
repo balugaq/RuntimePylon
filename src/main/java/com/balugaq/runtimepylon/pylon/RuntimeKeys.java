@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon;
+package com.balugaq.runtimepylon.pylon;
 
 import org.bukkit.NamespacedKey;
 

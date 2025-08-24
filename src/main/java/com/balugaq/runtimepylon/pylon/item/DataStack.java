@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon.item;
+package com.balugaq.runtimepylon.pylon.item;
 
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;

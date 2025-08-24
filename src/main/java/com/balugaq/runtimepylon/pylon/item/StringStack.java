@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon.item;
+package com.balugaq.runtimepylon.pylon.item;
 
 import com.balugaq.runtimepylon.gui.GuiItem;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
@@ -10,7 +10,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import static com.balugaq.runtimepylon.Lang.string_input_1;
+import static com.balugaq.runtimepylon.util.Lang.string_input_1;
 
 public class StringStack extends PylonItem implements DataStack {
     public String internal;

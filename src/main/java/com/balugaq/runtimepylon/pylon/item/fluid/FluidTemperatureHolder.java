@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon.item.fluid;
+package com.balugaq.runtimepylon.pylon.item.fluid;
 
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-import static com.balugaq.runtimepylon.Lang.set_temperature_1;
+import static com.balugaq.runtimepylon.util.Lang.set_temperature_1;
 import static com.balugaq.runtimepylon.gui.ButtonSet.done;
 
 public class FluidTemperatureHolder extends PylonItem implements PylonFluidTagHolder<FluidTemperature> {

@@ -1,13 +1,14 @@
 package com.balugaq.runtimepylon.gui;
 
-import com.balugaq.runtimepylon.RuntimeKeys;
+import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import com.balugaq.runtimepylon.RuntimePylon;
-import com.balugaq.runtimepylon.block.base.WithModel;
-import com.balugaq.runtimepylon.block.base.WithPage;
-import com.balugaq.runtimepylon.block.base.WithRecipe;
-import com.balugaq.runtimepylon.item.DataStack;
+import com.balugaq.runtimepylon.pylon.block.base.WithModel;
+import com.balugaq.runtimepylon.pylon.block.base.WithPage;
+import com.balugaq.runtimepylon.pylon.block.base.WithRecipe;
+import com.balugaq.runtimepylon.gui.interact.WrongStateException;
+import com.balugaq.runtimepylon.pylon.item.DataStack;
+import com.balugaq.runtimepylon.pylon.page.SearchPages;
 import com.balugaq.runtimepylon.util.RecipeAdapter;
-import com.balugaq.runtimepylon.util.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.guide.button.ItemButton;
@@ -39,7 +40,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.balugaq.runtimepylon.Lang.*;
+import static com.balugaq.runtimepylon.util.Lang.*;
 import static com.balugaq.runtimepylon.gui.GuiItem.toNamespacedKey;
 import static com.balugaq.runtimepylon.gui.GuiItem.waitInput;
 

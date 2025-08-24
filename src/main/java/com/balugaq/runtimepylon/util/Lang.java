@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon;
+package com.balugaq.runtimepylon.util;
 
 public class Lang {
     // @formatter:off

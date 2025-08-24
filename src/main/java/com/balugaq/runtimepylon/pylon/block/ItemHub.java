@@ -1,10 +1,11 @@
-package com.balugaq.runtimepylon.block;
+package com.balugaq.runtimepylon.pylon.block;
 
-import com.balugaq.runtimepylon.RuntimeKeys;
-import com.balugaq.runtimepylon.block.base.WithModel;
-import com.balugaq.runtimepylon.block.base.WithPage;
-import com.balugaq.runtimepylon.block.base.WithPlaceable;
-import com.balugaq.runtimepylon.block.base.WithRecipe;
+import com.balugaq.runtimepylon.pylon.MyBlock;
+import com.balugaq.runtimepylon.pylon.RuntimeKeys;
+import com.balugaq.runtimepylon.pylon.block.base.WithModel;
+import com.balugaq.runtimepylon.pylon.block.base.WithPage;
+import com.balugaq.runtimepylon.pylon.block.base.WithPlaceable;
+import com.balugaq.runtimepylon.pylon.block.base.WithRecipe;
 import com.balugaq.runtimepylon.gui.ButtonSet;
 import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
@@ -29,10 +30,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.balugaq.runtimepylon.Lang.*;
+import static com.balugaq.runtimepylon.util.Lang.*;
 
 @Getter
-public class ItemHub extends PylonBlock implements
+public class ItemHub extends MyBlock implements
         PylonGuiBlock,
         WithModel,
         WithPage,

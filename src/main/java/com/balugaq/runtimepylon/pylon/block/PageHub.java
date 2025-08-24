@@ -1,11 +1,11 @@
-package com.balugaq.runtimepylon.block;
+package com.balugaq.runtimepylon.pylon.block;
 
-import com.balugaq.runtimepylon.RuntimeKeys;
+import com.balugaq.runtimepylon.pylon.MyBlock;
+import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import com.balugaq.runtimepylon.RuntimePylon;
-import com.balugaq.runtimepylon.block.base.WithModel;
+import com.balugaq.runtimepylon.pylon.block.base.WithModel;
 import com.balugaq.runtimepylon.gui.ButtonSet;
-import com.balugaq.runtimepylon.gui.SearchPages;
-import io.github.pylonmc.pylon.core.block.PylonBlock;
+import com.balugaq.runtimepylon.pylon.page.SearchPages;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
@@ -27,12 +27,12 @@ import org.jetbrains.annotations.Nullable;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 
-import static com.balugaq.runtimepylon.Lang.*;
+import static com.balugaq.runtimepylon.util.Lang.*;
 import static com.balugaq.runtimepylon.gui.GuiItem.toNamespacedKey;
 import static com.balugaq.runtimepylon.gui.GuiItem.waitInput;
 
 @Getter
-public class PageHub extends PylonBlock implements
+public class PageHub extends MyBlock implements
         PylonGuiBlock,
         WithModel {
     public @Nullable ItemStack model = null;

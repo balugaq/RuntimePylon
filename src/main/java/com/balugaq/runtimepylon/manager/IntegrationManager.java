@@ -1,10 +1,11 @@
-package com.balugaq.runtimepylon;
+package com.balugaq.runtimepylon.manager;
 
+import com.balugaq.runtimepylon.RuntimePylon;
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.NotNull;
 
-// todo: apply
 public class IntegrationManager {
-    public IsEnabled isEnabled;
+    public @NotNull IsEnabled isEnabled;
 
     public IntegrationManager() {
         this.isEnabled = new IsEnabled();
@@ -13,8 +14,12 @@ public class IntegrationManager {
         });
     }
 
-    public void onServerDone(Runnable runnable) {
+    public void onServerDone(@NotNull Runnable runnable) {
         RuntimePylon.runTaskLater(runnable, 1);
+    }
+
+    public static IntegrationManager instance() {
+        return RuntimePylon.getInstance().getIntegrationManager();
     }
 
     public static class IsEnabled {

@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon.input;
+package com.balugaq.runtimepylon.listener;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

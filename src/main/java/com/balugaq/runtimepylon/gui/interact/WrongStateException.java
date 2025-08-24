@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon.util;
+package com.balugaq.runtimepylon.gui.interact;
 
 public class WrongStateException extends RuntimeException {
     public WrongStateException(String message) {
