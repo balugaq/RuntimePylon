@@ -27,6 +27,7 @@ public class Lang {
     register_page_1 = "Page ID is not set",
     register_page_2 = "Model is not set",
     register_page_3 = "Model is not set",
+    register_page_4 = "Registered page {}",
     nested_page_1 = "Enter nested page id",
     nested_page_2 = "Invalid page id",
     nested_page_3 = "Set nested page id to {}",

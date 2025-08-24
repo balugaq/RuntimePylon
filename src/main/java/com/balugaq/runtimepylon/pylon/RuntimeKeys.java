@@ -45,6 +45,7 @@ public class RuntimeKeys {
     unset_nested_page = create("unset_nested_page"),
     nested_page_id = create("nested_page_id"),
     nested_page = create("nested_page"),
-    page_hub = create("page_hub")
+    page_hub = create("page_hub"),
+    display_in_root = create("display_in_root")
     ;// @formatter:on
 }

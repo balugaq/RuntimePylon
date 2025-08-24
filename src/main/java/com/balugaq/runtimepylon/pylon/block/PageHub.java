@@ -6,6 +6,7 @@ import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.pylon.block.base.WithModel;
 import com.balugaq.runtimepylon.gui.ButtonSet;
 import com.balugaq.runtimepylon.pylon.page.SearchPages;
+import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
@@ -38,6 +39,7 @@ public class PageHub extends MyBlock implements
     public @Nullable ItemStack model = null;
     public @Nullable NamespacedKey pageId = null;
     public @Nullable NamespacedKey nestedPageId = null;
+    public boolean displayInRoot = true;
 
     public PageHub(@NotNull Block block, @NotNull BlockCreateContext context) {
         super(block, context);
@@ -48,6 +50,16 @@ public class PageHub extends MyBlock implements
         model = pdc.get(RuntimeKeys.model, PylonSerializers.ITEM_STACK);
         pageId = pdc.get(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY);
         nestedPageId = pdc.get(RuntimeKeys.nested_page_id, PylonSerializers.NAMESPACED_KEY);
+        displayInRoot = pdc.getOrDefault(RuntimeKeys.display_in_root, PylonSerializers.BOOLEAN, true);
+    }
+
+    @Override
+    public void write(@NotNull PersistentDataContainer pdc) {
+        super.write(pdc);
+        if (model != null) pdc.set(RuntimeKeys.model, PylonSerializers.ITEM_STACK, model);
+        if (pageId != null) pdc.set(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY, pageId);
+        if (nestedPageId != null) pdc.set(RuntimeKeys.nested_page_id, PylonSerializers.NAMESPACED_KEY, nestedPageId);
+        pdc.set(RuntimeKeys.display_in_root, PylonSerializers.BOOLEAN, displayInRoot);
     }
 
     @Override
@@ -112,7 +124,8 @@ public class PageHub extends MyBlock implements
                         assertTrue(!data.model.getType().isAir(), register_page_3);
 
                         SimpleStaticGuidePage page = new SimpleStaticGuidePage(data.pageId, data.model.getType());
-                        PylonGuide.getRootPage().addPage(page);
+                        if (data.displayInRoot) PylonGuide.getRootPage().addPage(page);
+                        done(player, register_page_4, data.pageId);
                         return false;
                     });
 

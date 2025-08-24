@@ -2,6 +2,7 @@ package com.balugaq.runtimepylon.pylon.page;
 
 import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
+import io.github.pylonmc.pylon.core.guide.pages.base.GuidePage;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;

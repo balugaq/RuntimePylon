@@ -1,6 +1,8 @@
 package com.balugaq.runtimepylon.pylon.page;
 
+import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
+import io.github.pylonmc.pylon.core.guide.pages.base.GuidePage;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
@@ -21,10 +23,13 @@ public class SearchPages {
 
     public static void triggerBackGuide(@NotNull Player player, boolean open) {
         var history = PylonGuide.getHistory().getOrDefault(player.getUniqueId(), List.of());
-        if (history.size() > 2) {
+        if (!history.isEmpty() && isTaggedPage(history.getLast())) {
             history.removeLast();
             if (open) history.getLast().open(player);
         }
     }
 
+    public static boolean isTaggedPage(@NotNull GuidePage page) {
+        return page.getKey().equals(RuntimeKeys.page_search_page) || page.getKey().equals(RuntimeKeys.recipe_type_search_page);
+    }
 }

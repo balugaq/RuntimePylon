@@ -52,7 +52,7 @@ public class ItemHub extends MyBlock implements
 
     public ItemHub(@NotNull Block block, @NotNull PersistentDataContainer pdc) {
         super(block, pdc);
-        placeable = Boolean.TRUE.equals(pdc.get(RuntimeKeys.placeable, PylonSerializers.BOOLEAN));
+        placeable = pdc.getOrDefault(RuntimeKeys.placeable, PylonSerializers.BOOLEAN, true);
         model = pdc.get(RuntimeKeys.model, PylonSerializers.ITEM_STACK);
         itemId = pdc.get(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY);
         pageId = pdc.get(RuntimeKeys.page_id, PylonSerializers.NAMESPACED_KEY);

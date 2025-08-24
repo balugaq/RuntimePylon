@@ -16,6 +16,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -29,9 +30,11 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @Getter
     private IntegrationManager integrationManager;
 
+    public Map<NamespacedKey, SimpleStaticGuidePage> customPages = new HashMap<>();
+
     @NotNull
     public static Map<NamespacedKey, SimpleStaticGuidePage> getGuidePages() {
-        return PylonGuide.getRootPage().getButtons()
+        var pages = new HashMap<>(PylonGuide.getRootPage().getButtons()
                 .stream()
                 .filter(button -> button instanceof PageButton)
                 .map(button -> ((PageButton) button).getPage())
@@ -41,7 +44,17 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
                         Keyed::getKey,
                         page -> page,
                         (a, b) -> b
-                ));
+                )));
+        pages.putAll(RuntimePylon.instance.customPages);
+        return pages;
+    }
+
+    public void registerCustomPage(@NotNull SimpleStaticGuidePage page) {
+        customPages.put(page.getKey(), page);
+    }
+
+    public void unregisterCustomPage(@NotNull SimpleStaticGuidePage page) {
+        customPages.remove(page.getKey());
     }
 
     public static void runTaskLater(@NotNull Runnable runnable, long delay) {
