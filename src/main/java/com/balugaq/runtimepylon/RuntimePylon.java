@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon;
 
+import com.balugaq.runtimepylon.manager.ConfigManager;
 import com.balugaq.runtimepylon.manager.IntegrationManager;
 import com.balugaq.runtimepylon.pylon.RuntimeBlocks;
 import com.balugaq.runtimepylon.pylon.RuntimeItems;
@@ -26,6 +27,9 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
     @Getter
     private static RuntimePylon instance;
+
+    @Getter
+    private ConfigManager configManager;
 
     @Getter
     private IntegrationManager integrationManager;
@@ -66,7 +70,9 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         instance = this;
 
         registerWithPylon();
+
         saveDefaultConfig();
+        configManager = new ConfigManager(this);
 
         integrationManager = new IntegrationManager();
 
@@ -97,5 +103,10 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @Override
     public boolean suppressAddonNameWarning() {
         return true;
+    }
+
+    @NotNull
+    public static ConfigManager getConfigManager() {
+        return instance.configManager;
     }
 }

@@ -81,22 +81,15 @@ public record RecipeAdapter<T extends PylonRecipe>(
                     findInt(recipe, 1)
             ))
         );
-        register(RecipeType.VANILLA_SMITHING, (key, model,recipe) -> {return
-            recipe.size() >= 3 ?
+        register(RecipeType.VANILLA_SMITHING, (key, model,recipe) ->
             new SmithingRecipeWrapper(new SmithingTransformRecipe(
                     key,
                     model,                        // result
                     toChoice(find(recipe, 1)), // template
                     toChoice(find(recipe, 2)), // base
                     toChoice(find(recipe, 3))  // addition
-            )) :
-            new SmithingRecipeWrapper(new SmithingTrimRecipe(
-                    key,
-                    toChoice(find(recipe, 1)), // template
-                    toChoice(find(recipe, 2)), // base
-                    toChoice(find(recipe, 3))  // addition
-            ));
-        });
+            ))
+        );
         register(RecipeType.VANILLA_SHAPED, (key, model,recipe) -> {
             ShapedRecipe r = new ShapedRecipe(key, model)
                     .shape(

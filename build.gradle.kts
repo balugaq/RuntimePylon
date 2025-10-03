@@ -16,6 +16,9 @@ group = "com.balugaq"
 
 repositories {
     mavenCentral()
+    maven("https://central.sonatype.com/repository/maven-snapshots/") {
+        name = "sonatype"
+    }
     maven("https://repo.papermc.io/repository/maven-public/") {
         name = "papermc"
     }
@@ -27,7 +30,7 @@ val baseVersion = project.properties["pylon-base.version"] as String
 
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     compileOnly("io.github.pylonmc:pylon-core:$coreVersion")
     //compileOnly("io.github.pylonmc:pylon-base:$baseVersion")
 }

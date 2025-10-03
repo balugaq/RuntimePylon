@@ -6,7 +6,6 @@ import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.pylon.block.base.WithModel;
 import com.balugaq.runtimepylon.gui.ButtonSet;
 import com.balugaq.runtimepylon.pylon.page.SearchPages;
-import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
