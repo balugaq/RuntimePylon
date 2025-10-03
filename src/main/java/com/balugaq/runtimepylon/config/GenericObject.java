@@ -2,8 +2,12 @@ package com.balugaq.runtimepylon.config;
 
 import org.jspecify.annotations.NullMarked;
 
+/**
+ * @param <T> The generic type
+ * @author balugaq
+ */
 @NullMarked
-public interface GenericObject<T> {
-    void setGenericType(Class<T> clazz);
+public interface GenericObject<K, T> {
+    K setGenericType(Class<T> clazz);
     Class<T> getGenericType();
 }

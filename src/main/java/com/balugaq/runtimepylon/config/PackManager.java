@@ -1,6 +1,13 @@
 package com.balugaq.runtimepylon.config;
 
+import com.balugaq.runtimepylon.RuntimePylon;
+import com.balugaq.runtimepylon.util.Debug;
+import lombok.Data;
 import org.jspecify.annotations.NullMarked;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * We're introducing a new concept: `Pack`
@@ -19,6 +26,12 @@ import org.jspecify.annotations.NullMarked;
  *               <li>zh_CN.yml</li>
  *             </ul>
  *           </li>
+ *           <li>pages/
+ *               <ul>
+ *                 <li>pages-partA.yml</li>
+ *                 <li>pages-partB.yml</li>
+ *               </ul>
+ *             </li>
  *           <li>items/
  *             <ul>
  *               <li>items-partA.yml</li>
@@ -62,6 +75,11 @@ import org.jspecify.annotations.NullMarked;
  *               <li>ID.yml</li>
  *             </ul>
  *           </li>
+ *           <li>scripts/
+ *             <ul>
+ *                 <li>a.js</li>
+ *             </ul>
+ *           </li>
  *         </ul>
  *       </li>
  *     </ul>
@@ -84,18 +102,35 @@ import org.jspecify.annotations.NullMarked;
  * | List<String> | *Contributors | is the contributors of a pack | - | [balugaq, balugaq2] |
  * | String | *Website | is the website of a pack | - | `https://github.com/balugaq/RuntimePylon` |
  * | String | *GitHubUpdateLink | is the update link of a pack | - | `https://github.com/balugaq/RuntimePylon/releases` |
+ * Properties tagged with * are optional
  * <p>
  * IDs:
  * | ID Type | ID Name | Description | Pattern | It likes |
  * | ------- | ------- | ----------- | ------- | -------- |
  * | String | Pack ID | is the identifier of a pack | `A-Za-z0-9_+-` | Abc |
  * | String | Internal object ID | is the identifier of an object in your own pack | `a-z0-9_-./` | abc |
- * | String | External object ID | is the identifier of an object for external packs to access | - | mypack:abc |
+ * | String | External object ID | is the identifier of an object for external packs to access | - | mypack_abc |
  * | NamespacedKey | Registered object ID | is the identifier of an object that registered in PylonCore | - | runtimepylon:mypack_abc |
  *
  * @author balugaq
  */
 @SuppressWarnings("JavadocLinkAsPlainText")
 @NullMarked
-public interface IPackManager {
+public @Data class PackManager {
+    public static final File PACKS_FOLDER = new File(RuntimePylon.getInstance().getDataFolder(), "packs");
+    private final List<Pack> packs = new ArrayList<>();
+
+    public void loadPacks() {
+        for (File packFolder : PACKS_FOLDER.listFiles()) {
+            if (packFolder.isDirectory()) {
+                Pack pack = FileObject.newDeserializer(Pack.class).deserialize(packFolder);
+                packs.add(pack);
+                Debug.log("Loaded pack: " + pack.getPackID());
+            }
+        }
+
+        for (Pack pack : packs) {
+            pack.register();
+        }
+    }
 }

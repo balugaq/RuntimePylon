@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon;
 
+import com.balugaq.runtimepylon.config.PackManager;
 import com.balugaq.runtimepylon.manager.ConfigManager;
 import com.balugaq.runtimepylon.manager.IntegrationManager;
 import com.balugaq.runtimepylon.pylon.RuntimeBlocks;
@@ -28,11 +29,11 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @Getter
     private static RuntimePylon instance;
 
-    @Getter
     private ConfigManager configManager;
 
-    @Getter
     private IntegrationManager integrationManager;
+
+    private PackManager packManager;
 
     public Map<NamespacedKey, SimpleStaticGuidePage> customPages = new HashMap<>();
 
@@ -67,17 +68,24 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
     @Override
     public void onEnable() {
+        // todo: /runtime commands
+        // `/runtime updatepacks` to update packs from github
+        // `/runtime clearsettings` to remerge settings
+        // `/runtime clearrecipes` to remerge recipes
+        // `/runtime clearlang` to remerge lang files
         instance = this;
 
         registerWithPylon();
 
         saveDefaultConfig();
-        configManager = new ConfigManager(this);
 
+        configManager = new ConfigManager(this);
         integrationManager = new IntegrationManager();
+        packManager = new PackManager();
 
         RuntimeItems.initialize();
         RuntimeBlocks.initialize();
+        packManager.loadPacks();
 
         Bukkit.getServer().getPluginManager().registerEvents(new ChatInputListener(), this);
     }
@@ -108,5 +116,15 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @NotNull
     public static ConfigManager getConfigManager() {
         return instance.configManager;
+    }
+
+    @NotNull
+    public static IntegrationManager getIntegrationManager() {
+        return instance.integrationManager;
+    }
+
+    @NotNull
+    public static PackManager getPackManager() {
+        return instance.packManager;
     }
 }

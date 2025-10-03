@@ -3,6 +3,8 @@ package com.balugaq.runtimepylon.config;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
@@ -11,13 +13,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 @NullMarked
-public class PackID implements Unserializable<PackID> {
-    private final String id;
-
-    @Override
-    public List<Reader<?, PackID>> readers() {
-        return List.of(
-                Reader.of(String.class, PackID::new)
-        );
-    }
+public class PreparedItem {
+    private final ItemStack icon;
+    private final @Nullable ScriptDesc script;
+    private final @Nullable List<InternalObjectID> pages;
 }

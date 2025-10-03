@@ -1,14 +1,15 @@
 package com.balugaq.runtimepylon.config;
 
+import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.function.Function;
 
 @NullMarked
-public sealed interface Reader<Input, Result> permits Reader.ReaderImpl {
-    static <Input, Result> Reader<Input, Result> of(Class<Input> clazz, Function<Input, @Nullable Result> function) {
-        return new ReaderImpl<>(clazz, function);
+public sealed interface ConfigReader<Input, Result> permits ConfigReader.ConfigReaderImpl {
+    static <Input, Result> ConfigReader<Input, Result> of(Class<Input> clazz, Function<Input, @Nullable Result> function) {
+        return new ConfigReaderImpl<>(clazz, function);
     }
 
     Class<Input> type();
@@ -17,15 +18,15 @@ public sealed interface Reader<Input, Result> permits Reader.ReaderImpl {
      * Read an object into Result
      * @param o object to read
      * @return Result
-     * @see Unserializable#unserialize(Object)
+     * @see Deserializable#deserialize(Object)
      */
     @Nullable
     Result read(Input o);
 
-    final class ReaderImpl<Input, Result> implements Reader<Input, Result> {
+    final class ConfigReaderImpl<Input, Result> implements ConfigReader<Input, Result> {
         private final Class<Input> clazz;
         private final Function<Input, Result> function;
-        public ReaderImpl(Class<Input> clazz, Function<Input, @Nullable Result> function) {
+        public ConfigReaderImpl(Class<Input> clazz, Function<Input, @Nullable Result> function) {
             this.clazz = clazz;
             this.function = function;
         }
@@ -38,7 +39,7 @@ public sealed interface Reader<Input, Result> permits Reader.ReaderImpl {
         @SuppressWarnings("DataFlowIssue")
         @Override
         @Nullable
-        public Result read(Input o) throws UnserializableException {
+        public Result read(Input o) throws DeserializationException {
             return function.apply(o);
         }
     }

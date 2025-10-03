@@ -32,6 +32,13 @@ val baseVersion = project.properties["pylon-base.version"] as String
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     compileOnly("io.github.pylonmc:pylon-core:$coreVersion")
+
+    compileOnly("com.caoccao.javet:javet:4.1.7")
+    compileOnly("com.caoccao.javet:javet-v8-linux-arm64:4.1.7")
+    compileOnly("com.caoccao.javet:javet-v8-linux-x86_64:4.1.7")
+    //compileOnly("com.caoccao.javet:javet-v8-macos-arm64:4.1.7")
+    //compileOnly("com.caoccao.javet:javet-v8-macos-x86_64:4.1.7")
+    compileOnly("com.caoccao.javet:javet-v8-windows-x86_64:4.1.7")
     //compileOnly("io.github.pylonmc:pylon-base:$baseVersion")
 }
 
