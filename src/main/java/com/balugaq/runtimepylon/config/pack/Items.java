@@ -9,7 +9,9 @@ import com.balugaq.runtimepylon.config.PreparedItem;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.config.UnsArrayList;
-import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
+import com.balugaq.runtimepylon.exceptions.InvalidDescException;
+import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import lombok.Data;
 import org.bukkit.configuration.ConfigurationSection;
@@ -62,27 +64,22 @@ public class Items implements FileObject<Items> {
 
                         for (String itemKey : config.getKeys(false)) {
                             if (!itemKey.matches("a-z0-9_-\\./")) {
-                                Debug.severe("Incompatible item key: " + itemKey);
+                                severe(new IncompatibleKeyFormatException(itemKey));
                                 continue;
                             }
 
                             ConfigurationSection section = config.getConfigurationSection(itemKey);
                             if (section == null) {
-                                Debug.severe("Invalid item desc at " + itemKey);
+                                severe(new InvalidDescException(itemKey));
                                 continue;
                             }
 
                             if (!section.contains("icon")) {
-                                Debug.severe("No icon key found at " + itemKey);
+                                severe(new MissingArgumentException("icon"));
                                 continue;
                             }
 
-                            var s2 = section.getConfigurationSection("icon");
-                            if (s2 == null) {
-                                Debug.severe("Invalid icon section at " + itemKey);
-                                continue;
-                            }
-
+                            var s2 = section.get("icon");
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
 
                             var id = InternalObjectID.of(itemKey).with(namespace).register();

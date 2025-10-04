@@ -1,7 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
 import lombok.Getter;
-import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
@@ -9,9 +8,13 @@ import java.util.List;
 
 @NullMarked
 public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implements Deserializer<UnsArrayList<T>>, GenericObject<UnsArrayList<T>, T> {
-    @Setter
     @Getter
     private Class<T> genericType;
+
+    public UnsArrayList<T> setGenericType(Class<T> clazz) {
+        this.genericType = clazz;
+        return this;
+    }
 
     @Override
     public List<ConfigReader<?, UnsArrayList<T>>> readers() {

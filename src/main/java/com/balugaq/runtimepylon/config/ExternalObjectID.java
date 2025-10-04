@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import org.bukkit.NamespacedKey;
 import org.jspecify.annotations.NullMarked;
 
+/**
+ * @author balugaq
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor(force = true)

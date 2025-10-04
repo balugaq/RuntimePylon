@@ -7,7 +7,9 @@ import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.PreparedBlock;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
-import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
+import com.balugaq.runtimepylon.exceptions.InvalidDescException;
+import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import lombok.Data;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -57,26 +59,22 @@ public class Blocks implements FileObject<Blocks> {
 
                         for (String blockKey : config.getKeys(false)) {
                             if (!blockKey.matches("a-z0-9_-\\./")) {
-                                Debug.severe("Incompatible block key: " + blockKey);
+                                severe(new IncompatibleKeyFormatException(blockKey));
                                 continue;
                             }
 
                             ConfigurationSection section = config.getConfigurationSection(blockKey);
                             if (section == null) {
-                                Debug.severe("Invalid block desc at " + blockKey);
+                                severe(new InvalidDescException(blockKey));
                                 continue;
                             }
 
                             if (!section.contains("material")) {
-                                Debug.severe("No material key found at " + blockKey);
+                                severe(new MissingArgumentException("material"));
                                 continue;
                             }
 
-                            var s2 = section.getConfigurationSection("material");
-                            if (s2 == null) {
-                                Debug.severe("Invalid material section at " + blockKey);
-                                continue;
-                            }
+                            var s2 = section.get("material");
 
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
                             var id = InternalObjectID.of(blockKey).with(namespace).register();

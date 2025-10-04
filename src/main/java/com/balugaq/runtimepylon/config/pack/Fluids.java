@@ -6,7 +6,9 @@ import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.PreparedFluid;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
-import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
+import com.balugaq.runtimepylon.exceptions.InvalidDescException;
+import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
 import lombok.Data;
 import org.bukkit.configuration.ConfigurationSection;
@@ -57,33 +59,29 @@ public class Fluids implements FileObject<Fluids> {
 
                         for (String fluidKey : config.getKeys(false)) {
                             if (!fluidKey.matches("a-z0-9_-\\./")) {
-                                Debug.severe("Incompatible fluid key: " + fluidKey);
+                                severe(new IncompatibleKeyFormatException(fluidKey));
                                 continue;
                             }
 
                             ConfigurationSection section = config.getConfigurationSection(fluidKey);
                             if (section == null) {
-                                Debug.severe("Invalid fluid desc at " + fluidKey);
+                                severe(new InvalidDescException(fluidKey));
                                 continue;
                             }
 
                             if (!section.contains("material")) {
-                                Debug.severe("No material key found at " + fluidKey);
+                                severe(new MissingArgumentException("material"));
                                 continue;
                             }
 
-                            var s2 = section.getConfigurationSection("material");
-                            if (s2 == null) {
-                                Debug.severe("Invalid material section at " + fluidKey);
-                                continue;
-                            }
+                            var s2 = section.get("material");
 
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
 
                             var id = InternalObjectID.of(fluidKey).with(namespace).register();
-                            var ts = section.getString("temperature");
+                            var ts = section.get("temperature");
                             if (ts == null) {
-                                Debug.severe("No temperature key found at " + fluidKey);
+                                severe(new MissingArgumentException("temperature"));
                                 continue;
                             }
 

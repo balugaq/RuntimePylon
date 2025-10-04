@@ -6,7 +6,9 @@ import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.PreparedPage;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
-import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
+import com.balugaq.runtimepylon.exceptions.InvalidDescException;
+import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import lombok.Data;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -53,31 +55,26 @@ public class Pages implements FileObject<Pages> {
                     for (File yml : ymls) {
                         var config = YamlConfiguration.loadConfiguration(yml);
 
-                        for (String blockKey : config.getKeys(false)) {
-                            if (!blockKey.matches("a-z0-9_-\\./")) {
-                                Debug.severe("Incompatible block key: " + blockKey);
+                        for (String pageKey : config.getKeys(false)) {
+                            if (!pageKey.matches("a-z0-9_-\\./")) {
+                                severe(new IncompatibleKeyFormatException(pageKey));
                                 continue;
                             }
 
-                            ConfigurationSection section = config.getConfigurationSection(blockKey);
+                            ConfigurationSection section = config.getConfigurationSection(pageKey);
                             if (section == null) {
-                                Debug.severe("Invalid block desc at " + blockKey);
+                                severe(new InvalidDescException(pageKey));
                                 continue;
                             }
 
                             if (!section.contains("material")) {
-                                Debug.severe("No material key found at " + blockKey);
+                                severe(new MissingArgumentException("material"));
                                 continue;
                             }
 
-                            var s2 = section.getConfigurationSection("material");
-                            if (s2 == null) {
-                                Debug.severe("Invalid material section at " + blockKey);
-                                continue;
-                            }
-
+                            var s2 = section.get("material");
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
-                            var id = InternalObjectID.of(blockKey).with(namespace).register();
+                            var id = InternalObjectID.of(pageKey).with(namespace).register();
 
                             boolean postLoad = section.getBoolean("postload", false);
                             pages.put(id, new PreparedPage(id, item.getType(), postLoad));

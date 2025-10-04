@@ -1,6 +1,7 @@
 package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
+import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.ApiStatus;
@@ -63,5 +64,10 @@ public interface FileObject<T> {
         }
 
         throw new DeserializationException(this.getClass());
+    }
+
+    default void severe(Exception e) {
+        // todo
+        Debug.severe(e);
     }
 }

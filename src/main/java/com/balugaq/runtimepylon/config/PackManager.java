@@ -146,6 +146,17 @@ public @Data class PackManager {
         else consumer.accept(postLoadable);
     }
 
+    public static ItemStack findSaveditem(PackDesc packDesc, SaveditemDesc itemDesc) throws
+            UnknownPackException, SaveditemsNotFoundException, UnknownSaveditemException {
+        Pack pack = packDesc.findPack();
+        if (pack == null) throw new UnknownPackException(packDesc);
+        Saveditems saveditems = pack.getSaveditems();
+        if (saveditems == null) throw new SaveditemsNotFoundException(packDesc);
+        ItemStack itemStack = saveditems.find(itemDesc);
+        if (itemStack == null) throw new UnknownSaveditemException(packDesc, itemDesc);
+        return itemStack;
+    }
+
     public void loadPacks() {
         for (File packFolder : PACKS_FOLDER.listFiles()) {
             if (packFolder.isDirectory()) {
@@ -158,16 +169,5 @@ public @Data class PackManager {
         for (Pack pack : packs) {
             pack.register();
         }
-    }
-
-    public static ItemStack findSaveditem(PackDesc packDesc, SaveditemDesc itemDesc) throws
-            UnknownPackException, SaveditemsNotFoundException, UnknownSaveditemException {
-        Pack pack = packDesc.findPack();
-        if (pack == null) throw new UnknownPackException(packDesc);
-        Saveditems saveditems = pack.getSaveditems();
-        if (saveditems == null) throw new SaveditemsNotFoundException(packDesc);
-        ItemStack itemStack = saveditems.find(itemDesc);
-        if (itemStack == null) throw new UnknownSaveditemException(packDesc, itemDesc);
-        return itemStack;
     }
 }

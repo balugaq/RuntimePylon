@@ -36,7 +36,7 @@ public class Scripts implements FileObject<Scripts> {
     }
 
     public void closeAll() {
-
+        // todo
     }
 
     @Override
