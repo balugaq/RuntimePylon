@@ -14,12 +14,12 @@ public class IntegrationManager {
         });
     }
 
-    public void onServerDone(@NotNull Runnable runnable) {
-        RuntimePylon.runTaskLater(runnable, 1);
-    }
-
     public static IntegrationManager instance() {
         return RuntimePylon.getInstance().getIntegrationManager();
+    }
+
+    public void onServerDone(@NotNull Runnable runnable) {
+        RuntimePylon.runTaskLater(runnable, 1);
     }
 
     public static class IsEnabled {

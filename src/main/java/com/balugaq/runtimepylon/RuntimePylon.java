@@ -1,11 +1,11 @@
 package com.balugaq.runtimepylon;
 
 import com.balugaq.runtimepylon.config.PackManager;
+import com.balugaq.runtimepylon.listener.ChatInputListener;
 import com.balugaq.runtimepylon.manager.ConfigManager;
 import com.balugaq.runtimepylon.manager.IntegrationManager;
 import com.balugaq.runtimepylon.pylon.RuntimeBlocks;
 import com.balugaq.runtimepylon.pylon.RuntimeItems;
-import com.balugaq.runtimepylon.listener.ChatInputListener;
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
@@ -28,14 +28,10 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
     @Getter
     private static RuntimePylon instance;
-
-    private ConfigManager configManager;
-
-    private IntegrationManager integrationManager;
-
-    private PackManager packManager;
-
     public Map<NamespacedKey, SimpleStaticGuidePage> customPages = new HashMap<>();
+    private ConfigManager configManager;
+    private IntegrationManager integrationManager;
+    private PackManager packManager;
 
     @NotNull
     public static Map<NamespacedKey, SimpleStaticGuidePage> getGuidePages() {
@@ -54,16 +50,31 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         return pages;
     }
 
+    public static void runTaskLater(@NotNull Runnable runnable, long delay) {
+        Bukkit.getScheduler().runTaskLater(getInstance(), runnable, delay);
+    }
+
+    @NotNull
+    public static ConfigManager getConfigManager() {
+        return instance.configManager;
+    }
+
+    @NotNull
+    public static IntegrationManager getIntegrationManager() {
+        return instance.integrationManager;
+    }
+
+    @NotNull
+    public static PackManager getPackManager() {
+        return instance.packManager;
+    }
+
     public void registerCustomPage(@NotNull SimpleStaticGuidePage page) {
         customPages.put(page.getKey(), page);
     }
 
     public void unregisterCustomPage(@NotNull SimpleStaticGuidePage page) {
         customPages.remove(page.getKey());
-    }
-
-    public static void runTaskLater(@NotNull Runnable runnable, long delay) {
-        Bukkit.getScheduler().runTaskLater(getInstance(), runnable, delay);
     }
 
     @Override
@@ -111,20 +122,5 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @Override
     public boolean suppressAddonNameWarning() {
         return true;
-    }
-
-    @NotNull
-    public static ConfigManager getConfigManager() {
-        return instance.configManager;
-    }
-
-    @NotNull
-    public static IntegrationManager getIntegrationManager() {
-        return instance.integrationManager;
-    }
-
-    @NotNull
-    public static PackManager getPackManager() {
-        return instance.packManager;
     }
 }

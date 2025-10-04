@@ -16,9 +16,10 @@ public sealed interface ConfigReader<Input, Result> permits ConfigReader.ConfigR
 
     /**
      * Read an object into Result
+     *
      * @param o object to read
      * @return Result
-     * @see Deserializable#deserialize(Object)
+     * @see Deserializer#deserialize(Object)
      */
     @Nullable
     Result read(Input o);
@@ -26,6 +27,7 @@ public sealed interface ConfigReader<Input, Result> permits ConfigReader.ConfigR
     final class ConfigReaderImpl<Input, Result> implements ConfigReader<Input, Result> {
         private final Class<Input> clazz;
         private final Function<Input, Result> function;
+
         public ConfigReaderImpl(Class<Input> clazz, Function<Input, @Nullable Result> function) {
             this.clazz = clazz;
             this.function = function;

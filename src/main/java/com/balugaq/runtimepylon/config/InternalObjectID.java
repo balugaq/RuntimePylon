@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 @NullMarked
-public class InternalObjectID implements Deserializable<InternalObjectID> {
+public class InternalObjectID implements Deserializer<InternalObjectID> {
     private final String id;
 
     public static InternalObjectID of(String id) {

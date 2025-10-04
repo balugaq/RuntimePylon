@@ -1,10 +1,10 @@
 package com.balugaq.runtimepylon.pylon.block;
 
+import com.balugaq.runtimepylon.RuntimePylon;
+import com.balugaq.runtimepylon.gui.ButtonSet;
 import com.balugaq.runtimepylon.pylon.MyBlock;
 import com.balugaq.runtimepylon.pylon.RuntimeKeys;
-import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.pylon.block.base.WithModel;
-import com.balugaq.runtimepylon.gui.ButtonSet;
 import com.balugaq.runtimepylon.pylon.page.SearchPages;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
@@ -27,9 +27,9 @@ import org.jetbrains.annotations.Nullable;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 
-import static com.balugaq.runtimepylon.util.Lang.*;
 import static com.balugaq.runtimepylon.gui.GuiItem.toNamespacedKey;
 import static com.balugaq.runtimepylon.gui.GuiItem.waitInput;
+import static com.balugaq.runtimepylon.util.Lang.*;
 
 @Getter
 public class PageHub extends MyBlock implements

@@ -1,8 +1,8 @@
 package com.balugaq.runtimepylon.config.pack;
 
-import com.balugaq.runtimepylon.config.Examinable;
 import com.balugaq.runtimepylon.config.ConfigReader;
-import com.balugaq.runtimepylon.config.Deserializable;
+import com.balugaq.runtimepylon.config.Deserializer;
+import com.balugaq.runtimepylon.config.Examinable;
 import com.balugaq.runtimepylon.exceptions.ExamineFailedException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 @NullMarked
-public class WebsiteLink implements Deserializable<WebsiteLink>, Examinable<WebsiteLink> {
+public class WebsiteLink implements Deserializer<WebsiteLink>, Examinable<WebsiteLink> {
     private final String link;
 
     @Override

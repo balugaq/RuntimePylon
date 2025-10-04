@@ -2,7 +2,6 @@ package com.balugaq.runtimepylon.config;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
@@ -11,10 +10,11 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor(force = true)
 @NullMarked
-public class PreparedItem {
-    private final ItemStack icon;
-    private final @Nullable ScriptDesc script;
-    private final @Nullable List<InternalObjectID> pages;
+public class PreparedItem implements PostLoadable {
+    final RegisteredObjectID id;
+    final ItemStack icon;
+    final @Nullable ScriptDesc script;
+    final @Nullable List<InternalObjectID> pages;
+    final boolean postLoad;
 }

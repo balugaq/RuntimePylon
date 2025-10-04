@@ -1,18 +1,14 @@
 package com.balugaq.runtimepylon.config.pack;
 
-import com.balugaq.runtimepylon.config.Deserializable;
+import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.PreparedFluid;
-import com.balugaq.runtimepylon.config.PreparedItem;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
-import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.util.Debug;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
-import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import lombok.Data;
-import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -30,14 +26,14 @@ import java.util.Map;
  *     <li>fluids-partB.yml</li>
  *   </ul>
  * </li>
- *
+ * <p>
  * For each yml:
  * <p>
  * [Internal object ID]:
  *   material: [Material Format]
  *   *temperature: [Temperature]
+ *   *postload: boolean
  * <p>
- *
  */
 @Data
 @NullMarked
@@ -82,7 +78,7 @@ public class Fluids implements FileObject<Fluids> {
                                 continue;
                             }
 
-                            ItemStack item = Deserializable.ITEMSTACK.deserialize(s2);
+                            ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
 
                             var id = InternalObjectID.of(fluidKey).with(namespace).register();
                             var ts = section.getString("temperature");
@@ -91,10 +87,11 @@ public class Fluids implements FileObject<Fluids> {
                                 continue;
                             }
 
-                            FluidTemperature temperature = Deserializable.enumDeserializer(FluidTemperature.class)
-                                            .deserialize(ts);
+                            FluidTemperature temperature = Deserializer.enumDeserializer(FluidTemperature.class)
+                                    .deserialize(ts);
 
-                            fluids.put(id, new PreparedFluid(item.getType(), temperature));
+                            boolean postLoad = section.getBoolean("postload", false);
+                            fluids.put(id, new PreparedFluid(id, item.getType(), temperature, postLoad));
                         }
                     }
 

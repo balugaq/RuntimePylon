@@ -1,9 +1,11 @@
 package com.balugaq.runtimepylon.config;
 
+import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.exceptions.ExamineFailedException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
@@ -15,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 @NullMarked
-public class PackDesc implements Deserializable<PackDesc>, Examinable<PackDesc> {
+public class PackDesc implements Deserializer<PackDesc>, Examinable<PackDesc> {
     private final String id;
 
     @Override
@@ -31,5 +33,10 @@ public class PackDesc implements Deserializable<PackDesc>, Examinable<PackDesc> 
         return List.of(
                 ConfigReader.of(String.class, PackDesc::new)
         );
+    }
+
+    @Nullable
+    public Pack findPack() {
+        return RuntimePylon.getPackManager().getPacks().stream().filter(pack -> pack.getPackID().getId().equalsIgnoreCase(id)).findFirst().orElse(null);
     }
 }

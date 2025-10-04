@@ -1,11 +1,11 @@
 package com.balugaq.runtimepylon.pylon.block;
 
+import com.balugaq.runtimepylon.gui.ButtonSet;
 import com.balugaq.runtimepylon.pylon.MyBlock;
 import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import com.balugaq.runtimepylon.pylon.block.base.WithFluidTag;
 import com.balugaq.runtimepylon.pylon.block.base.WithModel;
 import com.balugaq.runtimepylon.pylon.block.base.WithRecipe;
-import com.balugaq.runtimepylon.gui.ButtonSet;
 import com.balugaq.runtimepylon.pylon.item.fluid.PylonFluidTagHolder;
 import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;

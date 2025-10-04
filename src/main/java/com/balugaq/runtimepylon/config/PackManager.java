@@ -1,13 +1,22 @@
 package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
+import com.balugaq.runtimepylon.config.pack.Saveditems;
+import com.balugaq.runtimepylon.exceptions.SaveditemsNotFoundException;
+import com.balugaq.runtimepylon.exceptions.UnknownPackException;
+import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.util.Debug;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.Data;
+import lombok.SneakyThrows;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * We're introducing a new concept: `Pack`
@@ -85,7 +94,7 @@ import java.util.List;
  *     </ul>
  *   </li>
  * </ul>
- *
+ * <p>
  * In pack.yml:
  * | Property Type | Property | Description | Pattern | Example |
  * | ------------- | -------- | ----------- | ------- | ------- |
@@ -118,7 +127,24 @@ import java.util.List;
 @NullMarked
 public @Data class PackManager {
     public static final File PACKS_FOLDER = new File(RuntimePylon.getInstance().getDataFolder(), "packs");
+    private static final List<PostLoadTask<? extends PostLoadable>> postLoads = new ObjectArrayList<>(32);
     private final List<Pack> packs = new ArrayList<>();
+
+    @SneakyThrows
+    public static void saveConfig(YamlConfiguration config, YamlConfiguration target, File file) {
+        for (String key : config.getKeys(true)) {
+            if (!target.contains(key)) {
+                target.set(key, config.get(key));
+            }
+        }
+
+        target.save(file);
+    }
+
+    public static <T extends PostLoadable> void load(T postLoadable, Consumer<T> consumer) {
+        if (postLoadable.isPostLoad()) postLoads.add(PostLoadTask.of(postLoadable, consumer));
+        else consumer.accept(postLoadable);
+    }
 
     public void loadPacks() {
         for (File packFolder : PACKS_FOLDER.listFiles()) {
@@ -132,5 +158,16 @@ public @Data class PackManager {
         for (Pack pack : packs) {
             pack.register();
         }
+    }
+
+    public static ItemStack findSaveditem(PackDesc packDesc, SaveditemDesc itemDesc) throws
+            UnknownPackException, SaveditemsNotFoundException, UnknownSaveditemException {
+        Pack pack = packDesc.findPack();
+        if (pack == null) throw new UnknownPackException(packDesc);
+        Saveditems saveditems = pack.getSaveditems();
+        if (saveditems == null) throw new SaveditemsNotFoundException(packDesc);
+        ItemStack itemStack = saveditems.find(itemDesc);
+        if (itemStack == null) throw new UnknownSaveditemException(packDesc, itemDesc);
+        return itemStack;
     }
 }

@@ -1,6 +1,5 @@
 package com.balugaq.runtimepylon.config;
 
-import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.bukkit.Material;
@@ -9,9 +8,8 @@ import org.jspecify.annotations.NullMarked;
 @Data
 @AllArgsConstructor
 @NullMarked
-public class PreparedFluid implements PostLoadable {
+public class PreparedPage implements PostLoadable {
     final RegisteredObjectID id;
     final Material material;
-    final FluidTemperature temperature;
     final boolean postLoad;
 }

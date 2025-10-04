@@ -6,12 +6,10 @@ import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.script.ScriptExecutor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +31,8 @@ public class Scripts implements FileObject<Scripts> {
     }
 
     private ScriptExecutor createScriptExecutor(File file) {
-
+        // todo
+        return null;
     }
 
     public void closeAll() {

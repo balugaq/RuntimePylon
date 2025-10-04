@@ -1,13 +1,13 @@
 package com.balugaq.runtimepylon.config.pack;
 
-import com.balugaq.runtimepylon.config.Deserializable;
+import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
+import com.balugaq.runtimepylon.config.PreparedPage;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.util.Debug;
 import lombok.Data;
-import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -25,19 +25,19 @@ import java.util.Map;
  *     <li>pages-partB.yml</li>
  *   </ul>
  * </li>
- *
+ * <p>
  * For each yml:
  * <p>
  * [Internal object ID]:
  *   material: [Material Format]
+ *   *postload: boolean
  * <p>
- *
  */
 @Data
 @NullMarked
 public class Pages implements FileObject<Pages> {
     private PackNamespace namespace;
-    private Map<RegisteredObjectID, Material> pages;
+    private Map<RegisteredObjectID, PreparedPage> pages;
 
     public Pages setPackNamespace(PackNamespace namespace) {
         this.namespace = namespace;
@@ -76,10 +76,11 @@ public class Pages implements FileObject<Pages> {
                                 continue;
                             }
 
-                            ItemStack item = Deserializable.ITEMSTACK.deserialize(s2);
+                            ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
                             var id = InternalObjectID.of(blockKey).with(namespace).register();
-                            pages.put(id, item.getType());
 
+                            boolean postLoad = section.getBoolean("postload", false);
+                            pages.put(id, new PreparedPage(id, item.getType(), postLoad));
                         }
                     }
 

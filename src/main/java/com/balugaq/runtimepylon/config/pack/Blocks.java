@@ -1,11 +1,10 @@
 package com.balugaq.runtimepylon.config.pack;
 
-import com.balugaq.runtimepylon.config.Deserializable;
+import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.PreparedBlock;
-import com.balugaq.runtimepylon.config.PreparedItem;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.util.Debug;
@@ -27,14 +26,14 @@ import java.util.Map;
  *     <li>blocks-partB.yml</li>
  *   </ul>
  * </li>
- *
+ * <p>
  * For each yml:
  * <p>
  * [Internal object ID]:
  *   material: [Material Format]
  *   *script: script.js
+ *   *postload: boolean
  * <p>
- *
  */
 @Data
 @NullMarked
@@ -79,12 +78,13 @@ public class Blocks implements FileObject<Blocks> {
                                 continue;
                             }
 
-                            ItemStack item = Deserializable.ITEMSTACK.deserialize(s2);
+                            ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
                             var id = InternalObjectID.of(blockKey).with(namespace).register();
 
-                            ScriptDesc scriptdesc = Deserializable.newDeserializer(ScriptDesc.class).deserialize(section.getString("script"));
+                            ScriptDesc scriptdesc = Deserializer.newDeserializer(ScriptDesc.class).deserialize(section.getString("script"));
 
-                            blocks.put(id, new PreparedBlock(item.getType(), scriptdesc));
+                            boolean postLoad = section.getBoolean("postload", false);
+                            blocks.put(id, new PreparedBlock(id, item.getType(), scriptdesc, postLoad));
                         }
                     }
 

@@ -9,5 +9,6 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public interface GenericObject<K, T> {
     K setGenericType(Class<T> clazz);
+
     Class<T> getGenericType();
 }

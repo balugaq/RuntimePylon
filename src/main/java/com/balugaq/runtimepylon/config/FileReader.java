@@ -6,8 +6,8 @@ import org.jspecify.annotations.NullMarked;
 import java.io.File;
 
 /**
- * @author balugaq
  * @param <Result> The result type
+ * @author balugaq
  */
 @FunctionalInterface
 @NullMarked

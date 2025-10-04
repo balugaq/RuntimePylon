@@ -1,7 +1,7 @@
 package com.balugaq.runtimepylon.util;
 
 import com.balugaq.runtimepylon.config.ConfigReader;
-import com.balugaq.runtimepylon.config.Deserializable;
+import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import lombok.AllArgsConstructor;
 import org.jspecify.annotations.NullMarked;
@@ -15,7 +15,7 @@ import java.util.List;
  */
 @AllArgsConstructor
 @NullMarked
-public enum MinecraftVersion implements Deserializable<MinecraftVersion> {
+public enum MinecraftVersion implements Deserializer<MinecraftVersion> {
     V1_21_8(1, 21, 8),
     V1_21_9(1, 21, 9),
     V1_21_10(1, 21, 10),
@@ -27,6 +27,18 @@ public enum MinecraftVersion implements Deserializable<MinecraftVersion> {
     private final int major;
     private final int minor;
     private final int patch;
+
+    public static MinecraftVersion find(int major, int minor, int patch) {
+        for (var version : values()) {
+            if (version.major == major &&
+                    version.minor == minor &&
+                    version.patch == patch) {
+                return version;
+            }
+        }
+
+        throw new DeserializationException("Unknown Minecraft version: " + major + "." + minor + "." + patch);
+    }
 
     public boolean isAtLeast(String version) {
         return isAtLeast(deserialize(version));
@@ -57,17 +69,5 @@ public enum MinecraftVersion implements Deserializable<MinecraftVersion> {
                     return MinecraftVersion.find(major, minor, patch);
                 })
         );
-    }
-
-    public static MinecraftVersion find(int major, int minor, int patch) {
-        for (var version : values()) {
-            if (version.major == major &&
-                    version.minor == minor &&
-                    version.patch == patch) {
-                return version;
-            }
-        }
-
-        throw new DeserializationException("Unknown Minecraft version: " + major + "." + minor + "." + patch);
     }
 }

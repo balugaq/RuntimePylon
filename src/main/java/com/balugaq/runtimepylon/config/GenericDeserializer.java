@@ -3,7 +3,7 @@ package com.balugaq.runtimepylon.config;
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import org.jetbrains.annotations.ApiStatus;
 
-public interface GenericDeserializable<T> extends Deserializable<T>, GenericObject<GenericDeserializable<T>, T> {
+public interface GenericDeserializer<T> extends Deserializer<T>, GenericObject<GenericDeserializer<T>, T> {
     /**
      * Create an instance of the object.
      * All the data in this object are invalid.
@@ -14,7 +14,7 @@ public interface GenericDeserializable<T> extends Deserializable<T>, GenericObje
      * @see #deserialize(Object)
      */
     @ApiStatus.Internal
-    static <T extends Deserializable<T> & GenericObject<GenericDeserializable<T>, T>> T newDeserializer(Class<T> clazz) {
+    static <T extends Deserializer<T> & GenericObject<GenericDeserializer<T>, T>> T newDeserializer(Class<T> clazz) {
         try {
             return clazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {

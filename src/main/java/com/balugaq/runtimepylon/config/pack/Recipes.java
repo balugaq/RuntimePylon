@@ -13,12 +13,12 @@ import java.io.IOException;
 @Data
 @AllArgsConstructor
 @NullMarked
-public class Settings {
-    private File settingsFolder;
+public class Recipes {
+    private File recipeFolder;
     private PackNamespace namespace;
 
     public void mergeTo(File to) {
-        merge(settingsFolder, to);
+        merge(recipeFolder, to);
     }
 
     private void merge(File from, File to) {
@@ -45,4 +45,5 @@ public class Settings {
             }
         }
     }
+
 }

@@ -1,12 +1,12 @@
 package com.balugaq.runtimepylon.pylon.block;
 
+import com.balugaq.runtimepylon.gui.ButtonSet;
 import com.balugaq.runtimepylon.pylon.MyBlock;
 import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import com.balugaq.runtimepylon.pylon.block.base.WithModel;
 import com.balugaq.runtimepylon.pylon.block.base.WithPage;
 import com.balugaq.runtimepylon.pylon.block.base.WithPlaceable;
 import com.balugaq.runtimepylon.pylon.block.base.WithRecipe;
-import com.balugaq.runtimepylon.gui.ButtonSet;
 import com.balugaq.runtimepylon.util.Key;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;

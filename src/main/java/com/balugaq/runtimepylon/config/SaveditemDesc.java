@@ -15,21 +15,22 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 @NullMarked
-public class PluginDesc implements Deserializer<PluginDesc>, Examinable<PluginDesc> {
-    private final String id;
+public class SaveditemDesc implements Deserializer<SaveditemDesc>, Examinable<SaveditemDesc> {
+    private final String fileName;
 
     @Override
-    public PluginDesc examine() throws ExamineFailedException {
-        if (!id.matches(".+")) {
-            throw new ExamineFailedException("Plugin Desc must be .+");
+    public SaveditemDesc examine() throws ExamineFailedException {
+        if (!fileName.matches("[A-Za-z0-9_\\+\\-/]+")) {
+            throw new ExamineFailedException("Pack Desc must be [A-Za-z0-9_+-]+");
         }
         return this;
     }
 
     @Override
-    public List<ConfigReader<?, PluginDesc>> readers() {
+    public List<ConfigReader<?, SaveditemDesc>> readers() {
         return List.of(
-                ConfigReader.of(String.class, PluginDesc::new)
+                ConfigReader.of(String.class, SaveditemDesc::new)
         );
     }
+
 }

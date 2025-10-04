@@ -1,6 +1,6 @@
 package com.balugaq.runtimepylon.config.pack;
 
-import com.balugaq.runtimepylon.config.Deserializable;
+import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
@@ -29,7 +29,7 @@ import java.util.Map;
  *     <li>items-partB.yml</li>
  *   </ul>
  * </li>
- *
+ * <p>
  * For each yml:
  * <p>
  * [Internal object ID]:
@@ -37,8 +37,8 @@ import java.util.Map;
  *   *script: script.js
  *   *pages:
  *   - [Internal object ID]
+ *   *postload: boolean
  * <p>
- *
  */
 @Data
 @NullMarked
@@ -83,15 +83,16 @@ public class Items implements FileObject<Items> {
                                 continue;
                             }
 
-                            ItemStack item = Deserializable.ITEMSTACK.deserialize(s2);
+                            ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
 
                             var id = InternalObjectID.of(itemKey).with(namespace).register();
                             ItemStack icon = ItemStackBuilder.pylonItem(item.getType(), id.getKey()).amount(item.getAmount()).build();
 
-                            ScriptDesc scriptdesc = Deserializable.newDeserializer(ScriptDesc.class).deserialize(section.getString("script"));
+                            ScriptDesc scriptdesc = Deserializer.newDeserializer(ScriptDesc.class).deserialize(section.getString("script"));
                             UnsArrayList<InternalObjectID> pages = Pack.readGenericOrNull(section, UnsArrayList.class, InternalObjectID.class, "pages");
 
-                            items.put(id, new PreparedItem(icon, scriptdesc, pages));
+                            boolean postLoad = section.getBoolean("postload", false);
+                            items.put(id, new PreparedItem(id, icon, scriptdesc, pages, postLoad));
                         }
                     }
 

@@ -15,8 +15,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-import static com.balugaq.runtimepylon.util.Lang.set_temperature_1;
 import static com.balugaq.runtimepylon.gui.ButtonSet.done;
+import static com.balugaq.runtimepylon.util.Lang.set_temperature_1;
 
 public class FluidTemperatureHolder extends PylonItem implements PylonFluidTagHolder<FluidTemperature> {
     @Setter

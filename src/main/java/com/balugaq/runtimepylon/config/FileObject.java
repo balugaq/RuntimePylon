@@ -1,7 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
-import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.ApiStatus;
@@ -12,12 +11,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * For the example:
+ * <p>
+ * <code>
+ * <pre>
+ * &#064;NoArgsConstructor(force  = true)
+ * class Foo implements FileObject<Foo> {}
+ * </pre>
+ * </code>
+ * <p>
+ * The class `Foo` must be annotated with {@code @lombok.NoArgsConstructor(force = true)}
+ * to make {@link #newDeserializer(Class)} work.
+ *
  * @author balugaq
+ * @see Pack
  */
 @NullMarked
 public interface FileObject<T> {
-    List<FileReader<T>> readers();
-
     /**
      * Create an instance of the object.
      * All the data in this object are invalid.
@@ -36,12 +46,15 @@ public interface FileObject<T> {
         }
     }
 
+    List<FileReader<T>> readers();
+
     /**
      * Unserializes an object.
+     *
      * @param o the object to deserialize, it may be {@link ConfigurationSection}, {@link ArrayList}, or primitive type.
      * @return an instance of the object.
      * @author balugaq
-     * @see Deserializable#newDeserializer(Class)
+     * @see Deserializer#newDeserializer(Class)
      */
     default T deserialize(File o) throws DeserializationException {
         for (FileReader<T> reader : readers()) {
