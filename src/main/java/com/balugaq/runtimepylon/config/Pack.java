@@ -16,7 +16,6 @@ import com.balugaq.runtimepylon.config.pack.Saveditems;
 import com.balugaq.runtimepylon.config.pack.Scripts;
 import com.balugaq.runtimepylon.config.pack.Settings;
 import com.balugaq.runtimepylon.config.pack.WebsiteLink;
-import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.exceptions.PackException;
@@ -301,19 +300,19 @@ public class Pack implements FileObject<Pack> {
                 ConfigurationSection item = config.getConfigurationSection("item");
                 if (item != null) {
                     for (String key : item.getKeys(false)) {
-                        targetConfig.set("item." + packNamespace.getNamespace() + "_" + key, item.get(key));
+                        targetConfig.set("item." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).getId(), item.get(key));
                     }
                 }
                 ConfigurationSection fluid = config.getConfigurationSection("fluid");
                 if (fluid != null) {
                     for (String key : fluid.getKeys(false)) {
-                        targetConfig.set("fluid." + packNamespace.getNamespace() + "_" + key, fluid.get(key));
+                        targetConfig.set("fluid." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).getId(), fluid.get(key));
                     }
                 }
                 ConfigurationSection guidePage = config.getConfigurationSection("guide.page");
                 if (guidePage != null) {
                     for (String key : guidePage.getKeys(false)) {
-                        targetConfig.set("guide.page." + packNamespace.getNamespace() + "_" + key, guidePage.get(key));
+                        targetConfig.set("guide.page." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).getId(), guidePage.get(key));
                     }
                 }
                 try {
@@ -349,8 +348,8 @@ public class Pack implements FileObject<Pack> {
         for (var entry : items.getItems().values()) {
             PackManager.load(entry, e -> {
                 RegisteredObjectID id = e.getId();
-                ItemStack icon = entry.getIcon();
-                ScriptDesc scriptDesc = entry.getScript();
+                ItemStack icon = entry.icon();
+                ScriptDesc scriptDesc = entry.script();
 
                 ScriptExecutor executor;
                 if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
@@ -370,9 +369,9 @@ public class Pack implements FileObject<Pack> {
         if (blocks == null) return;
         for (var entry : blocks.getBlocks().values()) {
             PackManager.load(entry, e -> {
-                RegisteredObjectID id = e.getId();
-                Material material = e.getMaterial();
-                ScriptDesc scriptDesc = e.getScript();
+                RegisteredObjectID id = e.id();
+                Material material = e.material();
+                ScriptDesc scriptDesc = e.script();
 
                 ScriptExecutor executor;
                 if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);

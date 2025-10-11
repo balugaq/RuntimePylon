@@ -4,7 +4,6 @@ import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.PackNamespace;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.bukkit.NamespacedKey;
 import org.jspecify.annotations.NullMarked;
 
@@ -13,7 +12,6 @@ import org.jspecify.annotations.NullMarked;
  */
 @Data
 @AllArgsConstructor
-@NoArgsConstructor(force = true)
 @NullMarked
 public class ExternalObjectID {
     private final String id;

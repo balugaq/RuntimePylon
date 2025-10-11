@@ -4,5 +4,5 @@ import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 public interface PostLoadable {
-    boolean isPostLoad();
+    boolean postLoad();
 }

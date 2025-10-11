@@ -6,9 +6,6 @@ import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K extends Deserializer<K>> extends Deserializer<T> {
-    T setGenericType(Class<K> clazz);
-
-    Class<K> getGenericType();
     /**
      * Create an instance of the object.
      * All the data in this object are invalid.
@@ -26,4 +23,8 @@ public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K exte
             throw new DeserializationException(clazz, e);
         }
     }
+
+    Class<K> getGenericType();
+
+    T setGenericType(Class<K> clazz);
 }

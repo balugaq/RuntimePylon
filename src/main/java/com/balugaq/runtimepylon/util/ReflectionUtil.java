@@ -30,7 +30,6 @@ package com.balugaq.runtimepylon.util;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import lombok.experimental.UtilityClass;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 import org.jspecify.annotations.NullMarked;
@@ -132,7 +131,7 @@ public class ReflectionUtil {
     }
 
     public static @Nullable Method getMethod(
-            Class<?> clazz, String methodName, Class<?> ... parameterTypes) {
+            Class<?> clazz, String methodName, Class<?>... parameterTypes) {
         while (clazz != Object.class) {
             for (Method method : clazz.getDeclaredMethods()) {
                 if (method.getName().equals(methodName) && method.getParameterTypes().length == parameterTypes.length) {

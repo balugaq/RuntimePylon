@@ -5,7 +5,6 @@ import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.Pack;
-import com.balugaq.runtimepylon.config.PackManager;
 import com.balugaq.runtimepylon.config.PreparedItem;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;

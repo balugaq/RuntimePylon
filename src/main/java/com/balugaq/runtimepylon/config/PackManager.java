@@ -13,7 +13,6 @@ import com.balugaq.runtimepylon.util.Debug;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.Data;
 import lombok.SneakyThrows;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
@@ -147,7 +146,7 @@ public @Data class PackManager {
     }
 
     public static <T extends PostLoadable> void load(T postLoadable, Consumer<T> consumer) {
-        if (postLoadable.isPostLoad()) postLoads.add(PostLoadTask.of(postLoadable, consumer));
+        if (postLoadable.postLoad()) postLoads.add(PostLoadTask.of(postLoadable, consumer));
         else consumer.accept(postLoadable);
     }
 
@@ -165,6 +164,7 @@ public @Data class PackManager {
     /**
      * This method analyzes a given exception and prints out that
      * where the exception occurred: "An exception occurred when <action> at configuration <key> in Pack <packId>"
+     *
      * @param e the exception to analyze
      */
     public static void analyze(Exception e) {
