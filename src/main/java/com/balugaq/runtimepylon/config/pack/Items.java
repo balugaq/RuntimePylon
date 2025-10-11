@@ -5,11 +5,13 @@ import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.Pack;
+import com.balugaq.runtimepylon.config.PackManager;
 import com.balugaq.runtimepylon.config.PreparedItem;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.config.UnsArrayList;
 import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
+import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
@@ -21,6 +23,7 @@ import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +49,7 @@ import java.util.Map;
 @NullMarked
 public class Items implements FileObject<Items> {
     private PackNamespace namespace;
-    private Map<RegisteredObjectID, PreparedItem> items;
+    private Map<RegisteredObjectID, PreparedItem> items = new HashMap<>();
 
     public Items setPackNamespace(PackNamespace namespace) {
         this.namespace = namespace;
@@ -63,7 +66,7 @@ public class Items implements FileObject<Items> {
                         var config = YamlConfiguration.loadConfiguration(yml);
 
                         for (String itemKey : config.getKeys(false)) {
-                            if (!itemKey.matches("a-z0-9_-\\./")) {
+                            if (!itemKey.matches("[a-z0-9_\\-\\./]+")) {
                                 severe(new IncompatibleKeyFormatException(itemKey));
                                 continue;
                             }
@@ -81,11 +84,16 @@ public class Items implements FileObject<Items> {
 
                             var s2 = section.get("icon");
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
+                            if (item == null) continue;
+                            if (!item.getType().isItem() || item.getType().isAir()) {
+                                severe(new IncompatibleMaterialException("material must be items: " + item.getType()));
+                                continue;
+                            }
 
                             var id = InternalObjectID.of(itemKey).with(namespace).register();
                             ItemStack icon = ItemStackBuilder.pylonItem(item.getType(), id.getKey()).amount(item.getAmount()).build();
 
-                            ScriptDesc scriptdesc = Deserializer.newDeserializer(ScriptDesc.class).deserialize(section.getString("script"));
+                            ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
                             UnsArrayList<InternalObjectID> pages = Pack.readGenericOrNull(section, UnsArrayList.class, InternalObjectID.class, "pages");
 
                             boolean postLoad = section.getBoolean("postload", false);

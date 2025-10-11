@@ -7,6 +7,7 @@ import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.PreparedPage;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
+import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import lombok.Data;
@@ -17,6 +18,7 @@ import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +41,7 @@ import java.util.Map;
 @NullMarked
 public class Pages implements FileObject<Pages> {
     private PackNamespace namespace;
-    private Map<RegisteredObjectID, PreparedPage> pages;
+    private Map<RegisteredObjectID, PreparedPage> pages = new HashMap<>();
 
     public Pages setPackNamespace(PackNamespace namespace) {
         this.namespace = namespace;
@@ -56,7 +58,7 @@ public class Pages implements FileObject<Pages> {
                         var config = YamlConfiguration.loadConfiguration(yml);
 
                         for (String pageKey : config.getKeys(false)) {
-                            if (!pageKey.matches("a-z0-9_-\\./")) {
+                            if (!pageKey.matches("[a-z0-9_\\-\\./]+")) {
                                 severe(new IncompatibleKeyFormatException(pageKey));
                                 continue;
                             }
@@ -74,6 +76,11 @@ public class Pages implements FileObject<Pages> {
 
                             var s2 = section.get("material");
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
+                            if (item == null) continue;
+                            if (!item.getType().isItem() || item.getType().isAir()) {
+                                severe(new IncompatibleMaterialException("material must be items: " + item.getType()));
+                                continue;
+                            }
                             var id = InternalObjectID.of(pageKey).with(namespace).register();
 
                             boolean postLoad = section.getBoolean("postload", false);

@@ -8,6 +8,7 @@ import com.balugaq.runtimepylon.config.PreparedBlock;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
+import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import lombok.Data;
@@ -18,6 +19,7 @@ import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +43,7 @@ import java.util.Map;
 @NullMarked
 public class Blocks implements FileObject<Blocks> {
     private PackNamespace namespace;
-    private Map<RegisteredObjectID, PreparedBlock> blocks;
+    private Map<RegisteredObjectID, PreparedBlock> blocks = new HashMap<>();
 
     public Blocks setPackNamespace(PackNamespace namespace) {
         this.namespace = namespace;
@@ -58,7 +60,7 @@ public class Blocks implements FileObject<Blocks> {
                         var config = YamlConfiguration.loadConfiguration(yml);
 
                         for (String blockKey : config.getKeys(false)) {
-                            if (!blockKey.matches("a-z0-9_-\\./")) {
+                            if (!blockKey.matches("[a-z0-9_\\-\\./]+")) {
                                 severe(new IncompatibleKeyFormatException(blockKey));
                                 continue;
                             }
@@ -77,6 +79,12 @@ public class Blocks implements FileObject<Blocks> {
                             var s2 = section.get("material");
 
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
+                            if (item == null) continue;
+                            if (!item.getType().isBlock() || item.getType().isAir()) {
+                                severe(new IncompatibleMaterialException("material must be blocks: " + item.getType()));
+                                continue;
+                            }
+
                             var id = InternalObjectID.of(blockKey).with(namespace).register();
 
                             ScriptDesc scriptdesc = Deserializer.newDeserializer(ScriptDesc.class).deserialize(section.getString("script"));

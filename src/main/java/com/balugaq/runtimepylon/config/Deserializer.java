@@ -12,9 +12,10 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NullMarked;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +39,10 @@ import java.util.Map;
  * @see PackID
  */
 @FunctionalInterface
-@NullMarked
 public interface Deserializer<T> {
-    Deserializer<ItemStack> ITEMSTACK = new ItemStackDeserializer();
+    ItemStackDeserializer ITEMSTACK = new ItemStackDeserializer();
 
+    @NotNull
     static <E extends Enum<E>> Deserializer<E> enumDeserializer(Class<E> clazz) {
         return () -> List.of(
                 ConfigReader.of(String.class, s -> Enum.valueOf(clazz, s.toUpperCase()))
@@ -58,6 +59,7 @@ public interface Deserializer<T> {
      * @see #deserialize(Object)
      */
     @Internal
+    @NotNull
     static <T extends Deserializer<T>> T newDeserializer(Class<T> clazz) {
         try {
             return clazz.getDeclaredConstructor().newInstance();
@@ -78,8 +80,12 @@ public interface Deserializer<T> {
         if (o == null) throw new MissingArgumentException();
         for (ConfigReader<?, T> reader : readers()) {
             if (reader.type().isInstance(o)) {
-                @SuppressWarnings("unchecked") T v = (T) ReflectionUtil.invokeMethod(reader, "read", o);
-                if (v != null) return v;
+                try {
+                    @SuppressWarnings("unchecked") T v = (T) ReflectionUtil.invokeMethod(reader, "read", o);
+                    if (v != null) return v;
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new DeserializationException(getClass(), e);
+                }
             }
         }
 
@@ -92,6 +98,7 @@ public interface Deserializer<T> {
         Debug.severe(message);
     }
 
+    @NotNull
     List<ConfigReader<?, T>> readers();
 
     class ItemStackDeserializer implements Deserializer<ItemStack> {
@@ -101,6 +108,8 @@ public interface Deserializer<T> {
                 "chain", "iron_chain", "iron_chain", "chain"
         );
 
+        @Internal
+        @NotNull
         @SuppressWarnings("DuplicateCondition")
         private static ItemStack fromString(String s) throws DeserializationException {
             List<String> para = new ArrayList<>();
@@ -126,12 +135,12 @@ public interface Deserializer<T> {
                         fixed = s2;
                     }
 
-                    Material material = Material.getMaterial(fixed);
+                    Material material = Material.getMaterial(fixed.toUpperCase());
                     if (material == null) {
                         // try to rename field
                         String rename = FIELD_RENAME.get(fixed);
                         if (rename != null) {
-                            material = Material.getMaterial(rename);
+                            material = Material.getMaterial(rename.toUpperCase());
                         }
                     }
 
@@ -167,6 +176,7 @@ public interface Deserializer<T> {
             throw new DeserializationException("Unknown item: " + s);
         }
 
+        @NotNull
         @Override
         public List<ConfigReader<?, ItemStack>> readers() {
             return List.of(
@@ -185,6 +195,17 @@ public interface Deserializer<T> {
                         return item;
                     })
             );
+        }
+
+        @Nullable
+        @Override
+        public ItemStack deserialize(@Nullable Object o) {
+            try {
+                return Deserializer.super.deserialize(o);
+            } catch (DeserializationException e) {
+                Debug.warn(e);
+                return null;
+            }
         }
     }
 }

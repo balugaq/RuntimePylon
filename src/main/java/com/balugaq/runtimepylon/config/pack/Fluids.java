@@ -7,6 +7,7 @@ import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.PreparedFluid;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
+import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
@@ -18,6 +19,7 @@ import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +43,7 @@ import java.util.Map;
 @NullMarked
 public class Fluids implements FileObject<Fluids> {
     private PackNamespace namespace;
-    private Map<RegisteredObjectID, PreparedFluid> fluids;
+    private Map<RegisteredObjectID, PreparedFluid> fluids = new HashMap<>();
 
     public Fluids setPackNamespace(PackNamespace namespace) {
         this.namespace = namespace;
@@ -58,7 +60,7 @@ public class Fluids implements FileObject<Fluids> {
                         var config = YamlConfiguration.loadConfiguration(yml);
 
                         for (String fluidKey : config.getKeys(false)) {
-                            if (!fluidKey.matches("a-z0-9_-\\./")) {
+                            if (!fluidKey.matches("[a-z0-9_\\-\\./]+")) {
                                 severe(new IncompatibleKeyFormatException(fluidKey));
                                 continue;
                             }
@@ -77,6 +79,11 @@ public class Fluids implements FileObject<Fluids> {
                             var s2 = section.get("material");
 
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
+                            if (item == null) continue;
+                            if (!item.getType().isItem() || item.getType().isAir()) {
+                                severe(new IncompatibleMaterialException("material must be items: " + item.getType()));
+                                continue;
+                            }
 
                             var id = InternalObjectID.of(fluidKey).with(namespace).register();
                             var ts = section.get("temperature");

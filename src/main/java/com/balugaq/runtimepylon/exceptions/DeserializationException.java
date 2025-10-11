@@ -1,6 +1,6 @@
 package com.balugaq.runtimepylon.exceptions;
 
-public class DeserializationException extends RuntimeException {
+public class DeserializationException extends PackException {
     public DeserializationException() {
         super();
     }

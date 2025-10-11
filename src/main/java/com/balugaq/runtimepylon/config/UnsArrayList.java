@@ -1,16 +1,20 @@
 package com.balugaq.runtimepylon.config;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@EqualsAndHashCode(callSuper = true)
 @NullMarked
-public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implements Deserializer<UnsArrayList<T>>, GenericObject<UnsArrayList<T>, T> {
+public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implements GenericDeserializer<UnsArrayList<T>, T> {
     @Getter
     private Class<T> genericType;
 
+    @Override
     public UnsArrayList<T> setGenericType(Class<T> clazz) {
         this.genericType = clazz;
         return this;

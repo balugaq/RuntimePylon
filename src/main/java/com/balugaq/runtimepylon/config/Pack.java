@@ -18,7 +18,8 @@ import com.balugaq.runtimepylon.config.pack.Settings;
 import com.balugaq.runtimepylon.config.pack.WebsiteLink;
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
-import com.balugaq.runtimepylon.exceptions.UnrecognizedFileException;
+import com.balugaq.runtimepylon.exceptions.MissingFileException;
+import com.balugaq.runtimepylon.exceptions.PackException;
 import com.balugaq.runtimepylon.script.ScriptExecutor;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
@@ -77,6 +78,7 @@ public class Pack implements FileObject<Pack> {
     public static final File settingsFolder = new File(new File(pylonCore, "settings"), RuntimePylon.getInstance().namespace());
     public static final File recipesFolder = new File(pylonCore, "recipes");
     public static final File langFolder = new File(new File(pylonCore, "lang"), RuntimePylon.getInstance().namespace());
+    private final File dir;
     private final PackID packID;
     private final PackNamespace packNamespace;
     private final PackVersion packVersion;
@@ -118,7 +120,6 @@ public class Pack implements FileObject<Pack> {
     private final Scripts scripts;
     @Nullable
     private final Saveditems saveditems;
-    private File dir;
 
     public static <T extends Deserializer<T>> T tryExamine(T object) {
         try {
@@ -144,27 +145,27 @@ public class Pack implements FileObject<Pack> {
             return tryExamine(Deserializer
                     .newDeserializer(clazz)
                     .deserialize(config.getString(path)));
-        } catch (DeserializationException e) {
+        } catch (PackException e) {
             return null;
         }
     }
 
-    public static <T extends Deserializer<T> & GenericObject<GenericDeserializer<T>, T>, K extends Deserializer<K>> T readGeneric(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path) {
+    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readGeneric(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path) {
         if (!config.contains(path)) throw new MissingArgumentException(path);
         return tryExamine(GenericDeserializer
                 .newDeserializer(clazz)
-                .setGenericType((Class<T>) generic)
+                .setGenericType(generic)
                 .deserialize(config.get(path)));
     }
 
     @Nullable
-    public static <T extends Deserializer<T> & GenericObject<GenericDeserializer<T>, T>> T readGenericOrNull(ConfigurationSection config, Class<T> clazz, Class<?> generic, String path) {
+    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readGenericOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path) {
         try {
             return tryExamine(GenericDeserializer
                     .newDeserializer(clazz)
-                    .setGenericType((Class<T>) generic)
+                    .setGenericType(generic)
                     .deserialize(config.get(path)));
-        } catch (DeserializationException e) {
+        } catch (PackException e) {
             return null;
         }
     }
@@ -173,10 +174,9 @@ public class Pack implements FileObject<Pack> {
     public List<FileReader<Pack>> readers() {
         return List.of(
                 dir -> {
-                    this.dir = dir;
                     List<File> files = Arrays.stream(dir.listFiles()).toList();
                     var meta = files.stream().filter(file -> file.getName().equals("pack.yml")).findFirst().orElse(null);
-                    if (meta == null) throw new UnrecognizedFileException(dir.getAbsolutePath());
+                    if (meta == null) throw new MissingFileException(dir.getAbsolutePath() + "/pack.yml");
 
                     YamlConfiguration config = YamlConfiguration.loadConfiguration(meta);
 
@@ -251,6 +251,7 @@ public class Pack implements FileObject<Pack> {
                                 .deserialize(saveditemsFolder);
 
                     return new Pack(
+                            dir,
                             id,
                             namespace,
                             version,
@@ -285,16 +286,40 @@ public class Pack implements FileObject<Pack> {
         for (File file : from.listFiles()) {
             if (file.isFile() && file.getName().matches("[a-z0-9_\\-\\./]+\\.yml$")) {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                File targetFile = new File(to, getPackNamespace() + "_" + file.getName());
+                File targetFile = new File(to, file.getName());
 
                 if (!targetFile.exists()) {
                     try {
                         targetFile.createNewFile();
-                        YamlConfiguration targetConfig = YamlConfiguration.loadConfiguration(targetFile);
-                        PackManager.saveConfig(config, targetConfig, targetFile);
                     } catch (IOException e) {
                         Debug.severe(e);
+                        continue;
                     }
+                }
+
+                YamlConfiguration targetConfig = YamlConfiguration.loadConfiguration(targetFile);
+                ConfigurationSection item = config.getConfigurationSection("item");
+                if (item != null) {
+                    for (String key : item.getKeys(false)) {
+                        targetConfig.set("item." + packNamespace.getNamespace() + "_" + key, item.get(key));
+                    }
+                }
+                ConfigurationSection fluid = config.getConfigurationSection("fluid");
+                if (fluid != null) {
+                    for (String key : fluid.getKeys(false)) {
+                        targetConfig.set("fluid." + packNamespace.getNamespace() + "_" + key, fluid.get(key));
+                    }
+                }
+                ConfigurationSection guidePage = config.getConfigurationSection("guide.page");
+                if (guidePage != null) {
+                    for (String key : guidePage.getKeys(false)) {
+                        targetConfig.set("guide.page." + packNamespace.getNamespace() + "_" + key, guidePage.get(key));
+                    }
+                }
+                try {
+                    targetConfig.save(targetFile);
+                } catch (IOException e) {
+                    Debug.severe(e);
                 }
             } else if (file.isDirectory()) {
                 loadLang(file, new File(to, file.getName()));

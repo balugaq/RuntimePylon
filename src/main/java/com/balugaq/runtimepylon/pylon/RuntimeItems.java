@@ -42,7 +42,7 @@ public class RuntimeItems {
                 item_hub,
                 RuntimeKeys.item_hub // block signature
         );
-        MainPage.addItem(RuntimeKeys.item_hub);
+        MainPage.addItem(item_hub);
     }
 
     static {
@@ -51,7 +51,7 @@ public class RuntimeItems {
                 fluid_hub,
                 RuntimeKeys.fluid_hub
         );
-        MainPage.addItem(RuntimeKeys.fluid_hub);
+        MainPage.addItem(fluid_hub);
     }
 
     static {
@@ -60,22 +60,22 @@ public class RuntimeItems {
                 page_hub,
                 RuntimeKeys.page_hub
         );
-        MainPage.addItem(RuntimeKeys.page_hub);
+        MainPage.addItem(page_hub);
     }
 
     static {
         PylonItem.register(NumberStack.class, number_stack);
-        MainPage.addItem(RuntimeKeys.number_stack);
+        MainPage.addItem(number_stack);
     }
 
     static {
         PylonItem.register(StringStack.class, string_stack);
-        MainPage.addItem(RuntimeKeys.string_stack);
+        MainPage.addItem(string_stack);
     }
 
     static {
         PylonItem.register(FluidTemperatureHolder.class, fluid_temperature_holder);
-        MainPage.addItem(RuntimeKeys.fluid_temperature_holder);
+        MainPage.addItem(fluid_temperature_holder);
     }
 
     public static void initialize() {

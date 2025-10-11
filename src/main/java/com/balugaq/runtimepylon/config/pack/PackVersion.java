@@ -24,7 +24,7 @@ public class PackVersion implements Deserializer<PackVersion>, Examinable<PackVe
     @Override
     public PackVersion examine() throws ExamineFailedException {
         if (!version.matches("[A-Za-z0-9_\\+\\-\\./\\(\\)]+")) {
-            throw new ExamineFailedException("PackNamespace must be [A-Za-z0-9_+-./()]+");
+            throw new ExamineFailedException("PackVersion must be [A-Za-z0-9_+-./()]+");
         }
         return this;
     }

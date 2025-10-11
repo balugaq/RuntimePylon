@@ -1,13 +1,16 @@
 package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
+import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
+import lombok.SneakyThrows;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,10 +60,15 @@ public interface FileObject<T> {
      * @author balugaq
      * @see Deserializer#newDeserializer(Class)
      */
-    default T deserialize(File o) throws DeserializationException {
+    @SneakyThrows
+    default T deserialize(File o) throws DeserializationException, MissingFileException {
         for (FileReader<T> reader : readers()) {
-            @SuppressWarnings("unchecked") T v = (T) ReflectionUtil.invokeMethod(reader, "read", o);
-            if (v != null) return v;
+            try {
+                @SuppressWarnings("unchecked") T v = (T) ReflectionUtil.invokeMethod(reader, "read", o);
+                if (v != null) return v;
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw e.getCause();
+            }
         }
 
         throw new DeserializationException(this.getClass());

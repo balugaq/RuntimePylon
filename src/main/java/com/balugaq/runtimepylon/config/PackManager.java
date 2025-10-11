@@ -2,6 +2,10 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.Saveditems;
+import com.balugaq.runtimepylon.exceptions.DeserializationException;
+import com.balugaq.runtimepylon.exceptions.ExamineFailedException;
+import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
+import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.exceptions.SaveditemsNotFoundException;
 import com.balugaq.runtimepylon.exceptions.UnknownPackException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
@@ -9,6 +13,7 @@ import com.balugaq.runtimepylon.util.Debug;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.Data;
 import lombok.SneakyThrows;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
@@ -31,7 +36,7 @@ import java.util.function.Consumer;
  *           <li>pack.yml</li>
  *           <li>lang/
  *             <ul>
- *               <li>en_US.yml</li>
+ *               <li>en.yml</li>
  *               <li>zh_CN.yml</li>
  *             </ul>
  *           </li>
@@ -157,17 +162,55 @@ public @Data class PackManager {
         return itemStack;
     }
 
+    /**
+     * This method analyzes a given exception and prints out that
+     * where the exception occurred: "An exception occurred when <action> at configuration <key> in Pack <packId>"
+     * @param e the exception to analyze
+     */
+    public static void analyze(Exception e) {
+        // todo
+        Debug.warn(e);
+    }
+
     public void loadPacks() {
+        if (!PACKS_FOLDER.exists()) PACKS_FOLDER.mkdirs();
         for (File packFolder : PACKS_FOLDER.listFiles()) {
             if (packFolder.isDirectory()) {
-                Pack pack = FileObject.newDeserializer(Pack.class).deserialize(packFolder);
-                packs.add(pack);
-                Debug.log("Loaded pack: " + pack.getPackID());
+                try {
+                    Debug.log("Loading pack: " + packFolder.getName());
+                    Pack pack = FileObject.newDeserializer(Pack.class).deserialize(packFolder);
+                    packs.add(pack);
+                    Debug.log("Loaded pack: " + pack.getPackID());
+                } catch (DeserializationException e) {
+                    Debug.log("Failed to load pack: " + packFolder + ": " + e.getMessage());
+                    analyze(e);
+                } catch (MissingFileException e) {
+                    Debug.log("Missing file at " + packFolder + ": " + e.getMessage());
+                    analyze(e);
+                } catch (MissingArgumentException e) {
+                    Debug.log("Missing argument at " + packFolder + ": " + e.getMessage());
+                    analyze(e);
+                } catch (ExamineFailedException e) {
+                    Debug.log("Examine failed at " + packFolder + ": " + e.getMessage());
+                    analyze(e);
+                }
             }
         }
 
         for (Pack pack : packs) {
+            Debug.log("Registering pack: " + pack.getPackID());
             pack.register();
+            Debug.log("Registered pack: " + pack.getPackID());
         }
+
+        RuntimePylon.runTaskLater(() -> {
+            for (var postLoad : postLoads) {
+                postLoad.run();
+            }
+        }, 1L);
+    }
+
+    public void destroy() {
+        // todo
     }
 }

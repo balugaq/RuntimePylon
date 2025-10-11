@@ -107,7 +107,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     SimpleStaticGuidePage page = assertNotNull(pages.get(data.getPageId()), set_page_3);
 
                     assertNotNull(PylonRegistry.ITEMS.get(data.getItemId()), set_page_4);
-                    page.addItem(data.getItemId());
+                    page.addItem(data.getModel());
 
                     done(player, set_page_5, data.getItemId(), data.getPageId());
                     return true;
@@ -153,7 +153,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                             return false;
                         }
 
-                        PylonItem pylon = PylonItem.fromStack(button.getStack());
+                        PylonItem pylon = PylonItem.fromStack(button.getCurrentStack());
                         if (pylon == null) return false;
 
                         return pylon.getKey().equals(data.getItemId());

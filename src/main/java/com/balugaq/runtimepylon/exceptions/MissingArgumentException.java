@@ -3,7 +3,7 @@ package com.balugaq.runtimepylon.exceptions;
 /**
  * @author balugaq
  */
-public class MissingArgumentException extends RuntimeException {
+public class MissingArgumentException extends PackException {
     public MissingArgumentException() {
         super();
     }

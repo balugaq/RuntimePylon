@@ -13,7 +13,10 @@ import io.github.pylonmc.pylon.core.recipe.vanilla.FurnaceRecipeWrapper;
 import io.github.pylonmc.pylon.core.recipe.vanilla.ShapedRecipeWrapper;
 import io.github.pylonmc.pylon.core.recipe.vanilla.ShapelessRecipeWrapper;
 import io.github.pylonmc.pylon.core.recipe.vanilla.SmithingRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.SmithingTransformRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.SmithingTrimRecipeWrapper;
 import io.github.pylonmc.pylon.core.recipe.vanilla.SmokingRecipeWrapper;
+import io.papermc.paper.registry.keys.TrimPatternKeys;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -26,6 +29,7 @@ import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.SmithingTransformRecipe;
+import org.bukkit.inventory.SmithingTrimRecipe;
 import org.bukkit.inventory.SmokingRecipe;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -80,8 +84,8 @@ public record RecipeAdapter<T extends PylonRecipe>(
                     findInt(recipe, 1)
             ))
         );
-        register(RecipeType.VANILLA_SMITHING, (key, model,recipe) ->
-            new SmithingRecipeWrapper(new SmithingTransformRecipe(
+        register(RecipeType.VANILLA_SMITHING_TRANSFORM, (key, model,recipe) ->
+            new SmithingTransformRecipeWrapper(new SmithingTransformRecipe(
                     key,
                     model,                        // result
                     toChoice(find(recipe, 1)), // template

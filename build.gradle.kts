@@ -22,6 +22,9 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/") {
         name = "papermc"
     }
+    maven("https://jitpack.io") {
+        name = "JitPack"
+    }
     maven("https://repo.xenondevs.xyz/releases")
 }
 
@@ -71,6 +74,9 @@ bukkit {
     apiVersion = "1.21"
     depend = listOf("PylonCore")
     load = BukkitPluginDescription.PluginLoadOrder.STARTUP
+    softDepend = listOf(
+        "PylonBase"
+    )
 }
 
 tasks.runServer {
