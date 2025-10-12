@@ -11,7 +11,7 @@ public record PreparedItem(
         RegisteredObjectID id,
         ItemStack icon,
         @Nullable ScriptDesc script,
-        @Nullable List<InternalObjectID> pages,
+        @Nullable List<PageDesc> pages,
         boolean postLoad
 ) implements PostLoadable {
 }

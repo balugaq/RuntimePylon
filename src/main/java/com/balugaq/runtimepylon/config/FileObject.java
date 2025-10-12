@@ -73,9 +73,4 @@ public interface FileObject<T> {
 
         throw new DeserializationException(this.getClass());
     }
-
-    default void severe(Exception e) {
-        // todo
-        Debug.severe(e);
-    }
 }

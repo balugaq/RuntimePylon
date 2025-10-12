@@ -2,10 +2,6 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.Saveditems;
-import com.balugaq.runtimepylon.exceptions.DeserializationException;
-import com.balugaq.runtimepylon.exceptions.ExamineFailedException;
-import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
-import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.exceptions.SaveditemsNotFoundException;
 import com.balugaq.runtimepylon.exceptions.UnknownPackException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
@@ -175,32 +171,28 @@ public @Data class PackManager {
     public void loadPacks() {
         if (!PACKS_FOLDER.exists()) PACKS_FOLDER.mkdirs();
         for (File packFolder : PACKS_FOLDER.listFiles()) {
-            if (packFolder.isDirectory()) {
-                try {
-                    Debug.log("Loading pack: " + packFolder.getName());
-                    Pack pack = FileObject.newDeserializer(Pack.class).deserialize(packFolder);
-                    packs.add(pack);
-                    Debug.log("Loaded pack: " + pack.getPackID());
-                } catch (DeserializationException e) {
-                    Debug.log("Failed to load pack: " + packFolder + ": " + e.getMessage());
-                    analyze(e);
-                } catch (MissingFileException e) {
-                    Debug.log("Missing file at " + packFolder + ": " + e.getMessage());
-                    analyze(e);
-                } catch (MissingArgumentException e) {
-                    Debug.log("Missing argument at " + packFolder + ": " + e.getMessage());
-                    analyze(e);
-                } catch (ExamineFailedException e) {
-                    Debug.log("Examine failed at " + packFolder + ": " + e.getMessage());
-                    analyze(e);
-                }
+            if (!packFolder.isDirectory()) {
+                continue;
+            }
+
+            try (var sk = StackWalker.setPosition("Loading Pack Folder: " + packFolder.getName())) {
+                Debug.log("Loading pack: " + packFolder.getName());
+                Pack pack = FileObject.newDeserializer(Pack.class).deserialize(packFolder);
+                packs.add(pack);
+                Debug.log("Loaded pack: " + pack.getPackID());
+            } catch (Exception e) {
+                StackWalker.handle(e);
             }
         }
 
         for (Pack pack : packs) {
-            Debug.log("Registering pack: " + pack.getPackID());
-            pack.register();
-            Debug.log("Registered pack: " + pack.getPackID());
+            try (var sk = StackWalker.setPosition("Registering Pack: " + pack.getPackID())) {
+                Debug.log("Registering pack: " + pack.getPackID());
+                pack.register();
+                Debug.log("Registered pack: " + pack.getPackID());
+            } catch (Exception e) {
+                StackWalker.handle(e);
+            }
         }
 
         RuntimePylon.runTaskLater(() -> {

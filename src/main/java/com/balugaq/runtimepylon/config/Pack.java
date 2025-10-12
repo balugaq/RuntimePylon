@@ -23,6 +23,7 @@ import com.balugaq.runtimepylon.script.ScriptExecutor;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
+import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
@@ -41,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * In the disk, we have the following tree structure to define a pack:
@@ -132,37 +134,52 @@ public class Pack implements FileObject<Pack> {
     }
 
     public static <T extends Deserializer<T>> T read(ConfigurationSection config, Class<T> clazz, String path) {
+        return read(config, clazz, path, t -> t);
+    }
+
+    public static <T extends Deserializer<T>> T read(ConfigurationSection config, Class<T> clazz, String path, Advancer<T> advancer) {
         if (!config.contains(path)) throw new MissingArgumentException(path);
-        return tryExamine(Deserializer
-                .newDeserializer(clazz)
+        return tryExamine(advancer.advance(Deserializer.newDeserializer(clazz))
                 .deserialize(config.getString(path)));
     }
 
     @Nullable
     public static <T extends Deserializer<T>> T readOrNull(ConfigurationSection config, Class<T> clazz, String path) {
+        return readOrNull(config, clazz, path, t -> t);
+    }
+
+    @Nullable
+    public static <T extends Deserializer<T>> T readOrNull(ConfigurationSection config, Class<T> clazz, String path, Advancer<T> advancer) {
         try {
-            return tryExamine(Deserializer
-                    .newDeserializer(clazz)
+            return tryExamine(advancer.advance(Deserializer.newDeserializer(clazz))
                     .deserialize(config.getString(path)));
         } catch (PackException e) {
             return null;
         }
     }
 
-    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readGeneric(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path) {
+    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path) {
+        return read(config, clazz, generic, path, t -> t);
+    }
+
+    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path, Advancer<T> advancer) {
         if (!config.contains(path)) throw new MissingArgumentException(path);
-        return tryExamine(GenericDeserializer
-                .newDeserializer(clazz)
-                .setGenericType(generic)
+        return tryExamine(advancer.advance(GenericDeserializer.newDeserializer(clazz).setGenericType(generic))
                 .deserialize(config.get(path)));
     }
 
     @Nullable
-    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readGenericOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path) {
+    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path) {
+        return readOrNull(config, clazz, generic, path, t -> t);
+    }
+
+    @Nullable
+    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path, Advancer<K> advancer) {
         try {
             return tryExamine(GenericDeserializer
                     .newDeserializer(clazz)
                     .setGenericType(generic)
+                    .setAdvancer(advancer)
                     .deserialize(config.get(path)));
         } catch (PackException e) {
             return null;
@@ -184,70 +201,86 @@ public class Pack implements FileObject<Pack> {
                     PackVersion version = read(config, PackVersion.class, "PackVersion");
                     MinecraftVersion minAPIVersion = readOrNull(config, MinecraftVersion.class, "PackMinAPIVersion");
                     MinecraftVersion maxAPIVersion = readOrNull(config, MinecraftVersion.class, "PackMaxAPIVersion");
-                    UnsArrayList<PackDesc> packLoadBefores = readGenericOrNull(config, UnsArrayList.class, PackDesc.class, "LoadBefores");
-                    UnsArrayList<PackDesc> packSoftDependencies = readGenericOrNull(config, UnsArrayList.class, PackDesc.class, "SoftDependencies");
-                    UnsArrayList<PackDesc> packDependencies = readGenericOrNull(config, UnsArrayList.class, PackDesc.class, "PackDependencies");
-                    UnsArrayList<PackDesc> pluginSoftDependencies = readGenericOrNull(config, UnsArrayList.class, PackDesc.class, "PluginSoftDependencies");
-                    UnsArrayList<PluginDesc> pluginDependencies = readGenericOrNull(config, UnsArrayList.class, PluginDesc.class, "PluginDependencies");
+                    UnsArrayList<PackDesc> packLoadBefores = readOrNull(config, UnsArrayList.class, PackDesc.class, "LoadBefores");
+                    UnsArrayList<PackDesc> packSoftDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "SoftDependencies");
+                    UnsArrayList<PackDesc> packDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "PackDependencies");
+                    UnsArrayList<PackDesc> pluginSoftDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "PluginSoftDependencies");
+                    UnsArrayList<PluginDesc> pluginDependencies = readOrNull(config, UnsArrayList.class, PluginDesc.class, "PluginDependencies");
                     Author author = readOrNull(config, Author.class, "Author");
-                    UnsArrayList<Author> authors = readGenericOrNull(config, UnsArrayList.class, Author.class, "Authors");
+                    UnsArrayList<Author> authors = readOrNull(config, UnsArrayList.class, Author.class, "Authors");
                     if (author != null) {
                         if (authors == null) authors = new UnsArrayList<>();
                         authors.add(author);
                     }
-                    UnsArrayList<Contributor> contributors = readGenericOrNull(config, UnsArrayList.class, Contributor.class, "Contributors");
-                    UnsArrayList<WebsiteLink> websiteLinks = readGenericOrNull(config, UnsArrayList.class, WebsiteLink.class, "WebsiteLinks");
+                    UnsArrayList<Contributor> contributors = readOrNull(config, UnsArrayList.class, Contributor.class, "Contributors");
+                    UnsArrayList<WebsiteLink> websiteLinks = readOrNull(config, UnsArrayList.class, WebsiteLink.class, "WebsiteLinks");
                     GitHubUpdateLink githubUpdateLink = readOrNull(config, GitHubUpdateLink.class, "GitHubUpdateLink");
 
+                    StackWalker.setPosition("Reading pages");
                     Pages pages = null;
                     var pagesFolder = findDir(files, "pages");
                     if (pagesFolder != null)
                         pages = new Pages()
                                 .setPackNamespace(namespace)
                                 .deserialize(pagesFolder);
+                    StackWalker.destroy();
 
+                    StackWalker.setPosition("Reading items");
                     Items items = null;
                     var itemsFolder = findDir(files, "items");
                     if (itemsFolder != null)
                         items = new Items()
                                 .setPackNamespace(namespace)
                                 .deserialize(itemsFolder);
+                    StackWalker.destroy();
 
+                    StackWalker.setPosition("Reading blocks");
                     Blocks blocks = null;
                     var blocksFolder = findDir(files, "blocks");
                     if (blocksFolder != null)
                         blocks = new Blocks()
                                 .setPackNamespace(namespace)
                                 .deserialize(blocksFolder);
+                    StackWalker.destroy();
 
+                    StackWalker.setPosition("Reading fluids");
                     Fluids fluids = null;
                     var fluidsFolder = findDir(files, "fluids");
                     if (fluidsFolder != null)
                         fluids = new Fluids()
                                 .setPackNamespace(namespace)
                                 .deserialize(fluidsFolder);
+                    StackWalker.destroy();
 
+                    StackWalker.setPosition("Reading recipes");
                     Recipes recipes = null;
                     var recipesFolder = findDir(files, "recipes");
                     if (recipesFolder != null)
                         recipes = new Recipes(recipesFolder, namespace);
+                    StackWalker.destroy();
 
+                    StackWalker.setPosition("Reading settings");
                     Settings settings = null;
                     var settingsFolder = findDir(files, "settings");
                     if (settingsFolder != null)
                         settings = new Settings(settingsFolder, namespace);
+                    StackWalker.destroy();
 
+                    StackWalker.setPosition("Reading scripts");
                     Scripts scripts = null;
                     var scriptsFolder = findDir(files, "scripts");
                     if (scriptsFolder != null)
                         scripts = new Scripts()
                                 .deserialize(scriptsFolder);
+                    StackWalker.destroy();
 
+                    StackWalker.setPosition("Reading saveditems");
                     Saveditems saveditems = null;
                     var saveditemsFolder = findDir(files, "saveditems");
                     if (saveditemsFolder != null)
                         saveditems = new Saveditems()
                                 .deserialize(saveditemsFolder);
+                    StackWalker.destroy();
 
                     return new Pack(
                             dir,
@@ -335,10 +368,21 @@ public class Pack implements FileObject<Pack> {
         if (pages == null) return;
         for (var entry : pages.getPages().values()) {
             PackManager.load(entry, e -> {
-                RegisteredObjectID id = e.getId();
-                Material icon = e.getMaterial();
-                new SimpleStaticGuidePage(id.key(), icon);
-                Debug.log("Registered Page: " + id.key());
+                RegisteredObjectID id = e.id();
+                try (var sk = StackWalker.setPosition("Loading page: " + id)) {
+                    Material icon = e.material();
+                    SimpleStaticGuidePage page = new SimpleStaticGuidePage(id.key(), icon);
+                    if (e.parents() == null) {
+                        PylonGuide.getRootPage().addPage(page);
+                    } else {
+                        for (var parent : e.parents()) {
+                            parent.getPage().addPage(page);
+                        }
+                    }
+                    Debug.log("Registered Page: " + id.key());
+                } catch (Exception ex) {
+                    StackWalker.handle(ex);
+                }
             });
         }
     }
@@ -347,19 +391,23 @@ public class Pack implements FileObject<Pack> {
         if (items == null) return;
         for (var entry : items.getItems().values()) {
             PackManager.load(entry, e -> {
-                RegisteredObjectID id = e.getId();
-                ItemStack icon = entry.icon();
-                ScriptDesc scriptDesc = entry.script();
+                RegisteredObjectID id = e.id();
+                try (var sk = StackWalker.setPosition("Loading item: " + id)) {
+                    ItemStack icon = entry.icon();
+                    ScriptDesc scriptDesc = entry.script();
 
-                ScriptExecutor executor;
-                if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
+                    ScriptExecutor executor;
+                    if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
 
-                if (blocks != null && blocks.getBlocks().containsKey(id)) {
-                    PylonItem.register(PylonItem.class, icon, id.key());
-                    Debug.log("Registered Item: " + id.key());
-                } else {
-                    PylonItem.register(PylonItem.class, icon);
-                    Debug.log("Registered Item: " + id.key());
+                    if (blocks != null && blocks.getBlocks().containsKey(id)) {
+                        PylonItem.register(PylonItem.class, icon, id.key());
+                        Debug.log("Registered Item: " + id.key());
+                    } else {
+                        PylonItem.register(PylonItem.class, icon);
+                        Debug.log("Registered Item: " + id.key());
+                    }
+                } catch (Exception ex) {
+                    StackWalker.handle(ex);
                 }
             });
         }
@@ -370,14 +418,18 @@ public class Pack implements FileObject<Pack> {
         for (var entry : blocks.getBlocks().values()) {
             PackManager.load(entry, e -> {
                 RegisteredObjectID id = e.id();
-                Material material = e.material();
-                ScriptDesc scriptDesc = e.script();
+                try (var sk = StackWalker.setPosition("Loading block: " + id)) {
+                    Material material = e.material();
+                    ScriptDesc scriptDesc = e.script();
 
-                ScriptExecutor executor;
-                if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
+                    ScriptExecutor executor;
+                    if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
 
-                PylonBlock.register(id.key(), material, PylonBlock.class);
-                Debug.log("Registered Block: " + id.key());
+                    PylonBlock.register(id.key(), material, PylonBlock.class);
+                    Debug.log("Registered Block: " + id.key());
+                } catch (Exception ex) {
+                    StackWalker.handle(ex);
+                }
             });
         }
     }
@@ -386,9 +438,9 @@ public class Pack implements FileObject<Pack> {
         if (fluids == null) return;
         for (var entry : fluids.getFluids().values()) {
             PackManager.load(entry, e -> {
-                RegisteredObjectID id = e.getId();
-                Material material = e.getMaterial();
-                FluidTemperature temperature = e.getTemperature();
+                RegisteredObjectID id = e.id();
+                Material material = e.material();
+                FluidTemperature temperature = e.temperature();
                 new PylonFluid(id.key(), material).addTag(temperature).register();
             });
         }
@@ -400,18 +452,26 @@ public class Pack implements FileObject<Pack> {
     }
 
     public Pack register() {
-        loadLang(findDir(Arrays.asList(dir.listFiles()), "lang"), langFolder);
-        registerSettings();
-        registerRecipes();
-        registerPages();
-        registerItems();
-        registerBlocks();
-        registerFluids();
+        StackWalker.runWith("Loading lang", () -> loadLang(findDir(Arrays.asList(dir.listFiles()), "lang"), langFolder));
+        StackWalker.runWith("Loading settings", this::registerSettings);
+        StackWalker.runWith("Loading recipes", this::registerRecipes);
+        StackWalker.runWith("Loading pages", this::registerPages);
+        StackWalker.runWith("Loading items", this::registerItems);
+        StackWalker.runWith("Loading blocks", this::registerBlocks);
+        StackWalker.runWith("Loading fluids", this::registerFluids);
         return this;
     }
 
     @Nullable
     public File findDir(List<File> files, String name) {
         return files.stream().filter(file -> file.getName().equals(name) && file.isDirectory()).findFirst().orElse(null);
+    }
+
+    @FunctionalInterface
+    public interface Advancer<T> extends Function<T, T> {
+        default T apply(T object) {
+            return advance(object);
+        }
+        T advance(T object);
     }
 }

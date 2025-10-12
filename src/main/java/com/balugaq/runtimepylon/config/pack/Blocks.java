@@ -7,6 +7,7 @@ import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.PreparedBlock;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
+import com.balugaq.runtimepylon.config.StackWalker;
 import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
@@ -56,24 +57,22 @@ public class Blocks implements FileObject<Blocks> {
                 dir -> {
                     List<File> files = Arrays.stream(dir.listFiles()).toList();
                     List<File> ymls = files.stream().filter(file -> file.getName().endsWith(".yml") || file.getName().endsWith(".yaml")).toList();
-                    for (File yml : ymls) {
+
+                    for (File yml : ymls) { try (var ignored = StackWalker.setPosition("Reading file: " + yml.getAbsolutePath())) {
                         var config = YamlConfiguration.loadConfiguration(yml);
 
-                        for (String blockKey : config.getKeys(false)) {
+                        for (String blockKey : config.getKeys(false)) { try (var ignored1 = StackWalker.setPosition("Reading key: " + blockKey)) {
                             if (!blockKey.matches("[a-z0-9_\\-\\./]+")) {
-                                severe(new IncompatibleKeyFormatException(blockKey));
-                                continue;
+                                throw new IncompatibleKeyFormatException(blockKey);
                             }
 
                             ConfigurationSection section = config.getConfigurationSection(blockKey);
                             if (section == null) {
-                                severe(new InvalidDescException(blockKey));
-                                continue;
+                                throw new InvalidDescException(blockKey);
                             }
 
                             if (!section.contains("material")) {
-                                severe(new MissingArgumentException("material"));
-                                continue;
+                                throw new MissingArgumentException("material");
                             }
 
                             var s2 = section.get("material");
@@ -81,8 +80,7 @@ public class Blocks implements FileObject<Blocks> {
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
                             if (item == null) continue;
                             if (!item.getType().isBlock() || item.getType().isAir()) {
-                                severe(new IncompatibleMaterialException("material must be blocks: " + item.getType()));
-                                continue;
+                                throw new IncompatibleMaterialException("material must be blocks: " + item.getType());
                             }
 
                             var id = InternalObjectID.of(blockKey).with(namespace).register();
@@ -91,8 +89,12 @@ public class Blocks implements FileObject<Blocks> {
 
                             boolean postLoad = section.getBoolean("postload", false);
                             blocks.put(id, new PreparedBlock(id, item.getType(), scriptdesc, postLoad));
-                        }
-                    }
+                        } catch (Exception e) {
+                            StackWalker.handle(e);
+                        }}
+                    } catch (Exception e) {
+                        StackWalker.handle(e);
+                    }}
 
                     return this;
                 }

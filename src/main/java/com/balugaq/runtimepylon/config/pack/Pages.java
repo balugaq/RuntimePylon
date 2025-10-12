@@ -1,11 +1,16 @@
 package com.balugaq.runtimepylon.config.pack;
 
 import com.balugaq.runtimepylon.config.Deserializer;
+import com.balugaq.runtimepylon.config.ExternalObjectID;
 import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
+import com.balugaq.runtimepylon.config.Pack;
+import com.balugaq.runtimepylon.config.PageDesc;
 import com.balugaq.runtimepylon.config.PreparedPage;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
+import com.balugaq.runtimepylon.config.StackWalker;
+import com.balugaq.runtimepylon.config.UnsArrayList;
 import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
@@ -54,39 +59,41 @@ public class Pages implements FileObject<Pages> {
                 dir -> {
                     List<File> files = Arrays.stream(dir.listFiles()).toList();
                     List<File> ymls = files.stream().filter(file -> file.getName().endsWith(".yml") || file.getName().endsWith(".yaml")).toList();
-                    for (File yml : ymls) {
+                    for (File yml : ymls) { try (var ignored = StackWalker.setPosition("Reading file: " + yml.getAbsolutePath())) {
                         var config = YamlConfiguration.loadConfiguration(yml);
 
-                        for (String pageKey : config.getKeys(false)) {
+                        for (String pageKey : config.getKeys(false)) { try (var ignored1 = StackWalker.setPosition("Reading key: " + pageKey)) {
                             if (!pageKey.matches("[a-z0-9_\\-\\./]+")) {
-                                severe(new IncompatibleKeyFormatException(pageKey));
-                                continue;
+                                throw new IncompatibleKeyFormatException(pageKey);
                             }
 
                             ConfigurationSection section = config.getConfigurationSection(pageKey);
                             if (section == null) {
-                                severe(new InvalidDescException(pageKey));
-                                continue;
+                                throw new InvalidDescException(pageKey);
                             }
 
                             if (!section.contains("material")) {
-                                severe(new MissingArgumentException("material"));
-                                continue;
+                                throw new MissingArgumentException("material");
                             }
 
                             var s2 = section.get("material");
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
                             if (item == null) continue;
                             if (!item.getType().isItem() || item.getType().isAir()) {
-                                severe(new IncompatibleMaterialException("material must be items: " + item.getType()));
-                                continue;
+                                throw new IncompatibleMaterialException("material must be items: " + item.getType());
                             }
                             var id = InternalObjectID.of(pageKey).with(namespace).register();
 
+                            UnsArrayList<PageDesc> parents = Pack.readOrNull(section, UnsArrayList.class, PageDesc.class, "parents", e -> e.setPackNamespace(namespace));
+
                             boolean postLoad = section.getBoolean("postload", false);
-                            pages.put(id, new PreparedPage(id, item.getType(), postLoad));
-                        }
-                    }
+                            pages.put(id, new PreparedPage(id, item.getType(), parents, postLoad));
+                        } catch (Exception e) {
+                            StackWalker.handle(e);
+                        }}
+                    } catch (Exception e) {
+                        StackWalker.handle(e);
+                    }}
 
                     return this;
                 }

@@ -16,10 +16,19 @@ public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implem
     @Getter
     private Class<T> genericType;
 
+    @Getter
+    private Pack.Advancer<T> advancer;
+
     @NotNull
     @Override
     public UnsArrayList<T> setGenericType(@NotNull Class<T> clazz) {
         this.genericType = clazz;
+        return this;
+    }
+
+    @Override
+    public @NotNull UnsArrayList<T> setAdvancer(Pack.@NotNull Advancer<T> advancer) {
+        this.advancer = advancer;
         return this;
     }
 
@@ -28,7 +37,7 @@ public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implem
     public List<ConfigReader<?, UnsArrayList<T>>> readers() {
         return List.of(
                 ConfigReader.of(ArrayList.class, lst -> {
-                    var serializer = Deserializer.newDeserializer(getGenericType());
+                    var serializer = advancer.advance(Deserializer.newDeserializer(getGenericType()));
                     UnsArrayList<T> res = new UnsArrayList<>();
                     for (Object object : lst) {
                         res.add(serializer.deserialize(object));

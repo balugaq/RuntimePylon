@@ -94,12 +94,6 @@ public interface Deserializer<T> {
         throw new DeserializationException(this.getClass());
     }
 
-    default void severe(String message) {
-        // todo
-        StackTraceElement[] elements = Thread.currentThread().getStackTrace();
-        Debug.severe(message);
-    }
-
     @NotNull
     List<ConfigReader<?, T>> readers();
 
@@ -202,11 +196,8 @@ public interface Deserializer<T> {
         @Nullable
         @Override
         public ItemStack deserialize(@Nullable Object o) {
-            try {
+            try (var ignore = StackWalker.setPosition("Reading ItemStack")) {
                 return Deserializer.super.deserialize(o);
-            } catch (DeserializationException e) {
-                Debug.warn(e);
-                return null;
             }
         }
     }

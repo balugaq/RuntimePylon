@@ -8,4 +8,9 @@ public record RegisteredObjectID(NamespacedKey key) {
     public static RegisteredObjectID of(NamespacedKey id) {
         return new RegisteredObjectID(id);
     }
+
+    @Override
+    public String toString() {
+        return key.toString();
+    }
 }
