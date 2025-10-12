@@ -119,7 +119,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         Bukkit.getServer().getPluginManager().registerEvents(new ChatInputListener(), this);
 
         PylonRegistry.ADDONS.unregister(this);
-        registerWithPylon();
+        registerWithPylon(); // todo: rewrite lang translation check
     }
 
     @Override

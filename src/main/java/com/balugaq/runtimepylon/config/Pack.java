@@ -121,6 +121,7 @@ public class Pack implements FileObject<Pack> {
     private final Scripts scripts;
     @Nullable
     private final Saveditems saveditems;
+    // todo: supportedLanguages
 
     public static <T extends Deserializer<T>> T tryExamine(T object) {
         try {
@@ -406,6 +407,9 @@ public class Pack implements FileObject<Pack> {
                         PylonItem.register(PylonItem.class, icon);
                         Debug.log("Registered Item: " + id.key());
                     }
+
+                    List<PageDesc> pages = e.pages();
+                    if (pages != null) pages.forEach(desc -> desc.getPage().addItem(e.icon()));
                 } catch (Exception ex) {
                     StackWalker.handle(ex);
                 }
@@ -441,7 +445,11 @@ public class Pack implements FileObject<Pack> {
                 RegisteredObjectID id = e.id();
                 Material material = e.material();
                 FluidTemperature temperature = e.temperature();
-                new PylonFluid(id.key(), material).addTag(temperature).register();
+                PylonFluid fluid = new PylonFluid(id.key(), material).addTag(temperature);
+                fluid.register();
+
+                List<PageDesc> pages = e.pages();
+                if (pages != null) pages.forEach(desc -> desc.getPage().addFluid(fluid));
             });
         }
     }

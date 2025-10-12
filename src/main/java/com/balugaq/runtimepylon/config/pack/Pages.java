@@ -14,6 +14,7 @@ import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
+import com.balugaq.runtimepylon.util.MaterialUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
 import lombok.Data;
 import org.bukkit.configuration.ConfigurationSection;
@@ -89,7 +90,7 @@ public class Pages implements FileObject<Pages> {
                                     UnsArrayList<PageDesc> parents = Pack.readOrNull(section, UnsArrayList.class, PageDesc.class, "parents", e -> e.setPackNamespace(namespace));
 
                                     boolean postLoad = section.getBoolean("postload", false);
-                                    pages.put(id, new PreparedPage(id, item.getType(), parents, postLoad));
+                                    pages.put(id, new PreparedPage(id, MaterialUtil.getDisplayMaterial(item), parents, postLoad));
                                 } catch (Exception e) {
                                     StackWalker.handle(e);
                                 }

@@ -244,6 +244,6 @@ public @Data class PackManager {
     }
 
     public void destroy() {
-        // todo
+        packs.clear();
     }
 }

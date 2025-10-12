@@ -3,6 +3,7 @@ package com.balugaq.runtimepylon.config;
 import com.balugaq.runtimepylon.config.pack.PackID;
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
+import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
 import com.balugaq.runtimepylon.exceptions.UnknownItemException;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.item.PylonItemSchema;
@@ -247,7 +248,11 @@ public interface Deserializer<T> {
                 }
                 return null;
             } catch (Throwable e) {
-                StackWalker.handle(e);
+                if (e instanceof IllegalArgumentException e2) {
+                    StackWalker.handle(new UnknownEnumException(clazz, e2.getMessage().substring(e2.getMessage().lastIndexOf(clazz.getSimpleName() + '.'), clazz.getSimpleName().length() + 1)));
+                } else {
+                    StackWalker.handle(e);
+                }
                 return null;
             }
         }

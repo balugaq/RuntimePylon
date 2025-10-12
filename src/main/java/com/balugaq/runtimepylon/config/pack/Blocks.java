@@ -12,6 +12,7 @@ import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
+import com.balugaq.runtimepylon.util.MaterialUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
 import lombok.Data;
 import org.bukkit.configuration.ConfigurationSection;
@@ -91,7 +92,7 @@ public class Blocks implements FileObject<Blocks> {
                                     ScriptDesc scriptdesc = Deserializer.newDeserializer(ScriptDesc.class).deserialize(section.getString("script"));
 
                                     boolean postLoad = section.getBoolean("postload", false);
-                                    blocks.put(id, new PreparedBlock(id, item.getType(), scriptdesc, postLoad));
+                                    blocks.put(id, new PreparedBlock(id, MaterialUtil.getDisplayMaterial(item), scriptdesc, postLoad));
                                 } catch (Exception e) {
                                     StackWalker.handle(e);
                                 }

@@ -40,7 +40,11 @@ public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implem
                     var serializer = advancer.advance(Deserializer.newDeserializer(getGenericType()));
                     UnsArrayList<T> res = new UnsArrayList<>();
                     for (Object object : lst) {
-                        res.add(serializer.deserialize(object));
+                        try {
+                            res.add(serializer.deserialize(object));
+                        } catch (Exception e) {
+                            StackWalker.handle(e);
+                        }
                     }
                     return res;
                 })

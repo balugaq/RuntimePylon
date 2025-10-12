@@ -7,6 +7,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import lombok.experimental.UtilityClass;
+import org.bukkit.event.server.PluginDisableEvent;
 
 @UtilityClass
 public class RuntimePylonCommand {
@@ -31,9 +32,9 @@ public class RuntimePylonCommand {
                     .requires(source -> source.getSender().hasPermission("runtimepylon.command.loadpacks"))
                     .executes(context -> loadPacks())
             )
-            .then(Commands.literal("reloadpacks")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.reloadpacks"))
-                    .executes(context -> reloadPacks())
+            .then(Commands.literal("reloadplugin")
+                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.reloadplugin"))
+                    .executes(context -> reloadPlugin())
             )
             .build();
 
@@ -64,9 +65,11 @@ public class RuntimePylonCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int reloadPacks() {
+    private int reloadPlugin() {
         clearAll();
         RuntimePylon.getPackManager().destroy();
+        new PluginDisableEvent(RuntimePylon.getInstance()).callEvent();
+        RuntimePylon.getInstance().registerWithPylon();
         RuntimePylon.getPackManager().loadPacks();
         return Command.SINGLE_SUCCESS;
     }
