@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
+import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.util.Debug;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -10,7 +11,7 @@ public class StackWalker implements AutoCloseable {
     private static final Int2ObjectOpenHashMap<String> positions = new Int2ObjectOpenHashMap<>();
 
     @SuppressWarnings("UnnecessaryUnicodeEscape")
-    public static void handle(Exception e) {
+    public static void handle(Throwable e) {
         Debug.warn(e.getClass().getSimpleName() + ": " + e.getMessage());
         for (int i = 1; i <= getCurrent(); i++) {
             if (i == 1) {
@@ -20,6 +21,10 @@ public class StackWalker implements AutoCloseable {
 
             Debug.warn("  ".repeat(i - 1) + "\u2514When " + positions.get(i));
         }
+        if (RuntimePylon.getConfigManager().isDebug()) {
+            e.printStackTrace();
+        }
+        Debug.warn("-".repeat(40));
     }
 
     public static int getCurrent() {

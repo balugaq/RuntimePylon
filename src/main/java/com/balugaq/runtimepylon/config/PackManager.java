@@ -2,13 +2,18 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.Saveditems;
+import com.balugaq.runtimepylon.exceptions.PackDependencyMissingException;
+import com.balugaq.runtimepylon.exceptions.PluginDependencyMissingException;
 import com.balugaq.runtimepylon.exceptions.SaveditemsNotFoundException;
 import com.balugaq.runtimepylon.exceptions.UnknownPackException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
+import com.balugaq.runtimepylon.exceptions.UnsupportedVersionException;
 import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.util.MinecraftVersion;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.Data;
 import lombok.SneakyThrows;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
@@ -168,6 +173,15 @@ public @Data class PackManager {
         Debug.warn(e);
     }
 
+    public static void packDependencyCycle(List<String> cycle, DependencyType dependencyType) {
+        String cycleStr = String.join(" -> ", cycle);
+        if (dependencyType == DependencyType.HARD) {
+            Debug.severe("Found a pack hard dependency cycle, packs will NOT be loaded: " + cycleStr);
+        } else {
+            Debug.warn("Found a pack soft dependency cycle, packs will be loaded from " + cycle.stream().min(String::compareTo).get() + ": " + cycleStr);
+        }
+    }
+
     public void loadPacks() {
         if (!PACKS_FOLDER.exists()) PACKS_FOLDER.mkdirs();
         for (File packFolder : PACKS_FOLDER.listFiles()) {
@@ -178,6 +192,24 @@ public @Data class PackManager {
             try (var sk = StackWalker.setPosition("Loading Pack Folder: " + packFolder.getName())) {
                 Debug.log("Loading pack: " + packFolder.getName());
                 Pack pack = FileObject.newDeserializer(Pack.class).deserialize(packFolder);
+                MinecraftVersion min = pack.getPackMinAPIVersion();
+                if (min != null && MinecraftVersion.current().isBefore(min)) {
+                    throw new UnsupportedVersionException("Current version: " + MinecraftVersion.current() + ", Minimum version to load: " + min);
+                }
+                MinecraftVersion max = pack.getPackMaxAPIVersion();
+                if (max != null && MinecraftVersion.current().isAtLeast(max)) {
+                    throw new UnsupportedVersionException("Current version: " + MinecraftVersion.current() + ", Maximum version to load: " + max);
+                }
+                UnsArrayList<PluginDesc> pluginDependencies = pack.getPluginDependencies();
+                if (pluginDependencies != null) {
+                    ArrayList<PluginDesc> missing = new ArrayList<>();
+                    for (PluginDesc pluginDependency : pluginDependencies) {
+                        if (!Bukkit.getPluginManager().isPluginEnabled(pluginDependency.getId()))
+                            missing.add(pluginDependency);
+                    }
+
+                    if (!missing.isEmpty()) throw new PluginDependencyMissingException(pack, missing);
+                }
                 packs.add(pack);
                 Debug.log("Loaded pack: " + pack.getPackID());
             } catch (Exception e) {
@@ -185,8 +217,17 @@ public @Data class PackManager {
             }
         }
 
-        for (Pack pack : packs) {
+        for (Pack pack : PackSorter.sortPacks(packs)) {
             try (var sk = StackWalker.setPosition("Registering Pack: " + pack.getPackID())) {
+                UnsArrayList<PackDesc> packDependencies = pack.getPackDependencies();
+                if (packDependencies != null) {
+                    ArrayList<PackDesc> missing = new ArrayList<>();
+                    for (PackDesc packDependency : packDependencies) {
+                        if (packDependency.findPack() == null) missing.add(packDependency);
+                    }
+
+                    if (!missing.isEmpty()) throw new PackDependencyMissingException(pack, missing);
+                }
                 Debug.log("Registering pack: " + pack.getPackID());
                 pack.register();
                 Debug.log("Registered pack: " + pack.getPackID());

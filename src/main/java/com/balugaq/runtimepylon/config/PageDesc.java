@@ -2,7 +2,6 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.PackNamespace;
-import com.balugaq.runtimepylon.exceptions.ExamineFailedException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.UnknownPageException;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
@@ -23,8 +22,8 @@ import java.util.List;
 @NoArgsConstructor(force = true)
 @NullMarked
 public class PageDesc implements Deserializer<PageDesc> {
-    @Nullable PackNamespace packNamespace = null;
     private final SimpleStaticGuidePage page;
+    @Nullable PackNamespace packNamespace = null;
 
     public PageDesc setPackNamespace(PackNamespace namespace) {
         if (this.packNamespace != null) throw new IllegalStateException("This method is for deserialization only");
@@ -47,7 +46,7 @@ public class PageDesc implements Deserializer<PageDesc> {
                     }
 
                     NamespacedKey key = NamespacedKey.fromString(namespace + ":" + k);
-                    if (key == null) throw new InvalidDescException("Invalid page desc: " +s);
+                    if (key == null) throw new InvalidDescException("Invalid page desc: " + s);
 
                     SimpleStaticGuidePage page = RuntimePylon.getGuidePages().get(key);
                     if (page == null) throw new UnknownPageException(key.toString());

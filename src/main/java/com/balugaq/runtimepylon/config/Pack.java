@@ -94,7 +94,7 @@ public class Pack implements FileObject<Pack> {
     @Nullable
     private final UnsArrayList<PackDesc> packDependencies;
     @Nullable
-    private final UnsArrayList<PackDesc> pluginSoftDependencies;
+    private final UnsArrayList<PluginDesc> pluginSoftDependencies;
     @Nullable
     private final UnsArrayList<PluginDesc> pluginDependencies;
     @Nullable
@@ -204,7 +204,7 @@ public class Pack implements FileObject<Pack> {
                     UnsArrayList<PackDesc> packLoadBefores = readOrNull(config, UnsArrayList.class, PackDesc.class, "LoadBefores");
                     UnsArrayList<PackDesc> packSoftDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "SoftDependencies");
                     UnsArrayList<PackDesc> packDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "PackDependencies");
-                    UnsArrayList<PackDesc> pluginSoftDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "PluginSoftDependencies");
+                    UnsArrayList<PluginDesc> pluginSoftDependencies = readOrNull(config, UnsArrayList.class, PluginDesc.class, "PluginSoftDependencies");
                     UnsArrayList<PluginDesc> pluginDependencies = readOrNull(config, UnsArrayList.class, PluginDesc.class, "PluginDependencies");
                     Author author = readOrNull(config, Author.class, "Author");
                     UnsArrayList<Author> authors = readOrNull(config, UnsArrayList.class, Author.class, "Authors");
@@ -472,6 +472,7 @@ public class Pack implements FileObject<Pack> {
         default T apply(T object) {
             return advance(object);
         }
+
         T advance(T object);
     }
 }

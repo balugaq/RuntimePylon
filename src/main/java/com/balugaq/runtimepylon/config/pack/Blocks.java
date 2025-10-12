@@ -4,14 +4,15 @@ import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
-import com.balugaq.runtimepylon.config.PreparedBlock;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.config.StackWalker;
+import com.balugaq.runtimepylon.config.preloads.PreparedBlock;
 import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
+import com.balugaq.runtimepylon.util.StringUtil;
 import lombok.Data;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -58,43 +59,47 @@ public class Blocks implements FileObject<Blocks> {
                     List<File> files = Arrays.stream(dir.listFiles()).toList();
                     List<File> ymls = files.stream().filter(file -> file.getName().endsWith(".yml") || file.getName().endsWith(".yaml")).toList();
 
-                    for (File yml : ymls) { try (var ignored = StackWalker.setPosition("Reading file: " + yml.getAbsolutePath())) {
-                        var config = YamlConfiguration.loadConfiguration(yml);
+                    for (File yml : ymls) {
+                        try (var ignored = StackWalker.setPosition("Reading file: " + StringUtil.simplifyPath(yml.getAbsolutePath()))) {
+                            var config = YamlConfiguration.loadConfiguration(yml);
 
-                        for (String blockKey : config.getKeys(false)) { try (var ignored1 = StackWalker.setPosition("Reading key: " + blockKey)) {
-                            if (!blockKey.matches("[a-z0-9_\\-\\./]+")) {
-                                throw new IncompatibleKeyFormatException(blockKey);
+                            for (String blockKey : config.getKeys(false)) {
+                                try (var ignored1 = StackWalker.setPosition("Reading key: " + blockKey)) {
+                                    if (!blockKey.matches("[a-z0-9_\\-\\./]+")) {
+                                        throw new IncompatibleKeyFormatException(blockKey);
+                                    }
+
+                                    ConfigurationSection section = config.getConfigurationSection(blockKey);
+                                    if (section == null) {
+                                        throw new InvalidDescException(blockKey);
+                                    }
+
+                                    if (!section.contains("material")) {
+                                        throw new MissingArgumentException("material");
+                                    }
+
+                                    var s2 = section.get("material");
+
+                                    ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
+                                    if (item == null) continue;
+                                    if (!item.getType().isBlock() || item.getType().isAir()) {
+                                        throw new IncompatibleMaterialException("material must be blocks: " + item.getType());
+                                    }
+
+                                    var id = InternalObjectID.of(blockKey).with(namespace).register();
+
+                                    ScriptDesc scriptdesc = Deserializer.newDeserializer(ScriptDesc.class).deserialize(section.getString("script"));
+
+                                    boolean postLoad = section.getBoolean("postload", false);
+                                    blocks.put(id, new PreparedBlock(id, item.getType(), scriptdesc, postLoad));
+                                } catch (Exception e) {
+                                    StackWalker.handle(e);
+                                }
                             }
-
-                            ConfigurationSection section = config.getConfigurationSection(blockKey);
-                            if (section == null) {
-                                throw new InvalidDescException(blockKey);
-                            }
-
-                            if (!section.contains("material")) {
-                                throw new MissingArgumentException("material");
-                            }
-
-                            var s2 = section.get("material");
-
-                            ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
-                            if (item == null) continue;
-                            if (!item.getType().isBlock() || item.getType().isAir()) {
-                                throw new IncompatibleMaterialException("material must be blocks: " + item.getType());
-                            }
-
-                            var id = InternalObjectID.of(blockKey).with(namespace).register();
-
-                            ScriptDesc scriptdesc = Deserializer.newDeserializer(ScriptDesc.class).deserialize(section.getString("script"));
-
-                            boolean postLoad = section.getBoolean("postload", false);
-                            blocks.put(id, new PreparedBlock(id, item.getType(), scriptdesc, postLoad));
                         } catch (Exception e) {
                             StackWalker.handle(e);
-                        }}
-                    } catch (Exception e) {
-                        StackWalker.handle(e);
-                    }}
+                        }
+                    }
 
                     return this;
                 }

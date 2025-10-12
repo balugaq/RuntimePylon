@@ -2,42 +2,31 @@ package com.balugaq.runtimepylon.util;
 
 import com.balugaq.runtimepylon.config.ConfigReader;
 import com.balugaq.runtimepylon.config.Deserializer;
-import com.balugaq.runtimepylon.exceptions.DeserializationException;
-import lombok.AllArgsConstructor;
+import org.bukkit.Bukkit;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
 /**
- * Minecraft versions enum for version judgement
+ * Minecraft versions for version judgement
  *
  * @author lijinhong11
+ * @author balugaq
  */
-@AllArgsConstructor
 @NullMarked
-public enum MinecraftVersion implements Deserializer<MinecraftVersion> {
-    V1_21_8(1, 21, 8),
-    V1_21_9(1, 21, 9),
-    V1_21_10(1, 21, 10),
-    V1_21_11(1, 21, 11),
-    V1_22_0(1, 22, 0),
-    V1_22_1(1, 22, 1),
-    UNKNOWN(999, 999, 999);
+public record MinecraftVersion(int major, int minor, int patch) implements Deserializer<MinecraftVersion> {
+    public static final MinecraftVersion UNKNOWN = MinecraftVersion.of(999, 999, 999);
 
-    private final int major;
-    private final int minor;
-    private final int patch;
+    public static MinecraftVersion current() {
+        return MinecraftVersion.of(Bukkit.getMinecraftVersion());
+    }
 
-    public static MinecraftVersion find(int major, int minor, int patch) {
-        for (var version : values()) {
-            if (version.major == major &&
-                    version.minor == minor &&
-                    version.patch == patch) {
-                return version;
-            }
-        }
+    public static MinecraftVersion of(String version) {
+        return MinecraftVersion.UNKNOWN.deserialize(version);
+    }
 
-        throw new DeserializationException("Unknown Minecraft version: " + major + "." + minor + "." + patch);
+    public static MinecraftVersion of(int major, int minor, int patch) {
+        return new MinecraftVersion(major, minor, patch);
     }
 
     public boolean isAtLeast(String version) {
@@ -66,7 +55,7 @@ public enum MinecraftVersion implements Deserializer<MinecraftVersion> {
                     int major = Integer.parseUnsignedInt(split[0]);
                     int minor = Integer.parseUnsignedInt(split[1]);
                     int patch = Integer.parseUnsignedInt(split.length == 2 ? "0" : split[2]);
-                    return MinecraftVersion.find(major, minor, patch);
+                    return MinecraftVersion.of(major, minor, patch);
                 })
         );
     }

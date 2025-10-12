@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author balugaq
  * @param <T> the type of the elements in this list
+ * @author balugaq
  */
 @EqualsAndHashCode(callSuper = true)
 public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implements GenericDeserializer<@NotNull UnsArrayList<T>, @NotNull T> {

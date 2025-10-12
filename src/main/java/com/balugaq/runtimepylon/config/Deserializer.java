@@ -3,7 +3,7 @@ package com.balugaq.runtimepylon.config;
 import com.balugaq.runtimepylon.config.pack.PackID;
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
-import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.exceptions.UnknownItemException;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.item.PylonItemSchema;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
@@ -44,10 +44,8 @@ public interface Deserializer<T> {
     ItemStackDeserializer ITEMSTACK = new ItemStackDeserializer();
 
     @NotNull
-    static <E extends Enum<E>> Deserializer<E> enumDeserializer(Class<E> clazz) {
-        return () -> List.of(
-                ConfigReader.of(String.class, s -> Enum.valueOf(clazz, s.toUpperCase()))
-        );
+    static <E extends Enum<E>> EnumDeserializer<E> enumDeserializer(Class<E> clazz) {
+        return EnumDeserializer.of(clazz);
     }
 
     /**
@@ -169,7 +167,7 @@ public interface Deserializer<T> {
                 }
             }
 
-            throw new DeserializationException("Unknown item: " + s);
+            throw new UnknownItemException(s);
         }
 
         @NotNull
@@ -197,7 +195,60 @@ public interface Deserializer<T> {
         @Override
         public ItemStack deserialize(@Nullable Object o) {
             try (var ignore = StackWalker.setPosition("Reading ItemStack")) {
-                return Deserializer.super.deserialize(o);
+                if (o == null) throw new MissingArgumentException();
+                for (ConfigReader<?, ItemStack> reader : readers()) {
+                    if (reader.type().isInstance(o)) {
+                        try {
+                            return (ItemStack) ReflectionUtil.invokeMethod(reader, "read", o);
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw e.getCause();
+                        }
+                    }
+                }
+                return null;
+            } catch (Throwable e) {
+                StackWalker.handle(e);
+                return null;
+            }
+        }
+    }
+
+    class EnumDeserializer<E extends Enum<E>> implements Deserializer<E> {
+        private final Class<E> clazz;
+
+        public EnumDeserializer(@NotNull Class<E> clazz) {
+            this.clazz = clazz;
+        }
+
+        public static <E extends Enum<E>> EnumDeserializer<E> of(@NotNull Class<E> clazz) {
+            return new EnumDeserializer<>(clazz);
+        }
+
+        @Override
+        public @NotNull List<ConfigReader<?, E>> readers() {
+            return List.of(
+                    ConfigReader.of(String.class, s -> Enum.valueOf(clazz, s))
+            );
+        }
+
+        @Nullable
+        @Override
+        public E deserialize(@Nullable Object o) {
+            try (var ignore = StackWalker.setPosition("Reading " + clazz.getSimpleName())) {
+                if (o == null) throw new MissingArgumentException();
+                for (ConfigReader<?, E> reader : readers()) {
+                    if (reader.type().isInstance(o)) {
+                        try {
+                            return (E) ReflectionUtil.invokeMethod(reader, "read", o);
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw e.getCause();
+                        }
+                    }
+                }
+                return null;
+            } catch (Throwable e) {
+                StackWalker.handle(e);
+                return null;
             }
         }
     }
