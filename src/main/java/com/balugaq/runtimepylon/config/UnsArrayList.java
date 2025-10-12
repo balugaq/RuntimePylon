@@ -7,6 +7,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author balugaq
+ * @param <T> the type of the elements in this list
+ */
 @EqualsAndHashCode(callSuper = true)
 public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implements GenericDeserializer<@NotNull UnsArrayList<T>, @NotNull T> {
     @Getter

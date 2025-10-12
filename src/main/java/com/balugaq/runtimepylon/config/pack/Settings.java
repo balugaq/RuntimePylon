@@ -31,7 +31,7 @@ public class Settings {
         for (File file : from.listFiles()) {
             if (file.isFile() && file.getName().matches("[a-z0-9_\\-\\./]+\\.yml$")) {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                File targetFile = new File(to, ExternalObjectID.of(namespace, InternalObjectID.of(file.getName())).getId());
+                File targetFile = new File(to, ExternalObjectID.of(namespace, InternalObjectID.of(file.getName())).id());
 
                 if (!targetFile.exists()) {
                     try {

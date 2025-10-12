@@ -2,20 +2,14 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.PackNamespace;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import org.bukkit.NamespacedKey;
 import org.jspecify.annotations.NullMarked;
 
 /**
  * @author balugaq
  */
-@Data
-@AllArgsConstructor
 @NullMarked
-public class ExternalObjectID {
-    private final String id;
-
+public record ExternalObjectID(String id) {
     public static ExternalObjectID of(PackNamespace namespace, InternalObjectID internal) {
         return new ExternalObjectID(namespace.getNamespace() + "_" + internal.getId());
     }

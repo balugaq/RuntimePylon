@@ -90,7 +90,7 @@ public class Items implements FileObject<Items> {
                             }
 
                             var id = InternalObjectID.of(itemKey).with(namespace).register();
-                            ItemStack icon = ItemStackBuilder.pylonItem(item.getType(), id.getKey()).amount(item.getAmount()).build();
+                            ItemStack icon = ItemStackBuilder.pylonItem(item.getType(), id.key()).amount(item.getAmount()).build();
 
                             ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
                             UnsArrayList<InternalObjectID> pages = Pack.readGenericOrNull(section, UnsArrayList.class, InternalObjectID.class, "pages");

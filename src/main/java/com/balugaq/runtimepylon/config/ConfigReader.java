@@ -6,6 +6,9 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.function.Function;
 
+/**
+ * @author balugaq
+ */
 @NullMarked
 public sealed interface ConfigReader<Input, Result> permits ConfigReader.ConfigReaderImpl {
     static <Input, Result> ConfigReader<Input, Result> of(Class<Input> clazz, Function<Input, @Nullable Result> function) {

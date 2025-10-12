@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -76,6 +77,7 @@ public interface Deserializer<T> {
      * @author balugaq
      * @see Deserializer#newDeserializer(Class)
      */
+    @UnknownNullability
     default T deserialize(@Nullable Object o) throws DeserializationException {
         if (o == null) throw new MissingArgumentException();
         for (ConfigReader<?, T> reader : readers()) {

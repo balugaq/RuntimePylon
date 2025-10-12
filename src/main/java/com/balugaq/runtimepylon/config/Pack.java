@@ -300,19 +300,19 @@ public class Pack implements FileObject<Pack> {
                 ConfigurationSection item = config.getConfigurationSection("item");
                 if (item != null) {
                     for (String key : item.getKeys(false)) {
-                        targetConfig.set("item." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).getId(), item.get(key));
+                        targetConfig.set("item." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).id(), item.get(key));
                     }
                 }
                 ConfigurationSection fluid = config.getConfigurationSection("fluid");
                 if (fluid != null) {
                     for (String key : fluid.getKeys(false)) {
-                        targetConfig.set("fluid." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).getId(), fluid.get(key));
+                        targetConfig.set("fluid." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).id(), fluid.get(key));
                     }
                 }
                 ConfigurationSection guidePage = config.getConfigurationSection("guide.page");
                 if (guidePage != null) {
                     for (String key : guidePage.getKeys(false)) {
-                        targetConfig.set("guide.page." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).getId(), guidePage.get(key));
+                        targetConfig.set("guide.page." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).id(), guidePage.get(key));
                     }
                 }
                 try {
@@ -337,8 +337,8 @@ public class Pack implements FileObject<Pack> {
             PackManager.load(entry, e -> {
                 RegisteredObjectID id = e.getId();
                 Material icon = e.getMaterial();
-                new SimpleStaticGuidePage(id.getKey(), icon);
-                Debug.log("Registered Page: " + id.getKey());
+                new SimpleStaticGuidePage(id.key(), icon);
+                Debug.log("Registered Page: " + id.key());
             });
         }
     }
@@ -355,11 +355,11 @@ public class Pack implements FileObject<Pack> {
                 if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
 
                 if (blocks != null && blocks.getBlocks().containsKey(id)) {
-                    PylonItem.register(PylonItem.class, icon, id.getKey());
-                    Debug.log("Registered Item: " + id.getKey());
+                    PylonItem.register(PylonItem.class, icon, id.key());
+                    Debug.log("Registered Item: " + id.key());
                 } else {
                     PylonItem.register(PylonItem.class, icon);
-                    Debug.log("Registered Item: " + id.getKey());
+                    Debug.log("Registered Item: " + id.key());
                 }
             });
         }
@@ -376,8 +376,8 @@ public class Pack implements FileObject<Pack> {
                 ScriptExecutor executor;
                 if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
 
-                PylonBlock.register(id.getKey(), material, PylonBlock.class);
-                Debug.log("Registered Block: " + id.getKey());
+                PylonBlock.register(id.key(), material, PylonBlock.class);
+                Debug.log("Registered Block: " + id.key());
             });
         }
     }
@@ -389,7 +389,7 @@ public class Pack implements FileObject<Pack> {
                 RegisteredObjectID id = e.getId();
                 Material material = e.getMaterial();
                 FluidTemperature temperature = e.getTemperature();
-                new PylonFluid(id.getKey(), material).addTag(temperature).register();
+                new PylonFluid(id.key(), material).addTag(temperature).register();
             });
         }
     }
