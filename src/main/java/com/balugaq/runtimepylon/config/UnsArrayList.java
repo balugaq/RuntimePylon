@@ -3,6 +3,7 @@ package com.balugaq.runtimepylon.config;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,10 +15,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implements GenericDeserializer<@NotNull UnsArrayList<T>, @NotNull T> {
     @Getter
-    private Class<T> genericType;
+    @UnknownNullability private Class<T> genericType;
 
     @Getter
-    private Pack.Advancer<T> advancer;
+    private Pack.@UnknownNullability Advancer<T> advancer;
 
     @NotNull
     @Override

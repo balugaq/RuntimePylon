@@ -3,12 +3,19 @@ package com.balugaq.runtimepylon.exceptions;
 import com.balugaq.runtimepylon.config.PackDesc;
 import com.balugaq.runtimepylon.config.SaveditemDesc;
 
-public class UnknownSaveditemException extends RuntimeException {
+/**
+ * @author balugaq
+ */
+public class UnknownSaveditemException extends UnknownItemException {
     public UnknownSaveditemException() {
         super();
     }
 
     public UnknownSaveditemException(PackDesc packDesc, SaveditemDesc itemDesc) {
-        super(packDesc.getId() + "/" + itemDesc.getFileName());
+        super(packDesc.getId() + "/" + itemDesc.getFile());
+    }
+
+    public UnknownSaveditemException(String message) {
+        super(message);
     }
 }

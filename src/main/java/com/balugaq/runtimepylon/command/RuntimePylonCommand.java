@@ -36,6 +36,10 @@ public class RuntimePylonCommand {
                     .requires(source -> source.getSender().hasPermission("runtimepylon.command.reloadplugin"))
                     .executes(context -> reloadPlugin())
             )
+            .then(Commands.literal("help")
+                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.help"))
+                    .executes(context -> help())
+            )
             .build();
 
     private int clearSettings() {
@@ -71,6 +75,11 @@ public class RuntimePylonCommand {
         new PluginDisableEvent(RuntimePylon.getInstance()).callEvent();
         RuntimePylon.getInstance().registerWithPylon();
         RuntimePylon.getPackManager().loadPacks();
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int help() {
+        // todo
         return Command.SINGLE_SUCCESS;
     }
 }

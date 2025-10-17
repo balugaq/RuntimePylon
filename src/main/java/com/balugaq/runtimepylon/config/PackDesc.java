@@ -1,6 +1,7 @@
 package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
+import com.balugaq.runtimepylon.config.pack.PackID;
 import com.balugaq.runtimepylon.exceptions.ExamineFailedException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,7 +32,9 @@ public class PackDesc implements Deserializer<PackDesc>, Examinable<PackDesc> {
     @Override
     public List<ConfigReader<?, PackDesc>> readers() {
         return List.of(
-                ConfigReader.of(String.class, PackDesc::new)
+                ConfigReader.of(String.class, PackDesc::new),
+                ConfigReader.of(PackID.class, p -> new PackDesc(p.getId())),
+                ConfigReader.of(Pack.class, p -> new PackDesc(p.getPackID().getId()))
         );
     }
 

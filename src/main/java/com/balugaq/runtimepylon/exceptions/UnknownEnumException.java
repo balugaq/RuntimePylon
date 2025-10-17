@@ -1,5 +1,8 @@
 package com.balugaq.runtimepylon.exceptions;
 
+/**
+ * @author balugaq
+ */
 public class UnknownEnumException extends RuntimeException {
     public UnknownEnumException() {
         super();

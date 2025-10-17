@@ -1,5 +1,8 @@
 package com.balugaq.runtimepylon.exceptions;
 
+/**
+ * @author balugaq
+ */
 public class PackException extends RuntimeException {
     public PackException() {
         super();

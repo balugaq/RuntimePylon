@@ -4,6 +4,7 @@ import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.SaveditemDesc;
+import com.balugaq.runtimepylon.exceptions.ExamineFailedException;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bukkit.inventory.ItemStack;
@@ -36,7 +37,7 @@ public class Saveditems implements FileObject<Saveditems> {
     public List<FileReader<Saveditems>> readers() {
         return List.of(
                 dir -> {
-                    loadFiles(dir, "");
+                    loadFiles(dir, dir.getPath());
                     return this;
                 }
         );
@@ -47,7 +48,13 @@ public class Saveditems implements FileObject<Saveditems> {
             if (file.isDirectory()) {
                 loadFiles(file, path + file.getName() + "/");
             } else {
-                Deserializer.newDeserializer(SaveditemDesc.class).deserialize(path + file.getName());
+                var serializer = Deserializer.newDeserializer(SaveditemDesc.class);
+                try {
+                    var desc = serializer.deserialize(file);
+                    ItemStack item = desc.getItemStack();
+                    items.put(desc, item);
+                } catch (ExamineFailedException ignored) {
+                }
             }
         }
     }

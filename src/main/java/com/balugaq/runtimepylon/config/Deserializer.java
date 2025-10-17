@@ -5,6 +5,7 @@ import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
 import com.balugaq.runtimepylon.exceptions.UnknownItemException;
+import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.item.PylonItemSchema;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
@@ -142,10 +143,10 @@ public interface Deserializer<T> {
                     if (material != null) {
                         return new ItemStack(material);
                     }
-                } else if (s2.contains(":")) {
+                } else if (s2.startsWith("saveditem")) {
                     // item: saveditem:mypack:foo
                     // also supports saveditem:mypack:blocks/bar
-                    if (s2.startsWith("saveditem")) {
+                    if (s2.contains(":")) {
                         // item: saveditem:mypack:foo
                         String[] split = s2.split(":");
                         String pack = split[1];
@@ -154,8 +155,22 @@ public interface Deserializer<T> {
                                 Deserializer.newDeserializer(PackDesc.class).deserialize(pack),
                                 Deserializer.newDeserializer(SaveditemDesc.class).deserialize(fileName)
                         );
+                    } else {
+                        // item: saveditem:foo
+                        // also supports saveditem:blocks/foo
+                        // find from all packs
+                        for (Pack pack : PackManager.getPacks()) {
+                            try {
+                                return PackManager.findSaveditem(
+                                        Deserializer.newDeserializer(PackDesc.class).deserialize(pack),
+                                        Deserializer.newDeserializer(SaveditemDesc.class).deserialize(s2)
+                                );
+                            } catch (UnknownSaveditemException ignored) {
+                            }
+                        }
+                        throw new UnknownSaveditemException(s2);
                     }
-
+                } else if (s2.contains(":")) {
                     // item: pylonbase:loupe
                     // get item from pylon registry
                     NamespacedKey k = NamespacedKey.fromString(s2);
@@ -232,6 +247,7 @@ public interface Deserializer<T> {
             );
         }
 
+        @SuppressWarnings("unchecked")
         @Nullable
         @Override
         public E deserialize(@Nullable Object o) {

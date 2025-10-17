@@ -5,6 +5,9 @@ import com.balugaq.runtimepylon.config.PluginDesc;
 
 import java.util.List;
 
+/**
+ * @author balugaq
+ */
 public class PluginDependencyMissingException extends RuntimeException {
     public PluginDependencyMissingException() {
         super();

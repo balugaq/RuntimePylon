@@ -6,6 +6,7 @@ import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.PageDesc;
+import com.balugaq.runtimepylon.config.PreRegister;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.config.StackWalker;
@@ -47,6 +48,7 @@ import java.util.Map;
  *   - [PageDesc]
  *   *postload: boolean
  * <p>
+ * @author balugaq
  */
 @Data
 @NullMarked
@@ -59,62 +61,53 @@ public class Items implements FileObject<Items> {
         return this;
     }
 
+    // @formatter:off
     @Override
     public List<FileReader<Items>> readers() {
         return List.of(
                 dir -> {
                     List<File> files = Arrays.stream(dir.listFiles()).toList();
                     List<File> ymls = files.stream().filter(file -> file.getName().endsWith(".yml") || file.getName().endsWith(".yaml")).toList();
-                    for (File yml : ymls) {
-                        try (var ignored = StackWalker.setPosition("Reading file: " + StringUtil.simplifyPath(yml.getAbsolutePath()))) {
-                            var config = YamlConfiguration.loadConfiguration(yml);
+                    for (File yml : ymls) {try (var ignored = StackWalker.setPosition("Reading file: " + StringUtil.simplifyPath(yml.getAbsolutePath()))) {
+                        var config = YamlConfiguration.loadConfiguration(yml);
 
-                            for (String itemKey : config.getKeys(false)) {
-                                try (var ignored1 = StackWalker.setPosition("Reading key: " + itemKey)) {
-                                    if (!itemKey.matches("[a-z0-9_\\-\\./]+")) {
-                                        throw new IncompatibleKeyFormatException(itemKey);
-                                    }
+                        for (String itemKey : config.getKeys(false)) {try (var ignored1 = StackWalker.setPosition("Reading key: " + itemKey)) {
+                            if (!itemKey.matches("[a-z0-9_\\-\\./]+")) throw new IncompatibleKeyFormatException(itemKey);
 
-                                    ConfigurationSection section = config.getConfigurationSection(itemKey);
-                                    if (section == null) {
-                                        throw new InvalidDescException(itemKey);
-                                    }
+                            ConfigurationSection section = config.getConfigurationSection(itemKey);
+                            if (section == null) throw new InvalidDescException(itemKey);
+                            if (PreRegister.blocks(section)) continue;
 
-                                    if (!section.contains("icon")) {
-                                        throw new MissingArgumentException("icon");
-                                    }
+                            if (!section.contains("icon")) throw new MissingArgumentException("icon");
 
-                                    var s2 = section.get("icon");
-                                    ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
-                                    if (item == null) continue;
-                                    if (!item.getType().isItem() || item.getType().isAir()) {
-                                        throw new IncompatibleMaterialException("material must be items: " + item.getType());
-                                    }
+                            var s2 = section.get("icon");
+                            ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
+                            if (item == null) continue;
+                            if (!item.getType().isItem() || item.getType().isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
 
-                                    var id = InternalObjectID.of(itemKey).with(namespace).register();
-                                    ItemStack icon = ItemStackBuilder.pylonItem(item.getType(), id.key()).amount(item.getAmount()).build();
+                            var id = InternalObjectID.of(itemKey).with(namespace).register();
+                            ItemStack icon = ItemStackBuilder.pylonItem(item.getType(), id.key()).amount(item.getAmount()).build();
 
-                                    ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
-                                    PageDesc page = Pack.readOrNull(section, PageDesc.class, "page", t -> t.setPackNamespace(getNamespace()));
-                                    UnsArrayList<PageDesc> pages = Pack.readOrNull(section, UnsArrayList.class, PageDesc.class, "pages", t -> t.setPackNamespace(getNamespace()));
-                                    if (page != null) {
-                                        if (pages == null) pages = new UnsArrayList<>();
-                                        pages.add(page);
-                                    }
-
-                                    boolean postLoad = section.getBoolean("postload", false);
-                                    items.put(id, new PreparedItem(id, icon, scriptdesc, pages, postLoad));
-                                } catch (Exception e) {
-                                    StackWalker.handle(e);
-                                }
+                            ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
+                            PageDesc page = Pack.readOrNull(section, PageDesc.class, "page", t -> t.setPackNamespace(getNamespace()));
+                            UnsArrayList<PageDesc> pages = Pack.readOrNull(section, UnsArrayList.class, PageDesc.class, "pages", t -> t.setPackNamespace(getNamespace()));
+                            if (page != null) {
+                                if (pages == null) pages = new UnsArrayList<>();
+                                pages.add(page);
                             }
+
+                            boolean postLoad = section.getBoolean("postload", false);
+                            items.put(id, new PreparedItem(id, icon, scriptdesc, pages, postLoad));
                         } catch (Exception e) {
                             StackWalker.handle(e);
-                        }
-                    }
+                        }}
+                    } catch (Exception e) {
+                        StackWalker.handle(e);
+                    }}
 
                     return this;
                 }
         );
     }
+    // @formatter:on
 }

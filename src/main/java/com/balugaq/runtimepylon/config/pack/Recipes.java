@@ -12,6 +12,9 @@ import org.jspecify.annotations.NullMarked;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * @author balugaq
+ */
 @Data
 @AllArgsConstructor
 @NullMarked

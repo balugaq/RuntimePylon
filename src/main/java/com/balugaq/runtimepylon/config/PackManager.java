@@ -162,17 +162,6 @@ public @Data class PackManager {
         return itemStack;
     }
 
-    /**
-     * This method analyzes a given exception and prints out that
-     * where the exception occurred: "An exception occurred when <action> at configuration <key> in Pack <packId>"
-     *
-     * @param e the exception to analyze
-     */
-    public static void analyze(Exception e) {
-        // todo
-        Debug.warn(e);
-    }
-
     public static void packDependencyCycle(List<String> cycle, DependencyType dependencyType) {
         String cycleStr = String.join(" -> ", cycle);
         if (dependencyType == DependencyType.HARD) {
@@ -245,5 +234,9 @@ public @Data class PackManager {
 
     public void destroy() {
         packs.clear();
+    }
+
+    public static List<Pack> getPacks() {
+        return RuntimePylon.getPackManager().packs;
     }
 }

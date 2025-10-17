@@ -5,6 +5,9 @@ import com.balugaq.runtimepylon.config.PackDesc;
 
 import java.util.List;
 
+/**
+ * @author balugaq
+ */
 public class PackDependencyMissingException extends RuntimeException {
     public PackDependencyMissingException() {
         super();
