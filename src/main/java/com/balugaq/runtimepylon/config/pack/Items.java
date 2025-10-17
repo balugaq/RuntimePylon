@@ -16,9 +16,11 @@ import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
+import com.balugaq.runtimepylon.util.MaterialUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import lombok.Data;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -83,10 +85,11 @@ public class Items implements FileObject<Items> {
                             var s2 = section.get("icon");
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
                             if (item == null) continue;
-                            if (!item.getType().isItem() || item.getType().isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
+                            Material dm = MaterialUtil.getDisplayMaterial(item);
+                            if (!dm.isItem() || dm.isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
 
                             var id = InternalObjectID.of(itemKey).with(namespace).register();
-                            ItemStack icon = ItemStackBuilder.pylonItem(item.getType(), id.key()).amount(item.getAmount()).build();
+                            ItemStack icon = ItemStackBuilder.pylonItem(dm, id.key()).amount(item.getAmount()).build();
 
                             ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
                             PageDesc page = Pack.readOrNull(section, PageDesc.class, "page", t -> t.setPackNamespace(getNamespace()));

@@ -25,7 +25,7 @@ public sealed interface ConfigReader<Input, Result> permits ConfigReader.ConfigR
      * @see Deserializer#deserialize(Object)
      */
     @Nullable
-    Result read(Input o);
+    Result read(@Nullable Input o);
 
     final class ConfigReaderImpl<Input, Result> implements ConfigReader<Input, Result> {
         private final Class<Input> clazz;
@@ -44,7 +44,7 @@ public sealed interface ConfigReader<Input, Result> permits ConfigReader.ConfigR
         @SuppressWarnings("DataFlowIssue")
         @Override
         @Nullable
-        public Result read(Input o) throws DeserializationException {
+        public Result read(@Nullable Input o) throws DeserializationException {
             return function.apply(o);
         }
     }

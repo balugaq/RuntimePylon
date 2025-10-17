@@ -4,6 +4,7 @@ import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
+import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.PreRegister;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
@@ -16,6 +17,7 @@ import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.util.MaterialUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
 import lombok.Data;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -79,14 +81,15 @@ public class Blocks implements FileObject<Blocks> {
 
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
                             if (item == null) continue;
-                            if (!item.getType().isBlock() || item.getType().isAir()) throw new IncompatibleMaterialException("material must be blocks: " + item.getType());
+                            Material dm = MaterialUtil.getDisplayMaterial(item);
+                            if (!dm.isBlock() || dm.isAir()) throw new IncompatibleMaterialException("material must be blocks: " + item.getType());
 
                             var id = InternalObjectID.of(blockKey).with(namespace).register();
 
-                            ScriptDesc scriptdesc = Deserializer.newDeserializer(ScriptDesc.class).deserialize(section.getString("script"));
+                            ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
 
                             boolean postLoad = section.getBoolean("postload", false);
-                            blocks.put(id, new PreparedBlock(id, MaterialUtil.getDisplayMaterial(item), scriptdesc, postLoad));
+                            blocks.put(id, new PreparedBlock(id, dm, scriptdesc, postLoad));
                         } catch (Exception e) {
                             StackWalker.handle(e);
                         }}

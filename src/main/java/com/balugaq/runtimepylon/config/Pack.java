@@ -380,6 +380,7 @@ public class Pack implements FileObject<Pack> {
                             parent.getPage().addPage(page);
                         }
                     }
+                    RuntimePylon.getInstance().registerCustomPage(page);
                     Debug.log("Registered Page: " + id.key());
                 } catch (Exception ex) {
                     StackWalker.handle(ex);
@@ -408,8 +409,14 @@ public class Pack implements FileObject<Pack> {
                         Debug.log("Registered Item: " + id.key());
                     }
 
-                    List<PageDesc> pages = e.pages();
-                    if (pages != null) pages.forEach(desc -> desc.getPage().addItem(e.icon()));
+                    List<PageDesc> descs = e.pages();
+                    if (descs != null) descs.forEach(desc -> {
+                        try (var ignored = StackWalker.setPosition("Adding to page: " + desc.getKey())) {
+                            desc.getPage().addItem(e.icon());
+                        } catch (Exception ex) {
+                            StackWalker.handle(ex);
+                        }
+                    });
                 } catch (Exception ex) {
                     StackWalker.handle(ex);
                 }
@@ -460,13 +467,13 @@ public class Pack implements FileObject<Pack> {
     }
 
     public Pack register() {
-        StackWalker.runWith("Loading lang", () -> loadLang(findDir(Arrays.asList(dir.listFiles()), "lang"), langFolder));
-        StackWalker.runWith("Loading settings", this::registerSettings);
-        StackWalker.runWith("Loading recipes", this::registerRecipes);
-        StackWalker.runWith("Loading pages", this::registerPages);
-        StackWalker.runWith("Loading items", this::registerItems);
-        StackWalker.runWith("Loading blocks", this::registerBlocks);
-        StackWalker.runWith("Loading fluids", this::registerFluids);
+        StackWalker.run("Loading lang", () -> loadLang(findDir(Arrays.asList(dir.listFiles()), "lang"), langFolder));
+        StackWalker.run("Loading settings", this::registerSettings);
+        StackWalker.run("Loading recipes", this::registerRecipes);
+        StackWalker.run("Loading pages", this::registerPages);
+        StackWalker.run("Loading items", this::registerItems);
+        StackWalker.run("Loading blocks", this::registerBlocks);
+        StackWalker.run("Loading fluids", this::registerFluids);
         return this;
     }
 

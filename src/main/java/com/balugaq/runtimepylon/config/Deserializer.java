@@ -79,14 +79,14 @@ public interface Deserializer<T> {
      */
     @UnknownNullability
     default T deserialize(@Nullable Object o) throws DeserializationException {
-        if (o == null) throw new MissingArgumentException();
+        if (o == null) throw new MissingArgumentException(this.getClass());
         for (ConfigReader<?, T> reader : readers()) {
             if (reader.type().isInstance(o)) {
                 try {
                     @SuppressWarnings("unchecked") T v = (T) ReflectionUtil.invokeMethod(reader, "read", o);
                     if (v != null) return v;
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new DeserializationException(getClass(), e);
+                    throw new DeserializationException(getClass(), e.getCause());
                 }
             }
         }

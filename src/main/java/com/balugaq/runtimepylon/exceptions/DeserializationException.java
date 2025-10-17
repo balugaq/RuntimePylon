@@ -16,7 +16,7 @@ public class DeserializationException extends PackException {
         super("An exception occured when trying to deserialize " + clazz.getName());
     }
 
-    public <T> DeserializationException(Class<T> clazz, Exception e) {
+    public <T> DeserializationException(Class<T> clazz, Throwable e) {
         super("An exception occured when trying to deserialize " + clazz.getName(), e);
     }
 }

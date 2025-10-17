@@ -20,6 +20,9 @@ public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implem
     @Getter
     private Pack.@UnknownNullability Advancer<T> advancer;
 
+    @Getter
+    private boolean skipFail;
+
     @NotNull
     @Override
     public UnsArrayList<T> setGenericType(@NotNull Class<T> clazz) {
@@ -37,11 +40,11 @@ public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implem
     @Override
     public List<ConfigReader<?, UnsArrayList<T>>> readers() {
         return List.of(
-                ConfigReader.of(ArrayList.class, lst -> {
+                ConfigReader.of(List.class, lst -> {
                     var serializer = advancer.advance(Deserializer.newDeserializer(getGenericType()));
                     UnsArrayList<T> res = new UnsArrayList<>();
                     for (Object object : lst) {
-                        try {
+                        try (var ignored = StackWalker.setPosition("Reading List<" + getGenericType().getSimpleName() + ">")) {
                             res.add(serializer.deserialize(object));
                         } catch (Exception e) {
                             StackWalker.handle(e);

@@ -19,6 +19,7 @@ import com.balugaq.runtimepylon.util.MaterialUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
 import lombok.Data;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -80,7 +81,8 @@ public class Fluids implements FileObject<Fluids> {
 
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
                             if (item == null) continue;
-                            if (!item.getType().isItem() || item.getType().isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
+                            Material dm = MaterialUtil.getDisplayMaterial(item);
+                            if (!dm.isItem() || dm.isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
 
                             var id = InternalObjectID.of(fluidKey).with(namespace).register();
                             var ts = section.getString("temperature");
@@ -100,7 +102,7 @@ public class Fluids implements FileObject<Fluids> {
                             }
 
                             boolean postLoad = section.getBoolean("postload", false);
-                            fluids.put(id, new PreparedFluid(id, MaterialUtil.getDisplayMaterial(item), temperature, pages, postLoad));
+                            fluids.put(id, new PreparedFluid(id, dm, temperature, pages, postLoad));
                         } catch (Exception e) {
                             StackWalker.handle(e);
                         }}
