@@ -1,39 +1,41 @@
 package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
+import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import com.balugaq.runtimepylon.util.Debug;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import lombok.Getter;
 import org.jetbrains.annotations.Range;
 
 public class StackWalker implements AutoCloseable {
     private static final StackWalker inst = new StackWalker();
+    @Getter
+    private static final Int2ObjectOpenHashMap<String> backup = new Int2ObjectOpenHashMap<>();
+    @Getter
     private static final Int2ObjectOpenHashMap<String> positions = new Int2ObjectOpenHashMap<>();
 
     @SuppressWarnings("UnnecessaryUnicodeEscape")
     public static void handle(Throwable e) {
-        Debug.warn(e.getClass().getSimpleName() + ": " + e.getMessage());
-        for (int i = 1; i <= getCurrent(); i++) {
-            if (i == 1) {
-                Debug.warn("When " + positions.get(i));
-                continue;
-            }
+        Throwable t = e;
+        if (e instanceof DeserializationException && e.getCause() != null) {
+            t = e.getCause();
+        }
+        Debug.warn(t.getClass().getSimpleName() + ": " + t.getMessage());
 
-            Debug.warn("  ".repeat(i - 1) + "\u2514When " + positions.get(i));
-        }
-        if (RuntimePylon.getConfigManager().isDebug()) {
+        for (int i = 1; i <= backup.size(); i++)
+            Debug.warn("  ".repeat(i - 1) + "\u2514When " + backup.get(i));
+
+        if (RuntimePylon.getConfigManager().isDebug())
             e.printStackTrace();
-        }
+
         Debug.warn("-".repeat(40));
     }
 
-    public static int getCurrent() {
-        return positions.size();
-    }
-
     public static StackWalker setPosition(@Range(from = 1, to = Integer.MAX_VALUE) int level, String position) {
-        if (level < getCurrent()) {
-            int c = getCurrent();
+        syncBackup();
+        if (level < positions.size()) {
+            int c = positions.size();
             for (int i = level + 1; i < c; i++) {
                 positions.remove(i);
             }
@@ -45,16 +47,22 @@ public class StackWalker implements AutoCloseable {
 
     @CanIgnoreReturnValue
     public static StackWalker setPosition(String position) {
-        return setPosition(getCurrent() + 1, position);
+        return setPosition(positions.size() + 1, position);
+    }
+
+    private static void syncBackup() {
+        backup.clear();
+        backup.putAll(positions);
     }
 
     @CanIgnoreReturnValue
     public static StackWalker destroy() {
-        positions.remove(getCurrent());
+        syncBackup();
+        positions.remove(positions.size());
         return inst;
     }
 
-    public static void runWith(String position, Runnable runnable) {
+    public static void run(String position, Runnable runnable) {
         setPosition(position);
         runnable.run();
         destroy();
@@ -63,5 +71,9 @@ public class StackWalker implements AutoCloseable {
     @Override
     public void close() {
         destroy();
+    }
+
+    public static StackWalker getInstance() {
+        return inst;
     }
 }

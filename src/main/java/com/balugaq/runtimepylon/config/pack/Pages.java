@@ -18,6 +18,7 @@ import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.util.MaterialUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
 import lombok.Data;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -78,13 +79,14 @@ public class Pages implements FileObject<Pages> {
                             var s2 = section.get("material");
                             ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
                             if (item == null) continue;
-                            if (!item.getType().isItem() || item.getType().isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
+                            Material dm = MaterialUtil.getDisplayMaterial(item);
+                            if (!dm.isItem() || dm.isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
                             var id = InternalObjectID.of(pageKey).with(namespace).register();
 
                             UnsArrayList<PageDesc> parents = Pack.readOrNull(section, UnsArrayList.class, PageDesc.class, "parents", e -> e.setPackNamespace(namespace));
 
                             boolean postLoad = section.getBoolean("postload", false);
-                            pages.put(id, new PreparedPage(id, MaterialUtil.getDisplayMaterial(item), parents, postLoad));
+                            pages.put(id, new PreparedPage(id, dm, parents, postLoad));
                         } catch (Exception e) {
                             StackWalker.handle(e);
                         }}

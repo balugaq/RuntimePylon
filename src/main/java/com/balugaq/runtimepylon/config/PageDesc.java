@@ -2,7 +2,6 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.PackNamespace;
-import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.UnknownPageException;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import lombok.Data;
@@ -22,7 +21,7 @@ import java.util.List;
 @NoArgsConstructor(force = true)
 @NullMarked
 public class PageDesc implements Deserializer<PageDesc> {
-    private final SimpleStaticGuidePage page;
+    private final NamespacedKey key;
     @Nullable PackNamespace packNamespace = null;
 
     public PageDesc setPackNamespace(PackNamespace namespace) {
@@ -35,24 +34,30 @@ public class PageDesc implements Deserializer<PageDesc> {
     public List<ConfigReader<?, PageDesc>> readers() {
         return List.of(
                 ConfigReader.of(String.class, s -> {
-                    String namespace;
+                    PackNamespace namespace;
                     String k;
                     if (s.contains(":")) {
-                        namespace = s.substring(0, s.indexOf(":"));
+                        NamespacedKey key = NamespacedKey.fromString(s);
+                        if (key != null && RuntimePylon.getGuidePages().get(key) != null) {
+                            return new PageDesc(key);
+                        }
+                        namespace = Deserializer.newDeserializer(PackDesc.class).deserialize(s.substring(0, s.indexOf(":"))).findPack().getPackNamespace();
                         k = s.substring(s.indexOf(":") + 1);
                     } else {
-                        namespace = this.packNamespace.getNamespace();
+                        namespace = this.packNamespace;
                         k = s;
                     }
 
-                    NamespacedKey key = NamespacedKey.fromString(namespace + ":" + k);
-                    if (key == null) throw new InvalidDescException("Invalid page desc: " + s);
-
-                    SimpleStaticGuidePage page = RuntimePylon.getGuidePages().get(key);
-                    if (page == null) throw new UnknownPageException(key.toString());
-
-                    return new PageDesc(page);
+                    NamespacedKey key = InternalObjectID.of(k).with(namespace).register().key();
+                    return new PageDesc(key);
                 })
         );
+    }
+
+    public SimpleStaticGuidePage getPage() {
+        SimpleStaticGuidePage page = RuntimePylon.getGuidePages().get(key);
+        if (page == null) throw new UnknownPageException(key.toString());
+
+        return page;
     }
 }

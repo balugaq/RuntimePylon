@@ -2,6 +2,7 @@ package com.balugaq.runtimepylon.command;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.Pack;
+import com.balugaq.runtimepylon.config.StackWalker;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -61,6 +62,7 @@ public class RuntimePylonCommand {
         clearSettings();
         clearRecipes();
         clearLang();
+        StackWalker.getPositions().clear();
         return Command.SINGLE_SUCCESS;
     }
 
