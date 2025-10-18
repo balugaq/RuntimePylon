@@ -4,6 +4,7 @@ import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.StackWalker;
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -15,63 +16,63 @@ public class RuntimePylonCommand {
     public final LiteralCommandNode<CommandSourceStack> ROOT = Commands.literal("runtime")
             .then(Commands.literal("clearsettings")
                     .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearsettings"))
-                    .executes(context -> clearSettings())
+                    .executes(RuntimePylonCommand::clearSettings)
             )
             .then(Commands.literal("clearrecipes")
                     .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearrecipes"))
-                    .executes(context -> clearRecipes())
+                    .executes(RuntimePylonCommand::clearRecipes)
             )
             .then(Commands.literal("clearlang")
                     .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearlang"))
-                    .executes(context -> clearLang())
+                    .executes(RuntimePylonCommand::clearLang)
             )
             .then(Commands.literal("clearall")
                     .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearall"))
-                    .executes(context -> clearAll())
+                    .executes(RuntimePylonCommand::clearAll)
             )
             .then(Commands.literal("loadpacks")
                     .requires(source -> source.getSender().hasPermission("runtimepylon.command.loadpacks"))
-                    .executes(context -> loadPacks())
+                    .executes(RuntimePylonCommand::loadPacks)
             )
             .then(Commands.literal("reloadplugin")
                     .requires(source -> source.getSender().hasPermission("runtimepylon.command.reloadplugin"))
-                    .executes(context -> reloadPlugin())
+                    .executes(RuntimePylonCommand::reloadPlugin)
             )
             .then(Commands.literal("help")
                     .requires(source -> source.getSender().hasPermission("runtimepylon.command.help"))
-                    .executes(context -> help())
+                    .executes(RuntimePylonCommand::help)
             )
             .build();
 
-    private int clearSettings() {
+    private int clearSettings(CommandContext<CommandSourceStack> ctx) {
         Pack.settingsFolder.delete();
         return Command.SINGLE_SUCCESS;
     }
 
-    private int clearRecipes() {
+    private int clearRecipes(CommandContext<CommandSourceStack> ctx) {
         Pack.recipesFolder.delete();
         return Command.SINGLE_SUCCESS;
     }
 
-    private int clearLang() {
+    private int clearLang(CommandContext<CommandSourceStack> ctx) {
         Pack.langFolder.delete();
         return Command.SINGLE_SUCCESS;
     }
 
-    private int clearAll() {
-        clearSettings();
-        clearRecipes();
-        clearLang();
+    private int clearAll(CommandContext<CommandSourceStack> ctx) {
+        clearSettings(ctx);
+        clearRecipes(ctx);
+        clearLang(ctx);
         StackWalker.getPositions().clear();
         return Command.SINGLE_SUCCESS;
     }
 
-    private int loadPacks() {
+    private int loadPacks(CommandContext<CommandSourceStack> ctx) {
         RuntimePylon.getPackManager().loadPacks();
         return Command.SINGLE_SUCCESS;
     }
 
-    private int reloadPlugin() {
+    private int reloadPlugin(CommandContext<CommandSourceStack> ctx) {
         clearAll();
         RuntimePylon.getPackManager().destroy();
         new PluginDisableEvent(RuntimePylon.getInstance()).callEvent();
@@ -80,7 +81,7 @@ public class RuntimePylonCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int help() {
+    private int help(CommandContext<CommandSourceStack> ctx) {
         // todo
         return Command.SINGLE_SUCCESS;
     }
