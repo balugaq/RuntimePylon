@@ -73,7 +73,7 @@ public class RuntimePylonCommand {
     }
 
     private int reloadPlugin(CommandContext<CommandSourceStack> ctx) {
-        clearAll();
+        clearAll(ctx);
         RuntimePylon.getPackManager().destroy();
         new PluginDisableEvent(RuntimePylon.getInstance()).callEvent();
         RuntimePylon.getInstance().registerWithPylon();
