@@ -15,7 +15,8 @@ import java.util.List;
  * @author balugaq
  */
 @NullMarked
-public record MinecraftVersion(int major, int minor, int patch) implements Deserializer<MinecraftVersion>, Comparable<MinecraftVersion> {
+public record MinecraftVersion(int major, int minor,
+                               int patch) implements Deserializer<MinecraftVersion>, Comparable<MinecraftVersion> {
     public static final MinecraftVersion UNKNOWN = MinecraftVersion.of(999, 999, 999);
 
     public static MinecraftVersion current() {

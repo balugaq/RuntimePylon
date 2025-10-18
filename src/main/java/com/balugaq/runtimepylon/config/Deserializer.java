@@ -17,11 +17,13 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
+import org.jspecify.annotations.NullMarked;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * This interface is used to deserialize a config structure, instead of file structure
@@ -229,21 +231,35 @@ public interface Deserializer<T> {
         }
     }
 
+    /**
+     * @author balugaq
+     */
+    @NullMarked
     class EnumDeserializer<E extends Enum<E>> implements Deserializer<E> {
         private final Class<E> clazz;
+        private Function<String, String> preHandle = s -> s;
 
-        public EnumDeserializer(@NotNull Class<E> clazz) {
+        public EnumDeserializer(Class<E> clazz) {
             this.clazz = clazz;
         }
 
-        public static <E extends Enum<E>> EnumDeserializer<E> of(@NotNull Class<E> clazz) {
+        public static <E extends Enum<E>> EnumDeserializer<E> of(Class<E> clazz) {
             return new EnumDeserializer<>(clazz);
         }
 
+        public EnumDeserializer<E> forceUpperCase() {
+            return updatePreHandle(String::toUpperCase);
+        }
+
+        public EnumDeserializer<E> updatePreHandle(Function<String, String> preHandle) {
+            this.preHandle = preHandle.andThen(preHandle);
+            return this;
+        }
+
         @Override
-        public @NotNull List<ConfigReader<?, E>> readers() {
+        public List<ConfigReader<?, E>> readers() {
             return List.of(
-                    ConfigReader.of(String.class, s -> Enum.valueOf(clazz, s))
+                    ConfigReader.of(String.class, s -> Enum.valueOf(clazz, preHandle.apply(s)))
             );
         }
 
@@ -265,7 +281,7 @@ public interface Deserializer<T> {
                 return null;
             } catch (Throwable e) {
                 if (e instanceof IllegalArgumentException e2) {
-                    StackWalker.handle(new UnknownEnumException(clazz, e2.getMessage().substring(e2.getMessage().lastIndexOf(clazz.getSimpleName() + '.'), clazz.getSimpleName().length() + 1)));
+                    StackWalker.handle(new UnknownEnumException(clazz, e2.getMessage()));
                 } else {
                     StackWalker.handle(e);
                 }

@@ -3,6 +3,9 @@ package com.balugaq.runtimepylon.config;
 import org.bukkit.NamespacedKey;
 import org.jspecify.annotations.NullMarked;
 
+/**
+ * @author balugaq
+ */
 @NullMarked
 public record RegisteredObjectID(NamespacedKey key) {
     public static RegisteredObjectID of(NamespacedKey id) {

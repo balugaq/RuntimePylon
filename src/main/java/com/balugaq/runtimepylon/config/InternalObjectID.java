@@ -19,8 +19,8 @@ public class InternalObjectID implements Deserializer<InternalObjectID> {
         return new InternalObjectID(id);
     }
 
-    public ExternalObjectID with(PackNamespace namespace) {
-        return ExternalObjectID.of(namespace, this);
+    public RegisteredObjectID register(PackNamespace namespace) {
+        return RegisteredObjectID.of(namespace.plugin().key(id));
     }
 
     @Override

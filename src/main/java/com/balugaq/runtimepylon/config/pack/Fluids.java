@@ -84,7 +84,7 @@ public class Fluids implements FileObject<Fluids> {
                             Material dm = MaterialUtil.getDisplayMaterial(item);
                             if (!dm.isItem() || dm.isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
 
-                            var id = InternalObjectID.of(fluidKey).with(namespace).register();
+                            var id = InternalObjectID.of(fluidKey).register(namespace);
                             var ts = section.getString("temperature");
                             if (ts == null) {
                                 ts = FluidTemperature.NORMAL.name();
