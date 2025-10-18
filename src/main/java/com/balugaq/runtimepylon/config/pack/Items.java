@@ -88,7 +88,7 @@ public class Items implements FileObject<Items> {
                             Material dm = MaterialUtil.getDisplayMaterial(item);
                             if (!dm.isItem() || dm.isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
 
-                            var id = InternalObjectID.of(itemKey).with(namespace).register();
+                            var id = InternalObjectID.of(itemKey).register(namespace);
                             ItemStack icon = ItemStackBuilder.pylonItem(dm, id.key()).amount(item.getAmount()).build();
 
                             ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");

@@ -10,11 +10,17 @@ import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.exceptions.UnsupportedVersionException;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
+import com.balugaq.runtimepylon.util.ReflectionUtil;
+import io.github.pylonmc.pylon.core.addon.PylonAddon;
+import io.github.pylonmc.pylon.core.block.BlockStorage;
+import io.github.pylonmc.pylon.core.entity.EntityStorage;
+import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 
@@ -103,19 +109,19 @@ import java.util.function.Consumer;
  * In pack.yml:
  * | Property Type | Property | Description | Pattern | Example |
  * | ------------- | -------- | ----------- | ------- | ------- |
- * | String | PackID | is the identifier of a pack | `A-Za-z0-9_+-`| mypack |
- * | String | PackNamespace | is the namespace of a pack | `a-z0-9_-.` | mypack |
- * | String | PackVersion | is the version of a pack | `A-Za-z0-9_+-./()` | 1.0.0 |
- * | String | *PackMinAPIVersion | defines the minimum API version to run this pack | 1.21.3 |
- * | String | *PackMaxAPIVersion | defines the maximum API version to run this pack | 1.21.9 |
- * | List<String> | *LoadBefores | defines what packs should be loaded before this | - | [mypack1, mypack2] |
- * | List<String> | *PackDependencies | is the pack dependencies | - | [mypack1, mypack2] |
- * | List<String> | *PluginDependencies | is the plugin dependencies | - | [plugin1, plugin2] |
- * | String | *Author | is the author of a pack | - | balugaq |
- * | List<String> | *Authors | is the authors of a pack | - | [balugaq, balugaq2] |
- * | List<String> | *Contributors | is the contributors of a pack | - | [balugaq, balugaq2] |
- * | String | *Website | is the website of a pack | - | `https://github.com/balugaq/RuntimePylon` |
- * | String | *GitHubUpdateLink | is the update link of a pack | - | `https://github.com/balugaq/RuntimePylon/releases` |
+ * | String | id | is the identifier of a pack | `A-Za-z0-9_+-`| mypack |
+ * | String | version | is the version of a pack | `A-Za-z0-9_+-./()` | 1.0.0 |
+ * | String | *minAPIVersion | defines the minimum API version to run this pack | 1.21.3 |
+ * | String | *maxAPIVersion | defines the maximum API version to run this pack | 1.21.9 |
+ * | List<String> | *loadBefores | defines what packs should be loaded before this | - | [mypack1, mypack2] |
+ * | List<String> | *packDependencies | is the pack dependencies | - | [mypack1, mypack2] |
+ * | List<String> | *pluginDependencies | is the plugin dependencies | - | [plugin1, plugin2] |
+ * | String | *author | is the author of a pack | - | balugaq |
+ * | List<String> | *authors | is the authors of a pack | - | [balugaq, balugaq2] |
+ * | List<String> | *contributors | is the contributors of a pack | - | [balugaq, balugaq2] |
+ * | String | *website | is the website of a pack | - | `https://github.com/balugaq/RuntimePylon` |
+ * | String | *githubUpdateLink | is the update link of a pack | - | `https://github.com/balugaq/RuntimePylon/releases` |
+ * | List<String> | *languages | defines what languages are supported by this pack | - | [en, zh_CN] |
  * Properties tagged with * are optional
  * <p>
  * IDs:
@@ -233,7 +239,31 @@ public @Data class PackManager {
     }
 
     public void destroy() {
+        packs.forEach(PackManager::unload);
         packs.clear();
+    }
+
+    public static void unload(Pack pack) {
+        PylonAddon plugin = pack.plugin();
+        try {
+            ReflectionUtil.invokeMethod(BlockStorage.class, "cleanup", plugin);
+        } catch (Exception e) {
+            StackWalker.handle(e);
+        }
+        try {
+            ReflectionUtil.invokeMethod(EntityStorage.class, "cleanup", plugin);
+        } catch (Exception e) {
+            StackWalker.handle(e);
+        }
+        PylonRegistry.GAMETESTS.unregisterAllFromAddon(plugin);
+        PylonRegistry.ITEMS.unregisterAllFromAddon(plugin);
+        PylonRegistry.ITEM_TAGS.unregisterAllFromAddon(plugin);
+        PylonRegistry.FLUIDS.unregisterAllFromAddon(plugin);
+        PylonRegistry.BLOCKS.unregisterAllFromAddon(plugin);
+        PylonRegistry.ENTITIES.unregisterAllFromAddon(plugin);
+        PylonRegistry.RECIPE_TYPES.unregisterAllFromAddon(plugin);
+        PylonRegistry.RESEARCHES.unregisterAllFromAddon(plugin);
+        PylonRegistry.ADDONS.unregister(plugin);
     }
 
     public static List<Pack> getPacks() {

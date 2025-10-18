@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
+import com.balugaq.runtimepylon.PackAddon;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.Author;
 import com.balugaq.runtimepylon.config.pack.Blocks;
@@ -19,6 +20,7 @@ import com.balugaq.runtimepylon.config.pack.WebsiteLink;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.exceptions.PackException;
+import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
 import com.balugaq.runtimepylon.script.ScriptExecutor;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
@@ -28,9 +30,11 @@ import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.item.PylonItem;
+import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -41,7 +45,10 @@ import org.jspecify.annotations.NullMarked;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -69,6 +76,7 @@ import java.util.function.Function;
  *
  * @author balugaq
  */
+@Slf4j
 @SuppressWarnings({"unchecked", "RegExpRedundantEscape", "ResultOfMethodCallIgnored", "UnusedAssignment", "unused"})
 @Data
 @RequiredArgsConstructor
@@ -76,9 +84,6 @@ import java.util.function.Function;
 @NullMarked
 public class Pack implements FileObject<Pack> {
     public static final File pylonCore = new File(RuntimePylon.getInstance().getDataFolder().getParent(), "PylonCore");
-    public static final File settingsFolder = new File(new File(pylonCore, "settings"), RuntimePylon.getInstance().namespace());
-    public static final File recipesFolder = new File(pylonCore, "recipes");
-    public static final File langFolder = new File(new File(pylonCore, "lang"), RuntimePylon.getInstance().namespace());
     private final File dir;
     private final PackID packID;
     private final PackNamespace packNamespace;
@@ -106,6 +111,8 @@ public class Pack implements FileObject<Pack> {
     @Nullable
     private final GitHubUpdateLink githubUpdateLink;
     @Nullable
+    private final UnsArrayList<Language> languages;
+    @Nullable
     private final Pages pages;
     @Nullable
     private final Items items;
@@ -121,7 +128,6 @@ public class Pack implements FileObject<Pack> {
     private final Scripts scripts;
     @Nullable
     private final Saveditems saveditems;
-    // todo: supportedLanguages
 
     public static <T extends Deserializer<T>> T tryExamine(T object) {
         try {
@@ -142,6 +148,31 @@ public class Pack implements FileObject<Pack> {
         if (!config.contains(path)) throw new MissingArgumentException(path);
         return tryExamine(advancer.advance(Deserializer.newDeserializer(clazz))
                 .deserialize(config.getString(path)));
+    }
+
+    public static <T extends Enum<T>> T readEnum(ConfigurationSection config, Class<T> clazz, String path) {
+        return readEnum(config, clazz, path, t -> t);
+    }
+
+    public static <T extends Enum<T>> T readEnum(ConfigurationSection config, Class<T> clazz, String path, Advancer<Deserializer.EnumDeserializer<T>> advancer) {
+        if (!config.contains(path)) throw new MissingArgumentException(path);
+        String s = config.getString(path);
+        T value = advancer.advance(Deserializer.enumDeserializer(clazz))
+                .deserialize(s);
+        if (value == null) throw new UnknownEnumException(clazz, s);
+        return value;
+    }
+
+    @Nullable
+    public static <T extends Enum<T>> T readEnumOrNull(ConfigurationSection config, Class<T> clazz, String path) {
+        return readEnumOrNull(config, clazz, path, t -> t);
+    }
+
+    @Nullable
+    public static <T extends Enum<T>> T readEnumOrNull(ConfigurationSection config, Class<T> clazz, String path, Advancer<Deserializer.EnumDeserializer<T>> advancer) {
+        if (!config.contains(path)) throw new MissingArgumentException(path);
+        return advancer.advance(Deserializer.enumDeserializer(clazz))
+                .deserialize(config.getString(path));
     }
 
     @Nullable
@@ -197,25 +228,33 @@ public class Pack implements FileObject<Pack> {
 
                     YamlConfiguration config = YamlConfiguration.loadConfiguration(meta);
 
-                    PackID id = read(config, PackID.class, "PackID");
-                    PackNamespace namespace = read(config, PackNamespace.class, "PackNamespace");
-                    PackVersion version = read(config, PackVersion.class, "PackVersion");
-                    MinecraftVersion minAPIVersion = readOrNull(config, MinecraftVersion.class, "PackMinAPIVersion");
-                    MinecraftVersion maxAPIVersion = readOrNull(config, MinecraftVersion.class, "PackMaxAPIVersion");
-                    UnsArrayList<PackDesc> packLoadBefores = readOrNull(config, UnsArrayList.class, PackDesc.class, "LoadBefores");
-                    UnsArrayList<PackDesc> packSoftDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "SoftDependencies");
-                    UnsArrayList<PackDesc> packDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "PackDependencies");
-                    UnsArrayList<PluginDesc> pluginSoftDependencies = readOrNull(config, UnsArrayList.class, PluginDesc.class, "PluginSoftDependencies");
-                    UnsArrayList<PluginDesc> pluginDependencies = readOrNull(config, UnsArrayList.class, PluginDesc.class, "PluginDependencies");
-                    Author author = readOrNull(config, Author.class, "Author");
-                    UnsArrayList<Author> authors = readOrNull(config, UnsArrayList.class, Author.class, "Authors");
+                    PackID id = read(config, PackID.class, "id");
+                    PackVersion version = read(config, PackVersion.class, "version");
+                    MinecraftVersion minAPIVersion = readOrNull(config, MinecraftVersion.class, "minAPIVersion");
+                    MinecraftVersion maxAPIVersion = readOrNull(config, MinecraftVersion.class, "maxAPIVersion");
+                    UnsArrayList<PackDesc> packLoadBefores = readOrNull(config, UnsArrayList.class, PackDesc.class, "loadBefores");
+                    UnsArrayList<PackDesc> packSoftDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "packSoftDependencies");
+                    UnsArrayList<PackDesc> packDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "packDependencies");
+                    UnsArrayList<PluginDesc> pluginSoftDependencies = readOrNull(config, UnsArrayList.class, PluginDesc.class, "pluginSoftDependencies");
+                    UnsArrayList<PluginDesc> pluginDependencies = readOrNull(config, UnsArrayList.class, PluginDesc.class, "pluginDependencies");
+                    Author author = readOrNull(config, Author.class, "author");
+                    UnsArrayList<Author> authors = readOrNull(config, UnsArrayList.class, Author.class, "authors");
                     if (author != null) {
                         if (authors == null) authors = new UnsArrayList<>();
                         authors.add(author);
                     }
-                    UnsArrayList<Contributor> contributors = readOrNull(config, UnsArrayList.class, Contributor.class, "Contributors");
-                    UnsArrayList<WebsiteLink> websiteLinks = readOrNull(config, UnsArrayList.class, WebsiteLink.class, "WebsiteLinks");
-                    GitHubUpdateLink githubUpdateLink = readOrNull(config, GitHubUpdateLink.class, "GitHubUpdateLink");
+                    UnsArrayList<Contributor> contributors = readOrNull(config, UnsArrayList.class, Contributor.class, "contributors");
+                    UnsArrayList<WebsiteLink> websiteLinks = readOrNull(config, UnsArrayList.class, WebsiteLink.class, "websiteLinks");
+                    GitHubUpdateLink githubUpdateLink = readOrNull(config, GitHubUpdateLink.class, "githubUpdateLink");
+                    UnsArrayList<Language> languages = readOrNull(config, UnsArrayList.class, Language.class, "languages");
+                    Set<Locale> locales = new HashSet<>();
+                    if (languages != null) {
+                        locales.addAll(languages.stream().map(language -> Locale.of(language.locale())).toList());
+                    } else {
+                        locales.add(Locale.of("en"));
+                    }
+                    Material material = Pack.readEnum(config, Material.class, "material", Deserializer.EnumDeserializer::forceUpperCase);
+                    PackNamespace namespace = PackNamespace.warp(id, locales, material);
 
                     StackWalker.setPosition("Reading pages");
                     Pages pages = null;
@@ -299,6 +338,7 @@ public class Pack implements FileObject<Pack> {
                             contributors,
                             websiteLinks,
                             githubUpdateLink,
+                            languages,
                             pages,
                             items,
                             blocks,
@@ -315,6 +355,7 @@ public class Pack implements FileObject<Pack> {
     private void loadLang(@Nullable File from, File to) {
         if (from == null) return;
         if (!from.exists()) from.mkdir();
+        if (!to.exists()) to.mkdir();
 
         for (File file : from.listFiles()) {
             if (file.isFile() && file.getName().matches("[a-z0-9_\\-\\./]+\\.yml$")) {
@@ -330,30 +371,7 @@ public class Pack implements FileObject<Pack> {
                     }
                 }
 
-                YamlConfiguration targetConfig = YamlConfiguration.loadConfiguration(targetFile);
-                ConfigurationSection item = config.getConfigurationSection("item");
-                if (item != null) {
-                    for (String key : item.getKeys(false)) {
-                        targetConfig.set("item." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).id(), item.get(key));
-                    }
-                }
-                ConfigurationSection fluid = config.getConfigurationSection("fluid");
-                if (fluid != null) {
-                    for (String key : fluid.getKeys(false)) {
-                        targetConfig.set("fluid." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).id(), fluid.get(key));
-                    }
-                }
-                ConfigurationSection guidePage = config.getConfigurationSection("guide.page");
-                if (guidePage != null) {
-                    for (String key : guidePage.getKeys(false)) {
-                        targetConfig.set("guide.page." + ExternalObjectID.of(packNamespace, InternalObjectID.of(key)).id(), guidePage.get(key));
-                    }
-                }
-                try {
-                    targetConfig.save(targetFile);
-                } catch (IOException e) {
-                    Debug.severe(e);
-                }
+                PackManager.saveConfig(config, YamlConfiguration.loadConfiguration(targetFile), targetFile);
             } else if (file.isDirectory()) {
                 loadLang(file, new File(to, file.getName()));
             }
@@ -362,7 +380,11 @@ public class Pack implements FileObject<Pack> {
 
     private void registerSettings() {
         if (settings == null) return;
-        settings.mergeTo(settingsFolder);
+        settings.mergeTo(getSettingsFolder());
+    }
+
+    public File getSettingsFolder() {
+        return new File(new File(pylonCore, "settings"), plugin().namespace());
     }
 
     private void registerPages() {
@@ -463,17 +485,28 @@ public class Pack implements FileObject<Pack> {
 
     private void registerRecipes() {
         if (recipes == null) return;
-        recipes.mergeTo(recipesFolder);
+        recipes.mergeTo(getRecipesFolder());
+    }
+
+    public File getRecipesFolder() {
+        return new File(pylonCore, "recipes");
+    }
+
+    public File getLangFolder() {
+        return new File(new File(pylonCore, "lang"), plugin().namespace());
     }
 
     public Pack register() {
-        StackWalker.run("Loading lang", () -> loadLang(findDir(Arrays.asList(dir.listFiles()), "lang"), langFolder));
+        PylonRegistry.ADDONS.register(plugin());
+        StackWalker.run("Loading lang", () -> loadLang(findDir(Arrays.asList(dir.listFiles()), "lang"), getLangFolder()));
         StackWalker.run("Loading settings", this::registerSettings);
         StackWalker.run("Loading recipes", this::registerRecipes);
         StackWalker.run("Loading pages", this::registerPages);
         StackWalker.run("Loading items", this::registerItems);
         StackWalker.run("Loading blocks", this::registerBlocks);
         StackWalker.run("Loading fluids", this::registerFluids);
+        PylonRegistry.ADDONS.unregister(plugin());
+        plugin().registerWithPylon();
         return this;
     }
 
@@ -489,5 +522,9 @@ public class Pack implements FileObject<Pack> {
         }
 
         T advance(T object);
+    }
+
+    public PackAddon plugin() {
+        return getPackNamespace().plugin();
     }
 }

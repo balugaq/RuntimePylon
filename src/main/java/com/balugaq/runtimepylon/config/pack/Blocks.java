@@ -84,7 +84,7 @@ public class Blocks implements FileObject<Blocks> {
                             Material dm = MaterialUtil.getDisplayMaterial(item);
                             if (!dm.isBlock() || dm.isAir()) throw new IncompatibleMaterialException("material must be blocks: " + item.getType());
 
-                            var id = InternalObjectID.of(blockKey).with(namespace).register();
+                            var id = InternalObjectID.of(blockKey).register(namespace);
 
                             ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
 

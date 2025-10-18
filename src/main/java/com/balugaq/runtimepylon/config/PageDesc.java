@@ -48,7 +48,7 @@ public class PageDesc implements Deserializer<PageDesc> {
                         k = s;
                     }
 
-                    NamespacedKey key = InternalObjectID.of(k).with(namespace).register().key();
+                    NamespacedKey key = InternalObjectID.of(k).register(namespace).key();
                     return new PageDesc(key);
                 })
         );

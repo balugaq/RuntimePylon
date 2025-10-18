@@ -81,7 +81,7 @@ public class Pages implements FileObject<Pages> {
                             if (item == null) continue;
                             Material dm = MaterialUtil.getDisplayMaterial(item);
                             if (!dm.isItem() || dm.isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
-                            var id = InternalObjectID.of(pageKey).with(namespace).register();
+                            var id = InternalObjectID.of(pageKey).register(namespace);
 
                             UnsArrayList<PageDesc> parents = Pack.readOrNull(section, UnsArrayList.class, PageDesc.class, "parents", e -> e.setPackNamespace(namespace));
 

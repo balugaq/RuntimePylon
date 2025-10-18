@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class RuntimePylon extends JavaPlugin implements PylonAddon {
-
     @Getter
     private static RuntimePylon instance;
     public Map<NamespacedKey, SimpleStaticGuidePage> customPages = new HashMap<>();
@@ -127,7 +126,6 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         return instance;
     }
 
-    @Override
     public @NotNull Set<@NotNull Locale> getLanguages() {
         return Set.of(
                 Locale.ENGLISH,
@@ -135,13 +133,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         );
     }
 
-    @Override
     public @NotNull Material getMaterial() {
         return Material.COPPER_INGOT;
-    }
-
-    @Override
-    public boolean suppressAddonNameWarning() {
-        return true;
     }
 }
