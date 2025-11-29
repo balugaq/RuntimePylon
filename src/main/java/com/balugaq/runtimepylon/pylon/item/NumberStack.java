@@ -1,7 +1,7 @@
 package com.balugaq.runtimepylon.pylon.item;
 
-import com.balugaq.runtimepylon.gui.GuiItem;
 import com.balugaq.runtimepylon.exceptions.WrongStateException;
+import com.balugaq.runtimepylon.gui.GuiItem;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.item.PylonItem;
@@ -9,7 +9,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NullMarked;
 
@@ -20,7 +19,8 @@ import static com.balugaq.runtimepylon.util.Lang.*;
  */
 @NullMarked
 public class NumberStack extends PylonItem implements DataStack {
-    @UnknownNullability public String internal;
+    @UnknownNullability
+    public String internal;
 
     public NumberStack(ItemStack stack) {
         super(stack);

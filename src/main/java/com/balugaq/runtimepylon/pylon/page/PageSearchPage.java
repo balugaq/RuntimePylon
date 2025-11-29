@@ -12,7 +12,6 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.translation.GlobalTranslator;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.item.Item;
 

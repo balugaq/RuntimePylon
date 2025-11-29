@@ -8,7 +8,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NullMarked;
 
@@ -19,7 +18,8 @@ import static com.balugaq.runtimepylon.util.Lang.string_input_1;
  */
 @NullMarked
 public class StringStack extends PylonItem implements DataStack {
-    @UnknownNullability public String internal;
+    @UnknownNullability
+    public String internal;
 
     public StringStack(ItemStack stack) {
         super(stack);

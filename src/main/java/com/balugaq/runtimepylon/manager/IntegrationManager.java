@@ -2,7 +2,6 @@ package com.balugaq.runtimepylon.manager;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import org.bukkit.Bukkit;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NullMarked;
 
 /**
@@ -28,7 +27,7 @@ public class IntegrationManager {
     }
 
     /**
-     * @author  balugaq
+     * @author balugaq
      */
     @NullMarked
     public static class IsEnabled {

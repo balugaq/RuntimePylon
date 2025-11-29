@@ -1,6 +1,5 @@
 package com.balugaq.runtimepylon.config;
 
-import com.balugaq.runtimepylon.object.PackAddon;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.Author;
 import com.balugaq.runtimepylon.config.pack.Blocks;
@@ -25,6 +24,7 @@ import com.balugaq.runtimepylon.object.CustomBlock;
 import com.balugaq.runtimepylon.object.CustomFluid;
 import com.balugaq.runtimepylon.object.CustomItem;
 import com.balugaq.runtimepylon.object.CustomPage;
+import com.balugaq.runtimepylon.object.PackAddon;
 import com.balugaq.runtimepylon.script.ScriptExecutor;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;

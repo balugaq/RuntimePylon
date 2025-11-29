@@ -2,7 +2,6 @@ package com.balugaq.runtimepylon.pylon.item.fluid;
 
 import com.balugaq.runtimepylon.pylon.item.DataStack;
 import io.github.pylonmc.pylon.core.fluid.PylonFluidTag;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NullMarked;
 
 /**

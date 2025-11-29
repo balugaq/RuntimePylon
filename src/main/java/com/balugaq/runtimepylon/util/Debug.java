@@ -5,7 +5,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
@@ -36,7 +35,7 @@ public class Debug {
         }
     }
 
-    public static void severe(Object ... objects) {
+    public static void severe(Object... objects) {
         StringBuilder sb = new StringBuilder();
         for (Object obj : objects) {
             if (obj == null) {
@@ -152,7 +151,7 @@ public class Debug {
         warn(object == null ? "null" : object.toString());
     }
 
-    public static void severe(String ... messages) {
+    public static void severe(String... messages) {
         for (String message : messages) {
             warn(message);
         }
@@ -162,7 +161,7 @@ public class Debug {
         log("&e[ERROR] " + message);
     }
 
-    public static void warn(Object ... objects) {
+    public static void warn(Object... objects) {
         StringBuilder sb = new StringBuilder();
         for (Object obj : objects) {
             if (obj == null) {
@@ -184,13 +183,13 @@ public class Debug {
         warn(object == null ? "null" : object.toString());
     }
 
-    public static void warn(String ... messages) {
+    public static void warn(String... messages) {
         for (String message : messages) {
             warn(message);
         }
     }
 
-    public static void debug(Object ... objects) {
+    public static void debug(Object... objects) {
         StringBuilder sb = new StringBuilder();
         for (Object obj : objects) {
             if (obj == null) {
@@ -218,13 +217,13 @@ public class Debug {
         debug(object == null ? "null" : object.toString());
     }
 
-    public static void debug(String ... messages) {
+    public static void debug(String... messages) {
         for (String message : messages) {
             debug(message);
         }
     }
 
-    public static void sendMessage(Player player, Object ... objects) {
+    public static void sendMessage(Player player, Object... objects) {
         StringBuilder sb = new StringBuilder();
         for (Object obj : objects) {
             if (obj == null) {
@@ -249,7 +248,7 @@ public class Debug {
         sendMessage(player, object.toString());
     }
 
-    public static void sendMessages(Player player, String ... messages) {
+    public static void sendMessages(Player player, String... messages) {
         for (String message : messages) {
             sendMessage(player, message);
         }
@@ -259,7 +258,7 @@ public class Debug {
         Thread.dumpStack();
     }
 
-    public static void log(Object ... object) {
+    public static void log(Object... object) {
         StringBuilder sb = new StringBuilder();
         for (Object obj : object) {
             if (obj == null) {
@@ -277,7 +276,7 @@ public class Debug {
         log(object == null ? "null" : object.toString());
     }
 
-    public static void log(String ... messages) {
+    public static void log(String... messages) {
         for (String message : messages) {
             log(message);
         }
