@@ -1,30 +1,29 @@
 package com.balugaq.runtimepylon.command;
 
 import com.balugaq.runtimepylon.RuntimePylon;
-import com.balugaq.runtimepylon.config.Deserializer;
+import com.balugaq.runtimepylon.config.Language;
 import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.PackDesc;
 import com.balugaq.runtimepylon.config.PackManager;
+import com.balugaq.runtimepylon.config.PluginDesc;
 import com.balugaq.runtimepylon.config.StackWalker;
-import com.balugaq.runtimepylon.exceptions.ExamineFailedException;
+import com.balugaq.runtimepylon.config.pack.Author;
+import com.balugaq.runtimepylon.config.pack.Contributor;
+import com.balugaq.runtimepylon.config.pack.GitHubUpdateLink;
+import com.balugaq.runtimepylon.config.pack.WebsiteLink;
 import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.util.MessageUtil;
+import com.balugaq.runtimepylon.util.MinecraftVersion;
 import com.mojang.brigadier.Command;
-import com.mojang.brigadier.StringReader;
-import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
-import io.papermc.paper.command.brigadier.argument.CustomArgumentType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.translation.GlobalTranslator;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -32,74 +31,172 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.ItemStack;
-import org.jspecify.annotations.NullMarked;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
+@SuppressWarnings({"ConstantValue", "SameReturnValue", "ResultOfMethodCallIgnored", "UnstableApiUsage"})
 @UtilityClass
 public class RuntimePylonCommand {
-    public final int THRESHOLD = 1 << 14;
-    public final LiteralCommandNode<CommandSourceStack> ROOT = Commands.literal("runtime")
-            .then(Commands.literal("clearsettings")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearsettings"))
-                    .executes(RuntimePylonCommand::clearSettings)
-            )
-            .then(Commands.literal("clearrecipes")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearrecipes"))
-                    .executes(RuntimePylonCommand::clearRecipes)
-            )
-            .then(Commands.literal("clearlang")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearlang"))
-                    .executes(RuntimePylonCommand::clearLang)
-            )
-            .then(Commands.literal("clearall")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearall"))
-                    .executes(RuntimePylonCommand::clearAll)
-            )
-            .then(Commands.literal("loadpacks")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.loadpacks"))
-                    .executes(RuntimePylonCommand::loadPacks)
-            )
-            .then(Commands.literal("unloadpacks")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.unloadpacks"))
-                    .executes(RuntimePylonCommand::unloadPacks)
-            )
-            .then(Commands.literal("reloadpacks")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.reloadpacks"))
-                    .executes(RuntimePylonCommand::reloadPacks)
-            )
-            .then(Commands.literal("reloadplugin")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.reloadplugin"))
-                    .executes(RuntimePylonCommand::reloadPlugin)
-            )
-            .then(Commands.literal("help")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.help"))
-                    .executes(RuntimePylonCommand::help)
-            )
-            .then(Commands.literal("saveitem")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.saveitem"))
-                    .executes(RuntimePylonCommand::saveItem)
-            )
-            .then(Commands.literal("saveitem")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.saveitem"))
-                    .then(Commands.argument("filename", StringArgumentType.string()).executes(RuntimePylonCommand::saveItem))
-            )
-            .then(Commands.literal("saveitem")
-                    .requires(source -> source.getSender().hasPermission("runtimepylon.command.saveitem"))
-                    .then(Commands.argument("packname", StringArgumentType.string())
-                            .suggests((ctx, builder) -> {
-                                for (Pack pack : PackManager.getPacks()) {
-                                    builder.suggest(pack.getPackID().getId());
-                                }
-                                return builder.buildFuture();
-                            })
-                            .then(Commands.argument("filename", StringArgumentType.string())
-                                    .executes(RuntimePylonCommand::saveItem)))
-            )
-            .build();
+    public static final int THRESHOLD = 1 << 14;
+    //@formatter:off
+    public static final LiteralCommandNode<CommandSourceStack> ROOT = Commands.literal("runtime")
+        .then(Commands.literal("clearsettings")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearsettings"))
+            .executes(RuntimePylonCommand::clearSettings)
+        )
+        .then(Commands.literal("clearrecipes")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearrecipes"))
+            .executes(RuntimePylonCommand::clearRecipes)
+        )
+        .then(Commands.literal("clearlang")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearlang"))
+            .executes(RuntimePylonCommand::clearLang)
+        )
+        .then(Commands.literal("clearall")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearall"))
+            .executes(RuntimePylonCommand::clearAll)
+        )
+        .then(Commands.literal("loadpacks")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.loadpacks"))
+            .executes(RuntimePylonCommand::loadPacks)
+        )
+        .then(Commands.literal("unloadpacks")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.unloadpacks"))
+            .executes(RuntimePylonCommand::unloadPacks)
+        )
+        .then(Commands.literal("reloadpacks")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.reloadpacks"))
+            .executes(RuntimePylonCommand::reloadPacks)
+        )
+        .then(Commands.literal("reloadplugin")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.reloadplugin"))
+            .executes(RuntimePylonCommand::reloadPlugin)
+        )
+        .then(Commands.literal("help")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.help"))
+            .executes(RuntimePylonCommand::help)
+        )
+        .then(Commands.literal("saveitem")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.saveitem"))
+            .executes(RuntimePylonCommand::saveItem)
+        )
+        .then(Commands.literal("saveitem")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.saveitem"))
+            .then(Commands.argument("filename", StringArgumentType.string()).executes(RuntimePylonCommand::saveItem))
+        )
+        .then(Commands.literal("saveitem")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.saveitem"))
+            .then(Commands.argument("packname", StringArgumentType.string())
+                .suggests((ctx, builder) -> {
+                    for (Pack pack : PackManager.getPacks()) {
+                        builder.suggest(pack.getPackID().getId());
+                    }
+                    return builder.buildFuture();
+                })
+                .then(Commands.argument("filename", StringArgumentType.string())
+                    .executes(RuntimePylonCommand::saveItem)))
+        )
+        .then(Commands.literal("info")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.info"))
+            .then(Commands.argument("packname", StringArgumentType.string())
+                .suggests((ctx, builder) -> {
+                    for (Pack pack : PackManager.getPacks()) {
+                        builder.suggest(pack.getPackID().getId());
+                    }
+                    return builder.buildFuture();
+                }).executes(RuntimePylonCommand::info))
+        )
+        .then(Commands.literal("info")
+            .requires(source -> source.getSender().hasPermission("runtimepylon.command.info"))
+            .executes(RuntimePylonCommand::info)
+        )
+        .build();
+    //@formatter:on
+
+    private int info(CommandContext<CommandSourceStack> ctx) {
+        CommandSender sender = ctx.getSource().getSender();
+        try {
+            Pack pack = PackManager.findPack(new PackDesc(ctx.getArgument("packname", String.class)));
+            if (pack == null) {
+                sender.sendRichMessage("<red>Unknown pack");
+                return Command.SINGLE_SUCCESS;
+            }
+            sendMessage(sender, "=".repeat(20));
+            sendMessage(sender, "Pack ID: ", pack.getPackID().getId());
+            sendMessage(sender, "Pack Namespace: ", pack.getPackNamespace().getNamespace());
+            sendMessage(sender, "Pack Version: ", pack.getPackVersion().getVersion());
+            sendMessage(sender, "Pack Min API Version: ", pack.getPackMinAPIVersion(), MinecraftVersion::humanize);
+            sendMessage(sender, "Pack Max API Version: ", pack.getPackMaxAPIVersion(), MinecraftVersion::humanize);
+            showList(sender, Component.text("Pack Load Before: "), pack.getPackLoadBefores(), PackDesc::getId, 3);
+            showList(sender, Component.text("Pack Soft Dependencies: "), pack.getPackSoftDependencies(), PackDesc::getId, 3);
+            showList(sender, Component.text("Pack Dependencies: "), pack.getPackDependencies(), PackDesc::getId, 3);
+            showList(sender, Component.text("Plugin Dependencies: "), pack.getPluginDependencies(), PluginDesc::getId, 3);
+            showList(sender, Component.text("Authors: "), pack.getAuthors(), Author::getName, 5);
+            showList(sender, Component.text("Contributors: "), pack.getContributors(), Contributor::getName, 5);
+            showList(sender, Component.text("Website Links: "), pack.getWebsiteLinks(), WebsiteLink::getLink, 5);
+            sendMessage(sender, "GitHub Update Link: ", pack.getGithubUpdateLink(), GitHubUpdateLink::getLink);
+            showList(sender, Component.text("Languages: "), pack.getLanguages(), Language::localeCode, 5);
+            List<String> registryInfo = getRegistryInfo(pack);
+            showList(sender, Component.text("Registered "), registryInfo);
+            sendMessage(sender, "=".repeat(20));
+        } catch (Exception ignored) {
+            sendMessage(sender, "Version: ", RuntimePylon.getInstance().getPluginMeta().getVersion());
+            showList(sender, Component.text("Packs: "), PackManager.getPacks(), pack -> pack.getPackID().getId(), 5);
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static @NotNull List<String> getRegistryInfo(final Pack pack) {
+        List<String> registryInfo = new ArrayList<>();
+        if (pack.getPages() != null)
+            registryInfo.add(pack.getPages().getPages().size() + " Pages");
+        if (pack.getItems() != null)
+            registryInfo.add(pack.getItems().getItems().size() + " Items");
+        if (pack.getBlocks() != null)
+            registryInfo.add(pack.getBlocks().getBlocks().size() + " Blocks");
+        if (pack.getFluids() != null)
+            registryInfo.add(pack.getFluids().getFluids().size() + " Fluids");
+        if (pack.getScripts() != null)
+            registryInfo.add(pack.getScripts().getScripts().size() + " Scripts");
+        return registryInfo;
+    }
+
+    private void showList(CommandSender sender, Component prefix, @Nullable List<String> list) {
+        showList(sender, prefix, list, s -> s, Integer.MAX_VALUE);
+    }
+
+    private void showList(CommandSender sender, Component prefix, @Nullable List<String> list, int limit) {
+        showList(sender, prefix, list, s -> s, limit);
+    }
+
+    private <T> void showList(CommandSender sender, Component prefix, @Nullable List<T> list, Function<T, String> mapper) {
+        showList(sender, prefix, list, mapper, Integer.MAX_VALUE);
+    }
+
+    private <T> void showList(CommandSender sender, Component prefix, @Nullable List<T> list, Function<T, String> mapper, int limit) {
+        if (list != null && !list.isEmpty())
+            sender.sendMessage(prefix.color(TextColor.color(0x00d000)).append(MessageUtil.humanizeListDisplay(list, mapper, limit)));
+    }
+
+    private void sendMessage(CommandSender sender, String text) {
+        sendMessage(sender, "", text);
+    }
+
+    private void sendMessage(CommandSender sender, String prefix, String text) {
+        sendMessage(sender, prefix, text, s -> s);
+    }
+
+    private <T> void sendMessage(CommandSender sender, String prefix, @Nullable T object, Function<T, String> mapper) {
+        if (object != null) {
+            sender.sendMessage(Component.text(prefix).color(TextColor.color(0x00d000)).append(Component.text(mapper.apply(object))));
+        }
+    }
 
     private int clearSettings(CommandContext<CommandSourceStack> ctx) {
         PackManager.getPacks().forEach(pack -> deleteFolder(pack.getSettingsFolder()));
@@ -124,8 +221,9 @@ public class RuntimePylonCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int loadPacks(CommandContext<CommandSourceStack> ctx) {
-        RuntimePylon.getPackManager().loadPacks();
+    private int reloadPacks(CommandContext<CommandSourceStack> ctx) {
+        unloadPacks(ctx);
+        loadPacks(ctx);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -134,9 +232,8 @@ public class RuntimePylonCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int reloadPacks(CommandContext<CommandSourceStack> ctx) {
-        unloadPacks(ctx);
-        loadPacks(ctx);
+    private int loadPacks(CommandContext<CommandSourceStack> ctx) {
+        RuntimePylon.getPackManager().loadPacks();
         return Command.SINGLE_SUCCESS;
     }
 
@@ -150,7 +247,10 @@ public class RuntimePylonCommand {
     }
 
     private int help(CommandContext<CommandSourceStack> ctx) {
-        // todo
+        ctx.getArgument("addon", String.class);
+        ctx.getSource().getSender().sendMessage(Component.text(
+                "commands: clearsettings, clearrecipes, clearlang, clearall, loadpacks, unloadpacks, reloadpacks, reloadplugin, info, help, saveitem"
+        ));
         return Command.SINGLE_SUCCESS;
     }
 
@@ -164,7 +264,7 @@ public class RuntimePylonCommand {
         String packName;
         String fileName;
         try {
-            packName = ctx.getArgument("packname", Pack.class).getPackID().getId();
+            packName = ctx.getArgument("packname", String.class);
         } catch (Exception e) {
             packName = null;
         }
@@ -175,7 +275,8 @@ public class RuntimePylonCommand {
         }
 
         ItemStack itemStack = player.getInventory().getItemInMainHand();
-        if (itemStack == null || itemStack.getType() == Material.AIR) itemStack = player.getInventory().getItemInOffHand();
+        if (itemStack == null || itemStack.getType() == Material.AIR)
+            itemStack = player.getInventory().getItemInOffHand();
         if (itemStack == null || itemStack.getType() == Material.AIR) {
             sender.sendRichMessage("<red>You must be holding an item to use this command");
             return Command.SINGLE_SUCCESS;
@@ -229,20 +330,6 @@ public class RuntimePylonCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private void deleteFolder(File folder) {
-        File[] files = folder.listFiles();
-        if (files != null) {
-            for (File f : files) {
-                if (f.isDirectory()) {
-                    deleteFolder(f);
-                } else {
-                    f.delete();
-                }
-            }
-        }
-        folder.delete();
-    }
-
     private static void write(Player player, File file, ItemStack itemStack) {
         if (!file.exists()) {
             try {
@@ -264,5 +351,19 @@ public class RuntimePylonCommand {
             Debug.severe(e);
             player.sendRichMessage("<red>Failed to save item");
         }
+    }
+
+    private void deleteFolder(File folder) {
+        File[] files = folder.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isDirectory()) {
+                    deleteFolder(f);
+                } else {
+                    f.delete();
+                }
+            }
+        }
+        folder.delete();
     }
 }

@@ -162,12 +162,12 @@ public class ItemHub extends MyBlock implements
             placeable = create()
                     .item(data -> {
                         if (data.isPlaceable()) {
-                            return ItemStackBuilder.pylonItem(
+                            return ItemStackBuilder.pylon(
                                     Material.LIME_STAINED_GLASS_PANE,
                                     RuntimeKeys.placeable_active
                             );
                         } else {
-                            return ItemStackBuilder.pylonItem(
+                            return ItemStackBuilder.pylon(
                                     Material.RED_STAINED_GLASS_PANE,
                                     RuntimeKeys.placeable_inactive
                             );
@@ -180,7 +180,7 @@ public class ItemHub extends MyBlock implements
                     });
 
             registerItem = create()
-                    .item(data -> ItemStackBuilder.pylonItem(
+                    .item(data -> ItemStackBuilder.pylon(
                             Material.EMERALD_BLOCK,
                             RuntimeKeys.register_item
                     ))
@@ -190,10 +190,10 @@ public class ItemHub extends MyBlock implements
                         assertNotNull(data.getItemId(), register_item_3);
                         if (assertBlock(data, WithPlaceable.class).isPlaceable()) {
                             assertTrue(data.getModel().getType().isBlock(), register_item_4);
-                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build(), data.getItemId());
+                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylon(data.getModel().getType(), data.getItemId()).build(), data.getItemId());
                             register(data.getItemId(), data.getModel().getType(), PylonBlock.class);
                         } else {
-                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build());
+                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylon(data.getModel().getType(), data.getItemId()).build());
                         }
                         done(player, register_item_5, data.getItemId());
 

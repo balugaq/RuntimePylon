@@ -113,7 +113,7 @@ public class PageHub extends MyBlock implements
             super(b2);
 
             registerPage = create()
-                    .item(data -> ItemStackBuilder.pylonItem(
+                    .item(data -> ItemStackBuilder.pylon(
                             Material.EMERALD_BLOCK,
                             RuntimeKeys.register_page
                     ))
@@ -131,7 +131,7 @@ public class PageHub extends MyBlock implements
             nestedPage = create()
                     .item(data -> {
                         if (data.nestedPageId == null) {
-                            return ItemStackBuilder.pylonItem(
+                            return ItemStackBuilder.pylon(
                                     Material.WHITE_STAINED_GLASS_PANE,
                                     RuntimeKeys.nested_page
                             );
@@ -166,7 +166,7 @@ public class PageHub extends MyBlock implements
                     });
 
             setNestedPage = create()
-                    .item(data -> ItemStackBuilder.pylonItem(
+                    .item(data -> ItemStackBuilder.pylon(
                             Material.GREEN_STAINED_GLASS_PANE,
                             RuntimeKeys.set_nested_page
                     ))
@@ -181,7 +181,7 @@ public class PageHub extends MyBlock implements
                     });
 
             unsetNestedPage = create()
-                    .item(data -> ItemStackBuilder.pylonItem(
+                    .item(data -> ItemStackBuilder.pylon(
                             Material.RED_STAINED_GLASS_PANE,
                             RuntimeKeys.unset_nested_page
                     ))

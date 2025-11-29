@@ -11,27 +11,27 @@ import org.bukkit.inventory.ItemStack;
 
 public class RuntimeItems {
     // @formatter:off
-    public static final ItemStack item_hub = ItemStackBuilder.pylonItem(
+    public static final ItemStack item_hub = ItemStackBuilder.pylon(
             Material.PURPUR_PILLAR,
             RuntimeKeys.item_hub
     ).build();
-    public static final ItemStack fluid_hub = ItemStackBuilder.pylonItem(
+    public static final ItemStack fluid_hub = ItemStackBuilder.pylon(
             Material.LAPIS_BLOCK,
             RuntimeKeys.fluid_hub
     ).build();
-    public static final ItemStack page_hub = ItemStackBuilder.pylonItem(
+    public static final ItemStack page_hub = ItemStackBuilder.pylon(
             Material.QUARTZ_BLOCK,
             RuntimeKeys.page_hub
     ).build();
-    public static final ItemStack number_stack = ItemStackBuilder.pylonItem(
+    public static final ItemStack number_stack = ItemStackBuilder.pylon(
             Material.ENDER_EYE,
             RuntimeKeys.number_stack
     ).build();
-    public static final ItemStack string_stack = ItemStackBuilder.pylonItem(
+    public static final ItemStack string_stack = ItemStackBuilder.pylon(
             Material.HONEYCOMB,
             RuntimeKeys.string_stack
     ).build();
-    public static final ItemStack fluid_temperature_holder = ItemStackBuilder.pylonItem(
+    public static final ItemStack fluid_temperature_holder = ItemStackBuilder.pylon(
             Material.DRAGON_BREATH,
             RuntimeKeys.fluid_temperature_holder
     ).build();

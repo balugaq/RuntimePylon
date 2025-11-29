@@ -40,6 +40,6 @@ public class PackDesc implements Deserializer<PackDesc>, Examinable<PackDesc> {
 
     @Nullable
     public Pack findPack() {
-        return RuntimePylon.getPackManager().getPacks().stream().filter(pack -> pack.getPackID().getId().equals(id)).findFirst().orElse(null);
+        return PackManager.findPack(this);
     }
 }

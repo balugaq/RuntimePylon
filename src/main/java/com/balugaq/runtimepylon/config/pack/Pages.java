@@ -9,7 +9,7 @@ import com.balugaq.runtimepylon.config.PageDesc;
 import com.balugaq.runtimepylon.config.PreRegister;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.StackWalker;
-import com.balugaq.runtimepylon.config.UnsArrayList;
+import com.balugaq.runtimepylon.config.MyArrayList;
 import com.balugaq.runtimepylon.config.preloads.PreparedPage;
 import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
@@ -83,7 +83,7 @@ public class Pages implements FileObject<Pages> {
                             if (!dm.isItem() || dm.isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
                             var id = InternalObjectID.of(pageKey).register(namespace);
 
-                            UnsArrayList<PageDesc> parents = Pack.readOrNull(section, UnsArrayList.class, PageDesc.class, "parents", e -> e.setPackNamespace(namespace));
+                            MyArrayList<PageDesc> parents = Pack.readOrNull(section, MyArrayList.class, PageDesc.class, "parents", e -> e.setPackNamespace(namespace));
 
                             boolean postLoad = section.getBoolean("postload", false);
                             pages.put(id, new PreparedPage(id, dm, parents, postLoad));

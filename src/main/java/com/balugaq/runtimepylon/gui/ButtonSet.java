@@ -65,35 +65,35 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
     public ButtonSet(@NotNull T b2) {
         this.block = b2;
         blackBackground = create()
-                .item(block -> ItemStackBuilder.pylonItem(
+                .item(block -> ItemStackBuilder.pylon(
                         Material.BLACK_STAINED_GLASS_PANE,
                         RuntimeKeys.black_background
                 ))
                 .click(deny());
 
         grayBackground = create()
-                .item(block -> ItemStackBuilder.pylonItem(
+                .item(block -> ItemStackBuilder.pylon(
                         Material.GRAY_STAINED_GLASS_PANE,
                         RuntimeKeys.gray_background
                 ))
                 .click(deny());
 
         inputBorder = create()
-                .item(block -> ItemStackBuilder.pylonItem(
+                .item(block -> ItemStackBuilder.pylon(
                         Material.BLUE_STAINED_GLASS_PANE,
                         RuntimeKeys.input_border
                 ))
                 .click(deny());
 
         outputBorder = create()
-                .item(block -> ItemStackBuilder.pylonItem(
+                .item(block -> ItemStackBuilder.pylon(
                         Material.ORANGE_STAINED_GLASS_PANE,
                         RuntimeKeys.output_border
                 ))
                 .click(deny());
 
         setPage = create()
-                .item(block -> ItemStackBuilder.pylonItem(
+                .item(block -> ItemStackBuilder.pylon(
                         Material.GREEN_STAINED_GLASS_PANE,
                         RuntimeKeys.set_page
                 ))
@@ -107,6 +107,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     SimpleStaticGuidePage page = assertNotNull(pages.get(data.getPageId()), set_page_3);
 
                     assertNotNull(PylonRegistry.ITEMS.get(data.getItemId()), set_page_4);
+                    assertNotNull(data.getModel(), set_page_4);
                     page.addItem(data.getModel());
 
                     done(player, set_page_5, data.getItemId(), data.getPageId());
@@ -114,7 +115,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 });
 
         setRecipe = create()
-                .item(block -> ItemStackBuilder.pylonItem(
+                .item(block -> ItemStackBuilder.pylon(
                         Material.GREEN_STAINED_GLASS_PANE,
                         RuntimeKeys.set_recipe
                 ))
@@ -138,7 +139,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 });
 
         unsetPage = create()
-                .item(block -> ItemStackBuilder.pylonItem(
+                .item(block -> ItemStackBuilder.pylon(
                         Material.RED_STAINED_GLASS_PANE,
                         RuntimeKeys.unset_page
                 ))
@@ -163,7 +164,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 });
 
         unsetRecipe = create()
-                .item(block -> ItemStackBuilder.pylonItem(
+                .item(block -> ItemStackBuilder.pylon(
                         Material.RED_STAINED_GLASS_PANE,
                         RuntimeKeys.unset_recipe
                 ))
@@ -190,12 +191,12 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     var data = assertBlock(block, WithModel.class);
                     var itemId = data.getItemId();
                     if (itemId == null) {
-                        return ItemStackBuilder.pylonItem(
+                        return ItemStackBuilder.pylon(
                                 Material.BLUE_STAINED_GLASS_PANE,
                                 RuntimeKeys.set_id
                         );
                     } else {
-                        return ItemStackBuilder.pylonItem(
+                        return ItemStackBuilder.pylon(
                                 Material.BLUE_STAINED_GLASS_PANE,
                                 RuntimeKeys.set_id
                         ).lore(set_id_1 + data.getItemId());
@@ -220,7 +221,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                 .item(block -> {
                     var data = assertBlock(block, WithPage.class);
                     if (data.getPageId() == null) {
-                        return ItemStackBuilder.pylonItem(
+                        return ItemStackBuilder.pylon(
                                 Material.WHITE_STAINED_GLASS_PANE,
                                 RuntimeKeys.page
                         );
@@ -261,12 +262,12 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     var data = assertBlock(block, WithRecipe.class);
 
                     if (data.getRecipeTypeId() == null) {
-                        return ItemStackBuilder.pylonItem(
+                        return ItemStackBuilder.pylon(
                                 Material.WHITE_STAINED_GLASS_PANE,
                                 RuntimeKeys.recipe_type
                         );
                     } else {
-                        return ItemStackBuilder.pylonItem(
+                        return ItemStackBuilder.pylon(
                                 Material.CRAFTING_TABLE,
                                 RuntimeKeys.recipe_type
                         ).lore(recipe_type_1 + data.getRecipeTypeId());

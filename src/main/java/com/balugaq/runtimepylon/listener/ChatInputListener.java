@@ -11,6 +11,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+/**
+ * @author balugaq
+ */
 public class ChatInputListener implements Listener {
     private static final Map<UUID, Consumer<String>> callbacks = new HashMap<>();
 

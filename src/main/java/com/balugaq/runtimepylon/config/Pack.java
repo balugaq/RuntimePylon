@@ -93,25 +93,23 @@ public class Pack implements FileObject<Pack> {
     @Nullable
     private final MinecraftVersion packMaxAPIVersion;
     @Nullable
-    private final UnsArrayList<PackDesc> packLoadBefores;
+    private final MyArrayList<PackDesc> packLoadBefores;
     @Nullable
-    private final UnsArrayList<PackDesc> packSoftDependencies;
+    private final MyArrayList<PackDesc> packSoftDependencies;
     @Nullable
-    private final UnsArrayList<PackDesc> packDependencies;
+    private final MyArrayList<PackDesc> packDependencies;
     @Nullable
-    private final UnsArrayList<PluginDesc> pluginSoftDependencies;
+    private final MyArrayList<PluginDesc> pluginDependencies;
     @Nullable
-    private final UnsArrayList<PluginDesc> pluginDependencies;
+    private final MyArrayList<Author> authors;
     @Nullable
-    private final UnsArrayList<Author> authors;
+    private final MyArrayList<Contributor> contributors;
     @Nullable
-    private final UnsArrayList<Contributor> contributors;
-    @Nullable
-    private final UnsArrayList<WebsiteLink> websiteLinks;
+    private final MyArrayList<WebsiteLink> websiteLinks;
     @Nullable
     private final GitHubUpdateLink githubUpdateLink;
     @Nullable
-    private final UnsArrayList<Language> languages;
+    private final MyArrayList<Language> languages;
     @Nullable
     private final Pages pages;
     @Nullable
@@ -220,39 +218,39 @@ public class Pack implements FileObject<Pack> {
 
     @Override
     public List<FileReader<Pack>> readers() {
-        return List.of(
-                dir -> {
-                    List<File> files = Arrays.stream(dir.listFiles()).toList();
-                    var meta = files.stream().filter(file -> file.getName().equals("pack.yml")).findFirst().orElse(null);
-                    if (meta == null) throw new MissingFileException(dir.getAbsolutePath() + "/pack.yml");
+        return List.of(dir -> {
+                List<File> files = Arrays.stream(dir.listFiles()).toList();
+                var meta = files.stream().filter(file -> file.getName().equals("pack.yml")).findFirst().orElse(null);
+                if (meta == null) throw new MissingFileException(dir.getAbsolutePath() + "/pack.yml");
 
+                try (var ignored = StackWalker.setPosition("Reading file: pack.yml")) {
                     YamlConfiguration config = YamlConfiguration.loadConfiguration(meta);
 
                     PackID id = read(config, PackID.class, "id");
                     PackVersion version = read(config, PackVersion.class, "version");
                     MinecraftVersion minAPIVersion = readOrNull(config, MinecraftVersion.class, "minAPIVersion");
                     MinecraftVersion maxAPIVersion = readOrNull(config, MinecraftVersion.class, "maxAPIVersion");
-                    UnsArrayList<PackDesc> packLoadBefores = readOrNull(config, UnsArrayList.class, PackDesc.class, "loadBefores");
-                    UnsArrayList<PackDesc> packSoftDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "packSoftDependencies");
-                    UnsArrayList<PackDesc> packDependencies = readOrNull(config, UnsArrayList.class, PackDesc.class, "packDependencies");
-                    UnsArrayList<PluginDesc> pluginSoftDependencies = readOrNull(config, UnsArrayList.class, PluginDesc.class, "pluginSoftDependencies");
-                    UnsArrayList<PluginDesc> pluginDependencies = readOrNull(config, UnsArrayList.class, PluginDesc.class, "pluginDependencies");
+                    MyArrayList<PackDesc> packLoadBefores = readOrNull(config, MyArrayList.class, PackDesc.class, "loadBefores");
+                    MyArrayList<PackDesc> packSoftDependencies = readOrNull(config, MyArrayList.class, PackDesc.class, "packSoftDependencies");
+                    MyArrayList<PackDesc> packDependencies = readOrNull(config, MyArrayList.class, PackDesc.class, "packDependencies");
+                    MyArrayList<PluginDesc> pluginDependencies = readOrNull(config, MyArrayList.class, PluginDesc.class, "pluginDependencies");
                     Author author = readOrNull(config, Author.class, "author");
-                    UnsArrayList<Author> authors = readOrNull(config, UnsArrayList.class, Author.class, "authors");
+                    MyArrayList<Author> authors = readOrNull(config, MyArrayList.class, Author.class, "authors");
                     if (author != null) {
-                        if (authors == null) authors = new UnsArrayList<>();
+                        if (authors == null) authors = new MyArrayList<>();
                         authors.add(author);
                     }
-                    UnsArrayList<Contributor> contributors = readOrNull(config, UnsArrayList.class, Contributor.class, "contributors");
-                    UnsArrayList<WebsiteLink> websiteLinks = readOrNull(config, UnsArrayList.class, WebsiteLink.class, "websiteLinks");
+                    MyArrayList<Contributor> contributors = readOrNull(config, MyArrayList.class, Contributor.class, "contributors");
+                    MyArrayList<WebsiteLink> websiteLinks = readOrNull(config, MyArrayList.class, WebsiteLink.class, "websiteLinks");
                     GitHubUpdateLink githubUpdateLink = readOrNull(config, GitHubUpdateLink.class, "githubUpdateLink");
-                    UnsArrayList<Language> languages = readOrNull(config, UnsArrayList.class, Language.class, "languages");
+                    MyArrayList<Language> languages = readOrNull(config, MyArrayList.class, Language.class, "languages");
                     Set<Locale> locales = new HashSet<>();
                     if (languages != null) {
-                        locales.addAll(languages.stream().map(language -> Locale.of(language.locale())).toList());
+                        locales.addAll(languages.stream().map(Language::locale).toList());
                     } else {
                         locales.add(Locale.of("en"));
                     }
+                    RuntimePylon.getInstance().addSupportedLanguages(locales);
                     Material material = Pack.readEnum(config, Material.class, "material", Deserializer.EnumDeserializer::forceUpperCase);
                     PackNamespace namespace = PackNamespace.warp(id, locales, material);
 
@@ -332,7 +330,6 @@ public class Pack implements FileObject<Pack> {
                             packLoadBefores,
                             packSoftDependencies,
                             packDependencies,
-                            pluginSoftDependencies,
                             pluginDependencies,
                             authors,
                             contributors,
@@ -348,8 +345,12 @@ public class Pack implements FileObject<Pack> {
                             scripts,
                             saveditems
                     );
+                } catch (Exception e) {
+                    StackWalker.handle(e);
                 }
-        );
+
+                return this;
+            });
     }
 
     private void loadLang(@Nullable File from, File to) {

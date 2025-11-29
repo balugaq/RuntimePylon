@@ -20,8 +20,8 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
@@ -117,11 +117,11 @@ import java.util.function.Consumer;
  * | List<String> | *packDependencies | is the pack dependencies | - | [mypack1, mypack2] |
  * | List<String> | *pluginDependencies | is the plugin dependencies | - | [plugin1, plugin2] |
  * | String | *author | is the author of a pack | - | balugaq |
- * | List<String> | *authors | is the authors of a pack | - | [balugaq, balugaq2] |
+ * | List<String> | *authors | is the authors of a pack | - | [balugaq, balugaq2] |https://github.com/balugaq/RuntimePylon/releases
  * | List<String> | *contributors | is the contributors of a pack | - | [balugaq, balugaq2] |
  * | String | *website | is the website of a pack | - | `https://github.com/balugaq/RuntimePylon` |
  * | String | *githubUpdateLink | is the update link of a pack | - | `https://github.com/balugaq/RuntimePylon/releases` |
- * | List<String> | *languages | defines what languages are supported by this pack | - | [en, zh_CN] |
+ * | List<String> | *languages | defines what languages are supported by this pack | - | [en, zh-CN] |
  * Properties tagged with * are optional
  * <p>
  * IDs:
@@ -184,7 +184,7 @@ public @Data class PackManager {
                 continue;
             }
 
-            try (var sk = StackWalker.setPosition("Loading Pack Folder: " + packFolder.getName())) {
+            try (var ignored = StackWalker.setPosition("Loading Pack Folder: " + packFolder.getName())) {
                 Debug.log("Loading pack: " + packFolder.getName());
                 Pack pack = FileObject.newDeserializer(Pack.class).deserialize(packFolder);
                 MinecraftVersion min = pack.getPackMinAPIVersion();
@@ -195,7 +195,7 @@ public @Data class PackManager {
                 if (max != null && MinecraftVersion.current().isAtLeast(max)) {
                     throw new UnsupportedVersionException("Current version: " + MinecraftVersion.current() + ", Maximum version to load: " + max);
                 }
-                UnsArrayList<PluginDesc> pluginDependencies = pack.getPluginDependencies();
+                MyArrayList<PluginDesc> pluginDependencies = pack.getPluginDependencies();
                 if (pluginDependencies != null) {
                     ArrayList<PluginDesc> missing = new ArrayList<>();
                     for (PluginDesc pluginDependency : pluginDependencies) {
@@ -206,15 +206,14 @@ public @Data class PackManager {
                     if (!missing.isEmpty()) throw new PluginDependencyMissingException(pack, missing);
                 }
                 packs.add(pack);
-                Debug.log("Loaded pack: " + pack.getPackID());
             } catch (Exception e) {
                 StackWalker.handle(e);
             }
         }
 
         for (Pack pack : PackSorter.sortPacks(packs)) {
-            try (var sk = StackWalker.setPosition("Registering Pack: " + pack.getPackID())) {
-                UnsArrayList<PackDesc> packDependencies = pack.getPackDependencies();
+            try (var ignored = StackWalker.setPosition("Registering Pack: " + pack.getPackID())) {
+                MyArrayList<PackDesc> packDependencies = pack.getPackDependencies();
                 if (packDependencies != null) {
                     ArrayList<PackDesc> missing = new ArrayList<>();
                     for (PackDesc packDependency : packDependencies) {
@@ -263,10 +262,17 @@ public @Data class PackManager {
         PylonRegistry.ENTITIES.unregisterAllFromAddon(plugin);
         PylonRegistry.RECIPE_TYPES.unregisterAllFromAddon(plugin);
         PylonRegistry.RESEARCHES.unregisterAllFromAddon(plugin);
-        PylonRegistry.ADDONS.unregister(plugin);
+        if (PylonRegistry.ADDONS.contains(plugin.getKey())) {
+            PylonRegistry.ADDONS.unregister(plugin);
+        }
     }
 
     public static List<Pack> getPacks() {
         return RuntimePylon.getPackManager().packs;
+    }
+
+    @Nullable
+    public static Pack findPack(PackDesc desc) {
+        return PackManager.getPacks().stream().filter(pack -> pack.getPackID().getId().equals(desc.getId())).findFirst().orElse(null);
     }
 }

@@ -13,7 +13,7 @@ import java.util.List;
  * @author balugaq
  */
 @EqualsAndHashCode(callSuper = true)
-public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implements GenericDeserializer<@NotNull UnsArrayList<T>, @NotNull T> {
+public class MyArrayList<T extends Deserializer<T>> extends ArrayList<T> implements GenericDeserializer<@NotNull MyArrayList<T>, @NotNull T> {
     @Getter
     @UnknownNullability private Class<T> genericType;
 
@@ -25,24 +25,24 @@ public class UnsArrayList<T extends Deserializer<T>> extends ArrayList<T> implem
 
     @NotNull
     @Override
-    public UnsArrayList<T> setGenericType(@NotNull Class<T> clazz) {
+    public MyArrayList<T> setGenericType(@NotNull Class<T> clazz) {
         this.genericType = clazz;
         return this;
     }
 
     @Override
-    public @NotNull UnsArrayList<T> setAdvancer(Pack.@NotNull Advancer<T> advancer) {
+    public @NotNull MyArrayList<T> setAdvancer(Pack.@NotNull Advancer<T> advancer) {
         this.advancer = advancer;
         return this;
     }
 
     @NotNull
     @Override
-    public List<ConfigReader<?, UnsArrayList<T>>> readers() {
+    public List<ConfigReader<?, MyArrayList<T>>> readers() {
         return List.of(
                 ConfigReader.of(List.class, lst -> {
                     var serializer = advancer.advance(Deserializer.newDeserializer(getGenericType()));
-                    UnsArrayList<T> res = new UnsArrayList<>();
+                    MyArrayList<T> res = new MyArrayList<>();
                     for (Object object : lst) {
                         try (var ignored = StackWalker.setPosition("Reading List<" + getGenericType().getSimpleName() + ">")) {
                             res.add(serializer.deserialize(object));

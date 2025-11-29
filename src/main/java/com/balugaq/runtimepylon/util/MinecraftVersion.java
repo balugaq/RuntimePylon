@@ -67,4 +67,8 @@ public record MinecraftVersion(int major, int minor,
     public int compareTo(MinecraftVersion o) {
         return Integer.compare(this.major * 1000000 + this.minor * 10000 + this.patch, o.major * 1000000 + o.minor * 10000 + o.patch);
     }
+
+    public String humanize() {
+        return major + "." + minor + "." + patch;
+    }
 }

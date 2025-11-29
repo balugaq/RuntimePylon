@@ -9,7 +9,7 @@ import com.balugaq.runtimepylon.config.PageDesc;
 import com.balugaq.runtimepylon.config.PreRegister;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.StackWalker;
-import com.balugaq.runtimepylon.config.UnsArrayList;
+import com.balugaq.runtimepylon.config.MyArrayList;
 import com.balugaq.runtimepylon.config.preloads.PreparedFluid;
 import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
@@ -95,9 +95,9 @@ public class Fluids implements FileObject<Fluids> {
                             if (temperature == null) continue;
 
                             PageDesc page = Pack.readOrNull(section, PageDesc.class, "page", t -> t.setPackNamespace(getNamespace()));
-                            UnsArrayList<PageDesc> pages = Pack.readOrNull(section, UnsArrayList.class, PageDesc.class, "pages", t -> t.setPackNamespace(getNamespace()));
+                            MyArrayList<PageDesc> pages = Pack.readOrNull(section, MyArrayList.class, PageDesc.class, "pages", t -> t.setPackNamespace(getNamespace()));
                             if (page != null) {
-                                if (pages == null) pages = new UnsArrayList<>();
+                                if (pages == null) pages = new MyArrayList<>();
                                 pages.add(page);
                             }
 

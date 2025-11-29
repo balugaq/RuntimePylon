@@ -159,7 +159,7 @@ public class FluidHub extends MyBlock implements
         public FluidHubButtonSet(@NotNull T b2) {
             super(b2);
             registerFluid = create()
-                    .item(block -> ItemStackBuilder.pylonItem(
+                    .item(block -> ItemStackBuilder.pylon(
                             Material.EMERALD_BLOCK,
                             RuntimeKeys.register_fluid
                     ))
@@ -173,7 +173,7 @@ public class FluidHub extends MyBlock implements
                         return false;
                     });
             tag = create()
-                    .item(data -> data.getTag() != null ? ItemStackBuilder.of(data.getTag()) : ItemStackBuilder.pylonItem(
+                    .item(data -> data.getTag() != null ? ItemStackBuilder.of(data.getTag()) : ItemStackBuilder.pylon(
                             Material.WHITE_STAINED_GLASS_PANE,
                             RuntimeKeys.tag
                     ))
@@ -190,7 +190,7 @@ public class FluidHub extends MyBlock implements
                         return true;
                     });
             setTag = create()
-                    .item(block -> ItemStackBuilder.pylonItem(
+                    .item(block -> ItemStackBuilder.pylon(
                             Material.GOLD_BLOCK,
                             RuntimeKeys.set_tag
                     ))
@@ -203,7 +203,7 @@ public class FluidHub extends MyBlock implements
                         return false;
                     });
             unsetTag = create()
-                    .item(block -> ItemStackBuilder.pylonItem(
+                    .item(block -> ItemStackBuilder.pylon(
                             Material.IRON_BLOCK,
                             RuntimeKeys.unset_tag
                     ))
