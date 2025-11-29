@@ -9,13 +9,19 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnknownNullability;
+import org.jspecify.annotations.NullMarked;
 
 import static com.balugaq.runtimepylon.util.Lang.string_input_1;
 
+/**
+ * @author balugaq
+ */
+@NullMarked
 public class StringStack extends PylonItem implements DataStack {
-    public String internal;
+    @UnknownNullability public String internal;
 
-    public StringStack(@NotNull ItemStack stack) {
+    public StringStack(ItemStack stack) {
         super(stack);
     }
 
@@ -28,11 +34,13 @@ public class StringStack extends PylonItem implements DataStack {
     }
 
     @Override
-    public <T extends PylonBlock & PylonGuiBlock> void onClick(@NotNull T block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event, @NotNull Runnable callback) {
+    public <T extends PylonBlock & PylonGuiBlock> void onClick(T block, ClickType clickType, Player player, InventoryClickEvent event, Runnable callback) {
         player.closeInventory();
-        GuiItem.waitInput(player, string_input_1, s -> {
-            internal = s;
-            callback.run();
-        });
+        GuiItem.waitInput(
+                player, string_input_1, s -> {
+                    internal = s;
+                    callback.run();
+                }
+        );
     }
 }

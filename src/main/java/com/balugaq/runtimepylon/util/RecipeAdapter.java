@@ -1,6 +1,6 @@
 package com.balugaq.runtimepylon.util;
 
-import com.balugaq.runtimepylon.gui.interact.WrongStateException;
+import com.balugaq.runtimepylon.exceptions.WrongStateException;
 import com.balugaq.runtimepylon.pylon.item.DataStack;
 import com.balugaq.runtimepylon.pylon.item.NumberStack;
 import com.balugaq.runtimepylon.pylon.item.StringStack;
@@ -29,12 +29,18 @@ import org.bukkit.inventory.SmithingTransformRecipe;
 import org.bukkit.inventory.SmokingRecipe;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.balugaq.runtimepylon.util.Lang.*;
 
+/**
+ * @author balugaq
+ */
+@Deprecated
+@NullMarked
 public record RecipeAdapter<T extends PylonRecipe>(
         RecipeType<T> recipeType,
         RecipeResolver<T> mapper
@@ -120,13 +126,13 @@ public record RecipeAdapter<T extends PylonRecipe>(
         // @formatter:on
     }
 
-    public RecipeAdapter(@NotNull RecipeType<T> recipeType, @NotNull RecipeResolver<T> mapper) {
+    public RecipeAdapter(RecipeType<T> recipeType, RecipeResolver<T> mapper) {
         this.recipeType = recipeType;
         this.mapper = mapper;
         adapters.put(recipeType, this);
     }
 
-    public static @NotNull ItemStack find(@NotNull Map<Integer, ItemStack> recipe, int n) {
+    public static ItemStack find(Map<Integer, ItemStack> recipe, int n) {
         int cnt = 0;
         for (ItemStack itemStack : recipe.values()) {
             if (itemStack != null && itemStack.getType() != Material.AIR && ++cnt == n) return itemStack;
@@ -134,7 +140,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
         throw new WrongStateException("#" + cnt + recipe_err_2);
     }
 
-    public static int findInt(@NotNull Map<Integer, ItemStack> recipe, int n) {
+    public static int findInt(Map<Integer, ItemStack> recipe, int n) {
         int cnt = 0;
         for (ItemStack itemStack : recipe.values()) {
             if (PylonItem.fromStack(itemStack) instanceof NumberStack intStack && ++cnt == n) return intStack.toInt();
@@ -142,7 +148,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
         throw new WrongStateException("#" + cnt + recipe_err_3);
     }
 
-    public static float findFloat(@NotNull Map<Integer, ItemStack> recipe, int n) {
+    public static float findFloat(Map<Integer, ItemStack> recipe, int n) {
         int cnt = 0;
         for (ItemStack itemStack : recipe.values()) {
             if (PylonItem.fromStack(itemStack) instanceof NumberStack intStack && ++cnt == n) return intStack.toFloat();
@@ -150,7 +156,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
         throw new WrongStateException("#" + cnt + recipe_err_4);
     }
 
-    public static double findDouble(@NotNull Map<Integer, ItemStack> recipe, int n) {
+    public static double findDouble(Map<Integer, ItemStack> recipe, int n) {
         int cnt = 0;
         for (ItemStack itemStack : recipe.values()) {
             if (PylonItem.fromStack(itemStack) instanceof NumberStack intStack && ++cnt == n)
@@ -159,7 +165,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
         throw new WrongStateException("#" + cnt + recipe_err_5);
     }
 
-    public static boolean findBoolean(@NotNull Map<Integer, ItemStack> recipe, int n) {
+    public static boolean findBoolean(Map<Integer, ItemStack> recipe, int n) {
         int cnt = 0;
         for (ItemStack itemStack : recipe.values()) {
             PylonItem pylon = PylonItem.fromStack(itemStack);
@@ -174,7 +180,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
         throw new WrongStateException("#" + cnt + recipe_err_6);
     }
 
-    public static String findString(@NotNull Map<Integer, ItemStack> recipe, int n) {
+    public static String findString(Map<Integer, ItemStack> recipe, int n) {
         int cnt = 0;
         for (ItemStack itemStack : recipe.values()) {
             if (PylonItem.fromStack(itemStack) instanceof StringStack string && ++cnt == n) return string.get();
@@ -182,7 +188,7 @@ public record RecipeAdapter<T extends PylonRecipe>(
         throw new WrongStateException("#" + cnt + recipe_err_7);
     }
 
-    public static @Nullable ItemStack findNullable(@NotNull Map<Integer, ItemStack> recipe, int n) {
+    public static @Nullable ItemStack findNullable(Map<Integer, ItemStack> recipe, int n) {
         int cnt = 0;
         for (ItemStack itemStack : recipe.values()) {
             if (++cnt == n) return itemStack;
@@ -190,11 +196,11 @@ public record RecipeAdapter<T extends PylonRecipe>(
         return null;
     }
 
-    public static RecipeChoice.@NotNull ExactChoice toChoice(@NotNull ItemStack itemStack) {
+    public static RecipeChoice.ExactChoice toChoice(ItemStack itemStack) {
         return new RecipeChoice.ExactChoice(itemStack);
     }
 
-    public static <T extends PylonRecipe> RecipeAdapter<? extends PylonRecipe> register(@NotNull RecipeType<T> recipeType, @NotNull RecipeResolver<T> mapper) {
+    public static <T extends PylonRecipe> RecipeAdapter<? extends PylonRecipe> register(RecipeType<T> recipeType, RecipeResolver<T> mapper) {
         return adapters.put(recipeType, new RecipeAdapter<>(recipeType, mapper));
     }
 
@@ -203,23 +209,23 @@ public record RecipeAdapter<T extends PylonRecipe>(
         return (RecipeAdapter<T>) adapters.get(recipeType);
     }
 
-    public boolean apply(@NotNull NamespacedKey key, @NotNull ItemStack model, @NotNull Map<Integer, ItemStack> recipe) {
+    public boolean apply(NamespacedKey key, ItemStack model, Map<Integer, ItemStack> recipe) {
         T instance = mapper.apply(key, model, recipe);
         if (instance == null) return false;
         recipeType.addRecipe(instance);
         return true;
     }
 
-    public boolean noRecipe(@NotNull NamespacedKey key, @NotNull ItemStack model, @NotNull Map<Integer, ItemStack> recipe) {
+    public boolean noRecipe(NamespacedKey key, ItemStack model, Map<Integer, ItemStack> recipe) {
         return Bukkit.getRecipe(key) == null;
     }
 
-    public void removeRecipe(@NotNull NamespacedKey key) {
+    public void removeRecipe(NamespacedKey key) {
         recipeType.removeRecipe(key);
     }
 
     public interface RecipeResolver<T extends PylonRecipe> {
         @Nullable
-        T apply(@NotNull NamespacedKey key, @NotNull ItemStack model, @NotNull Map<@NotNull Integer, @NotNull ItemStack> recipe);
+        T apply(NamespacedKey key, ItemStack model, Map<Integer, ItemStack> recipe);
     }
 }

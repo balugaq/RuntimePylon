@@ -1,6 +1,7 @@
 package com.balugaq.runtimepylon.util;
 
 import net.kyori.adventure.text.Component;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.function.Function;
 /**
  * @author balugaq
  */
+@NullMarked
 public class MessageUtil {
     public static <T> Component humanizeListDisplay(List<T> list, Function<T, String> mapper, int limit) {
         if (list.isEmpty()) {

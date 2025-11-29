@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon;
 
+import com.balugaq.runtimepylon.object.PackAddon;
 import org.bukkit.Material;
 import org.jspecify.annotations.NullMarked;
 

@@ -1,8 +1,11 @@
 package com.balugaq.runtimepylon.exceptions;
 
+import org.jspecify.annotations.NullMarked;
+
 /**
  * @author balugaq
  */
+@NullMarked
 public class MissingArgumentException extends PackException {
     public MissingArgumentException() {
         super();

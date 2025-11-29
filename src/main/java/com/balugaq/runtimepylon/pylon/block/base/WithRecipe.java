@@ -4,15 +4,20 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Map;
 
+/**
+ * @author balugaq
+ */
+@NullMarked
 public interface WithRecipe extends WithModel {
     @Nullable NamespacedKey getRecipeTypeId();
 
-    @NotNull WithRecipe setRecipeTypeId(@Nullable NamespacedKey recipeTypeId);
+    WithRecipe setRecipeTypeId(@Nullable NamespacedKey recipeTypeId);
 
-    @NotNull Map<Integer, ItemStack> getRecipe();
+    Map<Integer, ItemStack> getRecipe();
 
-    @NotNull WithRecipe setRecipe(@NotNull Map<Integer, ItemStack> recipe);
+    WithRecipe setRecipe(Map<Integer, ItemStack> recipe);
 }

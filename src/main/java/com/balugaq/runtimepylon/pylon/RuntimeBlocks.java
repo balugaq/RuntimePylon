@@ -5,7 +5,12 @@ import com.balugaq.runtimepylon.pylon.block.ItemHub;
 import com.balugaq.runtimepylon.pylon.block.PageHub;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import org.bukkit.Material;
+import org.jspecify.annotations.NullMarked;
 
+/**
+ * @author balugaq
+ */
+@NullMarked
 public class RuntimeBlocks {
     static {
         PylonBlock.register(RuntimeKeys.item_hub, Material.PURPUR_PILLAR, ItemHub.class);

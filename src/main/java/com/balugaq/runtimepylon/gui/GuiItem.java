@@ -1,8 +1,8 @@
 package com.balugaq.runtimepylon.gui;
 
 import com.balugaq.runtimepylon.RuntimePylon;
-import com.balugaq.runtimepylon.gui.interact.IgnorableException;
-import com.balugaq.runtimepylon.gui.interact.WrongStateException;
+import com.balugaq.runtimepylon.exceptions.IgnorableException;
+import com.balugaq.runtimepylon.exceptions.WrongStateException;
 import com.balugaq.runtimepylon.listener.ChatInputListener;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
@@ -15,6 +15,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 import org.slf4j.helpers.MessageFormatter;
 import xyz.xenondevs.invui.item.ItemProvider;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
@@ -24,49 +25,53 @@ import java.util.function.Function;
 
 import static com.balugaq.runtimepylon.util.Lang.gui_err_1;
 
+/**
+ * @author balugaq
+ */
 @Getter
+@NullMarked
 public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem {
-    private final @NotNull T data;
-    private Function<T, ItemProvider> itemProvider;
+    private final T data;
+    private Function<T, @Nullable ItemProvider> itemProvider;
     private ClickHandler<T> clickHandler;
 
-    public GuiItem(@NotNull T data) {
+    public GuiItem(T data) {
         this.data = data;
         this.itemProvider = block -> null;
         this.clickHandler = ButtonSet.deny();
     }
 
-    public static <T extends PylonBlock & PylonGuiBlock> @NotNull GuiItem<T> create(@NotNull T data) {
+    public static <T extends PylonBlock & PylonGuiBlock> GuiItem<T> create(@NotNull T data) {
         return new GuiItem<>(data);
     }
 
-    public static <T> @NotNull T assertNotNull(@Nullable T o) {
+    public static <T> T assertNotNull(@Nullable T o) {
         if (o == null) throw new IgnorableException();
         return o;
     }
 
-    public static <T> @NotNull T assertNotNull(@Nullable T o, @NotNull String message) {
+    public static <T> T assertNotNull(@Nullable T o, String message) {
         if (o == null) throw new WrongStateException(message);
         return o;
     }
 
-    public static void assertTrue(boolean stmt, @NotNull String message) {
-        if (!stmt) throw new WrongStateException(message);
-    }
-
-    public static void assertFalse(boolean stmt, @NotNull String message) {
+    public static void assertFalse(boolean stmt, String message) {
         assertTrue(!stmt, message);
     }
 
-    public static void done(@NotNull Player player, @NotNull String literal, @NotNull Object... args) {
+    public static void assertTrue(boolean stmt, String message) {
+        if (!stmt) throw new WrongStateException(message);
+    }
+
+    public static void done(Player player, String literal, Object... args) {
         player.sendMessage(MessageFormatter.arrayFormat(literal, args).getMessage());
     }
 
-    public static void done(@NotNull Player player, @NotNull ComponentLike component) {
+    public static void done(Player player, ComponentLike component) {
         player.sendMessage(component.asComponent());
     }
 
-    public static <T extends PylonBlock & PylonGuiBlock, K> @NotNull K assertBlock(@NotNull T block, @NotNull Class<K> expected) {
+    public static <T extends PylonBlock & PylonGuiBlock, K> K assertBlock(T block, Class<K> expected) {
         if (expected.isInstance(block)) {
             return expected.cast(block);
         } else {
@@ -75,37 +80,37 @@ public class GuiItem<T extends PylonBlock & PylonGuiBlock> extends AbstractItem 
     }
 
     @Nullable
-    public static NamespacedKey toNamespacedKey(@NotNull String string) {
+    public static NamespacedKey toNamespacedKey(String string) {
         return NamespacedKey.fromString(string, RuntimePylon.getInstance());
     }
 
-    public static void waitInput(@NotNull Player player, @NotNull String literal, @NotNull Consumer<String> callback) {
+    public static void waitInput(Player player, String literal, Consumer<String> callback) {
         waitInput(player, Component.text(literal), callback);
     }
 
-    public static void waitInput(@NotNull Player player, @NotNull ComponentLike component, @NotNull Consumer<String> callback) {
+    public static void waitInput(Player player, ComponentLike component, Consumer<String> callback) {
         player.sendMessage(component);
         player.closeInventory();
         ChatInputListener.waitInput(player.getUniqueId(), callback);
     }
 
-    public @NotNull GuiItem<T> item(@NotNull Function<T, ItemProvider> itemProvider) {
+    public GuiItem<T> item(Function<T, ItemProvider> itemProvider) {
         this.itemProvider = itemProvider;
         return this;
     }
 
-    public @NotNull GuiItem<T> click(@NotNull ClickHandler<T> clickHandler) {
+    public GuiItem<T> click(ClickHandler<T> clickHandler) {
         this.clickHandler = clickHandler;
         return this;
     }
 
     @Override
-    public ItemProvider getItemProvider() {
+    public @Nullable ItemProvider getItemProvider() {
         return itemProvider.apply(data);
     }
 
     @Override
-    public void handleClick(@NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event) {
+    public void handleClick(ClickType clickType, Player player, InventoryClickEvent event) {
         try {
             boolean updateWindow = clickHandler.handleClick(data, clickType, player, event);
             if (updateWindow) notifyWindows();

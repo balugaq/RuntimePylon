@@ -1,5 +1,11 @@
-package com.balugaq.runtimepylon.gui.interact;
+package com.balugaq.runtimepylon.exceptions;
 
+import org.jspecify.annotations.NullMarked;
+
+/**
+ * @author balugaq
+ */
+@NullMarked
 public class WrongStateException extends RuntimeException {
     public WrongStateException(String message) {
         super(message);

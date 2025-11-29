@@ -1,9 +1,14 @@
 package com.balugaq.runtimepylon.pylon;
 
 import org.bukkit.NamespacedKey;
+import org.jspecify.annotations.NullMarked;
 
 import static com.balugaq.runtimepylon.util.Key.create;
 
+/**
+ * @author balugaq
+ */
+@NullMarked
 public class RuntimeKeys {
     // @formatter:off
     public static final NamespacedKey

@@ -8,20 +8,25 @@ import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * @author balugaq
+ */
+@NullMarked
 public class SearchPages {
-    public static void openPageSearchPage(@NotNull Player player, @NotNull Consumer<SimpleStaticGuidePage> consumer) {
+    public static void openPageSearchPage(Player player, Consumer<SimpleStaticGuidePage> consumer) {
         new PageSearchPage(consumer).open(player);
     }
 
-    public static void openRecipeTypeSearchPage(@NotNull Player player, @NotNull Consumer<RecipeType<? extends PylonRecipe>> consumer) {
+    public static void openRecipeTypeSearchPage(Player player, Consumer<RecipeType<? extends PylonRecipe>> consumer) {
         new RecipeTypeSearchPage(consumer).open(player);
     }
 
-    public static void triggerBackGuide(@NotNull Player player, boolean open) {
+    public static void triggerBackGuide(Player player, boolean open) {
         var history = PylonGuide.getHistory().getOrDefault(player.getUniqueId(), List.of());
         if (!history.isEmpty() && isTaggedPage(history.getLast())) {
             history.removeLast();
@@ -29,7 +34,7 @@ public class SearchPages {
         }
     }
 
-    public static boolean isTaggedPage(@NotNull GuidePage page) {
+    public static boolean isTaggedPage(GuidePage page) {
         return page.getKey().equals(RuntimeKeys.page_search_page) || page.getKey().equals(RuntimeKeys.recipe_type_search_page);
     }
 }

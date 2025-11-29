@@ -1,10 +1,9 @@
 package com.balugaq.runtimepylon.config.pack;
 
-import com.balugaq.runtimepylon.PackAddon;
+import com.balugaq.runtimepylon.object.PackAddon;
 import com.balugaq.runtimepylon.PackAddonGenerator;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
 import org.jspecify.annotations.NullMarked;
 

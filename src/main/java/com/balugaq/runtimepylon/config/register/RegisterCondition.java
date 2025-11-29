@@ -19,10 +19,10 @@ import java.util.List;
 /**
  * @author balugaq
  */
+@NullMarked
 public interface RegisterCondition extends Deserializer<RegisterCondition> {
     boolean pass();
 
-    @NotNull
     default List<ConfigReader<?, RegisterCondition>> readers() {
         return List.of(
                 ConfigReader.of(Boolean.class, BooleanRegisterCondition::new),

@@ -6,7 +6,7 @@ import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.PackDesc;
 import com.balugaq.runtimepylon.config.PackManager;
 import com.balugaq.runtimepylon.config.PluginDesc;
-import com.balugaq.runtimepylon.config.StackWalker;
+import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.config.pack.Author;
 import com.balugaq.runtimepylon.config.pack.Contributor;
 import com.balugaq.runtimepylon.config.pack.GitHubUpdateLink;
@@ -31,8 +31,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,8 +40,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * @author balugaq
+ */
 @SuppressWarnings({"ConstantValue", "SameReturnValue", "ResultOfMethodCallIgnored", "UnstableApiUsage"})
 @UtilityClass
+@NullMarked
 public class RuntimePylonCommand {
     public static final int THRESHOLD = 1 << 14;
     //@formatter:off
@@ -128,6 +132,7 @@ public class RuntimePylonCommand {
                 return Command.SINGLE_SUCCESS;
             }
             sendMessage(sender, "=".repeat(20));
+            sendMessage(sender, "Pack Dir: ", pack.getDir().getPath());
             sendMessage(sender, "Pack ID: ", pack.getPackID().getId());
             sendMessage(sender, "Pack Namespace: ", pack.getPackNamespace().getNamespace());
             sendMessage(sender, "Pack Version: ", pack.getPackVersion().getVersion());
@@ -152,7 +157,7 @@ public class RuntimePylonCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private static @NotNull List<String> getRegistryInfo(final Pack pack) {
+    private static List<String> getRegistryInfo(final Pack pack) {
         List<String> registryInfo = new ArrayList<>();
         if (pack.getPages() != null)
             registryInfo.add(pack.getPages().getPages().size() + " Pages");
@@ -175,13 +180,13 @@ public class RuntimePylonCommand {
         showList(sender, prefix, list, s -> s, limit);
     }
 
-    private <T> void showList(CommandSender sender, Component prefix, @Nullable List<T> list, Function<T, String> mapper) {
-        showList(sender, prefix, list, mapper, Integer.MAX_VALUE);
-    }
-
     private <T> void showList(CommandSender sender, Component prefix, @Nullable List<T> list, Function<T, String> mapper, int limit) {
         if (list != null && !list.isEmpty())
             sender.sendMessage(prefix.color(TextColor.color(0x00d000)).append(MessageUtil.humanizeListDisplay(list, mapper, limit)));
+    }
+
+    private <T> void showList(CommandSender sender, Component prefix, @Nullable List<T> list, Function<T, String> mapper) {
+        showList(sender, prefix, list, mapper, Integer.MAX_VALUE);
     }
 
     private void sendMessage(CommandSender sender, String text) {
@@ -217,7 +222,7 @@ public class RuntimePylonCommand {
         clearSettings(ctx);
         clearRecipes(ctx);
         clearLang(ctx);
-        StackWalker.getPositions().clear();
+        StackFormatter.getPositions().clear();
         return Command.SINGLE_SUCCESS;
     }
 

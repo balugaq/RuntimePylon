@@ -1,6 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
-import com.balugaq.runtimepylon.PackAddon;
+import com.balugaq.runtimepylon.object.PackAddon;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.Author;
 import com.balugaq.runtimepylon.config.pack.Blocks;
@@ -21,15 +21,16 @@ import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.exceptions.PackException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
+import com.balugaq.runtimepylon.object.CustomBlock;
+import com.balugaq.runtimepylon.object.CustomFluid;
+import com.balugaq.runtimepylon.object.CustomItem;
+import com.balugaq.runtimepylon.object.CustomPage;
 import com.balugaq.runtimepylon.script.ScriptExecutor;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
-import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
-import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
-import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -127,27 +128,6 @@ public class Pack implements FileObject<Pack> {
     @Nullable
     private final Saveditems saveditems;
 
-    public static <T extends Deserializer<T>> T tryExamine(T object) {
-        try {
-            if (object instanceof Examinable<?> examinable) {
-                return (T) examinable.examine();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return object;
-    }
-
-    public static <T extends Deserializer<T>> T read(ConfigurationSection config, Class<T> clazz, String path) {
-        return read(config, clazz, path, t -> t);
-    }
-
-    public static <T extends Deserializer<T>> T read(ConfigurationSection config, Class<T> clazz, String path, Advancer<T> advancer) {
-        if (!config.contains(path)) throw new MissingArgumentException(path);
-        return tryExamine(advancer.advance(Deserializer.newDeserializer(clazz))
-                .deserialize(config.getString(path)));
-    }
-
     public static <T extends Enum<T>> T readEnum(ConfigurationSection config, Class<T> clazz, String path) {
         return readEnum(config, clazz, path, t -> t);
     }
@@ -173,21 +153,6 @@ public class Pack implements FileObject<Pack> {
                 .deserialize(config.getString(path));
     }
 
-    @Nullable
-    public static <T extends Deserializer<T>> T readOrNull(ConfigurationSection config, Class<T> clazz, String path) {
-        return readOrNull(config, clazz, path, t -> t);
-    }
-
-    @Nullable
-    public static <T extends Deserializer<T>> T readOrNull(ConfigurationSection config, Class<T> clazz, String path, Advancer<T> advancer) {
-        try {
-            return tryExamine(advancer.advance(Deserializer.newDeserializer(clazz))
-                    .deserialize(config.getString(path)));
-        } catch (PackException e) {
-            return null;
-        }
-    }
-
     public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path) {
         return read(config, clazz, generic, path, t -> t);
     }
@@ -195,7 +160,166 @@ public class Pack implements FileObject<Pack> {
     public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path, Advancer<T> advancer) {
         if (!config.contains(path)) throw new MissingArgumentException(path);
         return tryExamine(advancer.advance(GenericDeserializer.newDeserializer(clazz).setGenericType(generic))
-                .deserialize(config.get(path)));
+                                  .deserialize(config.get(path)));
+    }
+
+    public static <T extends Deserializer<T>> T tryExamine(T object) {
+        try {
+            if (object instanceof Examinable<?> examinable) {
+                return (T) examinable.examine();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return object;
+    }
+
+    @Override
+    public List<FileReader<Pack>> readers() {
+        return List.of(dir -> {
+            List<File> files = Arrays.stream(dir.listFiles()).toList();
+            var meta = files.stream().filter(file -> file.getName().equals("pack.yml")).findFirst().orElse(null);
+            if (meta == null) throw new MissingFileException(dir.getAbsolutePath() + "/pack.yml");
+
+            try (var ignored = StackFormatter.setPosition("Reading file: pack.yml")) {
+                YamlConfiguration config = YamlConfiguration.loadConfiguration(meta);
+
+                PackID id = read(config, PackID.class, "id");
+                PackVersion version = read(config, PackVersion.class, "version");
+                MinecraftVersion minAPIVersion = readOrNull(config, MinecraftVersion.class, "minAPIVersion");
+                MinecraftVersion maxAPIVersion = readOrNull(config, MinecraftVersion.class, "maxAPIVersion");
+                MyArrayList<PackDesc> packLoadBefores = readOrNull(config, MyArrayList.class, PackDesc.class, "loadBefores");
+                MyArrayList<PackDesc> packSoftDependencies = readOrNull(config, MyArrayList.class, PackDesc.class, "packSoftDependencies");
+                MyArrayList<PackDesc> packDependencies = readOrNull(config, MyArrayList.class, PackDesc.class, "packDependencies");
+                MyArrayList<PluginDesc> pluginDependencies = readOrNull(config, MyArrayList.class, PluginDesc.class, "pluginDependencies");
+                Author author = readOrNull(config, Author.class, "author");
+                MyArrayList<Author> authors = readOrNull(config, MyArrayList.class, Author.class, "authors");
+                if (author != null) {
+                    if (authors == null) authors = new MyArrayList<>();
+                    if (!authors.contains(author)) {
+                        authors.add(author);
+                    }
+                }
+                MyArrayList<Contributor> contributors = readOrNull(config, MyArrayList.class, Contributor.class, "contributors");
+                MyArrayList<WebsiteLink> websiteLinks = readOrNull(config, MyArrayList.class, WebsiteLink.class, "websiteLinks");
+                GitHubUpdateLink githubUpdateLink = readOrNull(config, GitHubUpdateLink.class, "githubUpdateLink");
+                MyArrayList<Language> languages = readOrNull(config, MyArrayList.class, Language.class, "languages");
+                Set<Locale> locales = new HashSet<>();
+                if (languages != null) {
+                    locales.addAll(languages.stream().map(Language::locale).toList());
+                } else {
+                    locales.add(Locale.ENGLISH);
+                }
+                RuntimePylon.getInstance().addSupportedLanguages(locales);
+                Material material = Pack.readEnum(config, Material.class, "material", Deserializer.EnumDeserializer::forceUpperCase);
+                PackNamespace namespace = PackNamespace.warp(id, locales, material);
+
+                StackFormatter.setPosition("Reading pages");
+                Pages pages = null;
+                var pagesFolder = findDir(files, "pages");
+                if (pagesFolder != null)
+                    pages = new Pages()
+                            .setPackNamespace(namespace)
+                            .deserialize(pagesFolder);
+                StackFormatter.destroy();
+
+                StackFormatter.setPosition("Reading items");
+                Items items = null;
+                var itemsFolder = findDir(files, "items");
+                if (itemsFolder != null)
+                    items = new Items()
+                            .setPackNamespace(namespace)
+                            .deserialize(itemsFolder);
+                StackFormatter.destroy();
+
+                StackFormatter.setPosition("Reading blocks");
+                Blocks blocks = null;
+                var blocksFolder = findDir(files, "blocks");
+                if (blocksFolder != null)
+                    blocks = new Blocks()
+                            .setPackNamespace(namespace)
+                            .deserialize(blocksFolder);
+                StackFormatter.destroy();
+
+                StackFormatter.setPosition("Reading fluids");
+                Fluids fluids = null;
+                var fluidsFolder = findDir(files, "fluids");
+                if (fluidsFolder != null)
+                    fluids = new Fluids()
+                            .setPackNamespace(namespace)
+                            .deserialize(fluidsFolder);
+                StackFormatter.destroy();
+
+                StackFormatter.setPosition("Reading recipes");
+                Recipes recipes = null;
+                var recipesFolder = findDir(files, "recipes");
+                if (recipesFolder != null)
+                    recipes = new Recipes(recipesFolder, namespace);
+                StackFormatter.destroy();
+
+                StackFormatter.setPosition("Reading settings");
+                Settings settings = null;
+                var settingsFolder = findDir(files, "settings");
+                if (settingsFolder != null)
+                    settings = new Settings(settingsFolder, namespace);
+                StackFormatter.destroy();
+
+                StackFormatter.setPosition("Reading scripts");
+                Scripts scripts = null;
+                var scriptsFolder = findDir(files, "scripts");
+                if (scriptsFolder != null)
+                    scripts = new Scripts()
+                            .deserialize(scriptsFolder);
+                StackFormatter.destroy();
+
+                StackFormatter.setPosition("Reading saveditems");
+                Saveditems saveditems = null;
+                var saveditemsFolder = findDir(files, "saveditems");
+                if (saveditemsFolder != null)
+                    saveditems = new Saveditems()
+                            .deserialize(saveditemsFolder);
+                StackFormatter.destroy();
+
+                return new Pack(
+                        dir,
+                        id,
+                        namespace,
+                        version,
+                        minAPIVersion,
+                        maxAPIVersion,
+                        packLoadBefores,
+                        packSoftDependencies,
+                        packDependencies,
+                        pluginDependencies,
+                        authors,
+                        contributors,
+                        websiteLinks,
+                        githubUpdateLink,
+                        languages,
+                        pages,
+                        items,
+                        blocks,
+                        fluids,
+                        recipes,
+                        settings,
+                        scripts,
+                        saveditems
+                );
+            } catch (Exception e) {
+                StackFormatter.handle(e);
+            }
+
+            return this;
+        });
+    }
+
+    public static <T extends Deserializer<T>> T read(ConfigurationSection config, Class<T> clazz, String path) {
+        return read(config, clazz, path, t -> t);
+    }
+
+    @Nullable
+    public static <T extends Deserializer<T>> T readOrNull(ConfigurationSection config, Class<T> clazz, String path) {
+        return readOrNull(config, clazz, path, t -> t);
     }
 
     @Nullable
@@ -204,153 +328,37 @@ public class Pack implements FileObject<Pack> {
     }
 
     @Nullable
-    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path, Advancer<K> advancer) {
+    public File findDir(List<File> files, String name) {
+        return files.stream().filter(file -> file.getName().equals(name) && file.isDirectory()).findFirst().orElse(null);
+    }
+
+    public static <T extends Deserializer<T>> T read(ConfigurationSection config, Class<T> clazz, String path, Advancer<T> advancer) {
+        if (!config.contains(path)) throw new MissingArgumentException(path);
+        return tryExamine(advancer.advance(Deserializer.newDeserializer(clazz))
+                                  .deserialize(config.getString(path)));
+    }
+
+    @Nullable
+    public static <T extends Deserializer<T>> T readOrNull(ConfigurationSection config, Class<T> clazz, String path, Advancer<T> advancer) {
         try {
-            return tryExamine(GenericDeserializer
-                    .newDeserializer(clazz)
-                    .setGenericType(generic)
-                    .setAdvancer(advancer)
-                    .deserialize(config.get(path)));
+            return tryExamine(advancer.advance(Deserializer.newDeserializer(clazz))
+                                      .deserialize(config.getString(path)));
         } catch (PackException e) {
             return null;
         }
     }
 
-    @Override
-    public List<FileReader<Pack>> readers() {
-        return List.of(dir -> {
-                List<File> files = Arrays.stream(dir.listFiles()).toList();
-                var meta = files.stream().filter(file -> file.getName().equals("pack.yml")).findFirst().orElse(null);
-                if (meta == null) throw new MissingFileException(dir.getAbsolutePath() + "/pack.yml");
-
-                try (var ignored = StackWalker.setPosition("Reading file: pack.yml")) {
-                    YamlConfiguration config = YamlConfiguration.loadConfiguration(meta);
-
-                    PackID id = read(config, PackID.class, "id");
-                    PackVersion version = read(config, PackVersion.class, "version");
-                    MinecraftVersion minAPIVersion = readOrNull(config, MinecraftVersion.class, "minAPIVersion");
-                    MinecraftVersion maxAPIVersion = readOrNull(config, MinecraftVersion.class, "maxAPIVersion");
-                    MyArrayList<PackDesc> packLoadBefores = readOrNull(config, MyArrayList.class, PackDesc.class, "loadBefores");
-                    MyArrayList<PackDesc> packSoftDependencies = readOrNull(config, MyArrayList.class, PackDesc.class, "packSoftDependencies");
-                    MyArrayList<PackDesc> packDependencies = readOrNull(config, MyArrayList.class, PackDesc.class, "packDependencies");
-                    MyArrayList<PluginDesc> pluginDependencies = readOrNull(config, MyArrayList.class, PluginDesc.class, "pluginDependencies");
-                    Author author = readOrNull(config, Author.class, "author");
-                    MyArrayList<Author> authors = readOrNull(config, MyArrayList.class, Author.class, "authors");
-                    if (author != null) {
-                        if (authors == null) authors = new MyArrayList<>();
-                        authors.add(author);
-                    }
-                    MyArrayList<Contributor> contributors = readOrNull(config, MyArrayList.class, Contributor.class, "contributors");
-                    MyArrayList<WebsiteLink> websiteLinks = readOrNull(config, MyArrayList.class, WebsiteLink.class, "websiteLinks");
-                    GitHubUpdateLink githubUpdateLink = readOrNull(config, GitHubUpdateLink.class, "githubUpdateLink");
-                    MyArrayList<Language> languages = readOrNull(config, MyArrayList.class, Language.class, "languages");
-                    Set<Locale> locales = new HashSet<>();
-                    if (languages != null) {
-                        locales.addAll(languages.stream().map(Language::locale).toList());
-                    } else {
-                        locales.add(Locale.of("en"));
-                    }
-                    RuntimePylon.getInstance().addSupportedLanguages(locales);
-                    Material material = Pack.readEnum(config, Material.class, "material", Deserializer.EnumDeserializer::forceUpperCase);
-                    PackNamespace namespace = PackNamespace.warp(id, locales, material);
-
-                    StackWalker.setPosition("Reading pages");
-                    Pages pages = null;
-                    var pagesFolder = findDir(files, "pages");
-                    if (pagesFolder != null)
-                        pages = new Pages()
-                                .setPackNamespace(namespace)
-                                .deserialize(pagesFolder);
-                    StackWalker.destroy();
-
-                    StackWalker.setPosition("Reading items");
-                    Items items = null;
-                    var itemsFolder = findDir(files, "items");
-                    if (itemsFolder != null)
-                        items = new Items()
-                                .setPackNamespace(namespace)
-                                .deserialize(itemsFolder);
-                    StackWalker.destroy();
-
-                    StackWalker.setPosition("Reading blocks");
-                    Blocks blocks = null;
-                    var blocksFolder = findDir(files, "blocks");
-                    if (blocksFolder != null)
-                        blocks = new Blocks()
-                                .setPackNamespace(namespace)
-                                .deserialize(blocksFolder);
-                    StackWalker.destroy();
-
-                    StackWalker.setPosition("Reading fluids");
-                    Fluids fluids = null;
-                    var fluidsFolder = findDir(files, "fluids");
-                    if (fluidsFolder != null)
-                        fluids = new Fluids()
-                                .setPackNamespace(namespace)
-                                .deserialize(fluidsFolder);
-                    StackWalker.destroy();
-
-                    StackWalker.setPosition("Reading recipes");
-                    Recipes recipes = null;
-                    var recipesFolder = findDir(files, "recipes");
-                    if (recipesFolder != null)
-                        recipes = new Recipes(recipesFolder, namespace);
-                    StackWalker.destroy();
-
-                    StackWalker.setPosition("Reading settings");
-                    Settings settings = null;
-                    var settingsFolder = findDir(files, "settings");
-                    if (settingsFolder != null)
-                        settings = new Settings(settingsFolder, namespace);
-                    StackWalker.destroy();
-
-                    StackWalker.setPosition("Reading scripts");
-                    Scripts scripts = null;
-                    var scriptsFolder = findDir(files, "scripts");
-                    if (scriptsFolder != null)
-                        scripts = new Scripts()
-                                .deserialize(scriptsFolder);
-                    StackWalker.destroy();
-
-                    StackWalker.setPosition("Reading saveditems");
-                    Saveditems saveditems = null;
-                    var saveditemsFolder = findDir(files, "saveditems");
-                    if (saveditemsFolder != null)
-                        saveditems = new Saveditems()
-                                .deserialize(saveditemsFolder);
-                    StackWalker.destroy();
-
-                    return new Pack(
-                            dir,
-                            id,
-                            namespace,
-                            version,
-                            minAPIVersion,
-                            maxAPIVersion,
-                            packLoadBefores,
-                            packSoftDependencies,
-                            packDependencies,
-                            pluginDependencies,
-                            authors,
-                            contributors,
-                            websiteLinks,
-                            githubUpdateLink,
-                            languages,
-                            pages,
-                            items,
-                            blocks,
-                            fluids,
-                            recipes,
-                            settings,
-                            scripts,
-                            saveditems
-                    );
-                } catch (Exception e) {
-                    StackWalker.handle(e);
-                }
-
-                return this;
-            });
+    @Nullable
+    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path, Advancer<K> advancer) {
+        try {
+            return tryExamine(GenericDeserializer
+                                      .newDeserializer(clazz)
+                                      .setGenericType(generic)
+                                      .setAdvancer(advancer)
+                                      .deserialize(config.get(path)));
+        } catch (PackException e) {
+            return null;
+        }
     }
 
     private void loadLang(@Nullable File from, File to) {
@@ -391,96 +399,104 @@ public class Pack implements FileObject<Pack> {
     private void registerPages() {
         if (pages == null) return;
         for (var entry : pages.getPages().values()) {
-            PackManager.load(entry, e -> {
-                RegisteredObjectID id = e.id();
-                try (var sk = StackWalker.setPosition("Loading page: " + id)) {
-                    Material icon = e.material();
-                    SimpleStaticGuidePage page = new SimpleStaticGuidePage(id.key(), icon);
-                    if (e.parents() == null) {
-                        PylonGuide.getRootPage().addPage(page);
-                    } else {
-                        for (var parent : e.parents()) {
-                            parent.getPage().addPage(page);
+            PackManager.load(
+                    entry, e -> {
+                        RegisteredObjectID id = e.id();
+                        try (var sk = StackFormatter.setPosition("Loading page: " + id)) {
+                            Material icon = e.material();
+                            CustomPage page = new CustomPage(id.key(), icon);
+                            if (e.parents() == null) {
+                                PylonGuide.getRootPage().addPage(page);
+                            } else {
+                                for (var parent : e.parents()) {
+                                    parent.getPage().addPage(page);
+                                }
+                            }
+                            RuntimePylon.getInstance().registerCustomPage(page);
+                            Debug.log("Registered Page: " + id.key());
+                        } catch (Exception ex) {
+                            StackFormatter.handle(ex);
                         }
                     }
-                    RuntimePylon.getInstance().registerCustomPage(page);
-                    Debug.log("Registered Page: " + id.key());
-                } catch (Exception ex) {
-                    StackWalker.handle(ex);
-                }
-            });
+            );
         }
     }
 
     private void registerItems() {
         if (items == null) return;
         for (var entry : items.getItems().values()) {
-            PackManager.load(entry, e -> {
-                RegisteredObjectID id = e.id();
-                try (var sk = StackWalker.setPosition("Loading item: " + id)) {
-                    ItemStack icon = entry.icon();
-                    ScriptDesc scriptDesc = entry.script();
+            PackManager.load(
+                    entry, e -> {
+                        RegisteredObjectID id = e.id();
+                        try (var sk = StackFormatter.setPosition("Loading item: " + id)) {
+                            ItemStack icon = entry.icon();
+                            ScriptDesc scriptDesc = entry.script();
 
-                    ScriptExecutor executor;
-                    if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
+                            ScriptExecutor executor;
+                            if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
 
-                    if (blocks != null && blocks.getBlocks().containsKey(id)) {
-                        PylonItem.register(PylonItem.class, icon, id.key());
-                        Debug.log("Registered Item: " + id.key());
-                    } else {
-                        PylonItem.register(PylonItem.class, icon);
-                        Debug.log("Registered Item: " + id.key());
-                    }
+                            if (blocks != null && blocks.getBlocks().containsKey(id)) {
+                                CustomItem.register(CustomItem.class, icon, id.key());
+                                Debug.log("Registered Item: " + id.key());
+                            } else {
+                                CustomItem.register(CustomItem.class, icon);
+                                Debug.log("Registered Item: " + id.key());
+                            }
 
-                    List<PageDesc> descs = e.pages();
-                    if (descs != null) descs.forEach(desc -> {
-                        try (var ignored = StackWalker.setPosition("Adding to page: " + desc.getKey())) {
-                            desc.getPage().addItem(e.icon());
+                            List<PageDesc> descs = e.pages();
+                            if (descs != null) descs.forEach(desc -> {
+                                try (var ignored = StackFormatter.setPosition("Adding to page: " + desc.getKey())) {
+                                    desc.getPage().addItem(e.icon());
+                                } catch (Exception ex) {
+                                    StackFormatter.handle(ex);
+                                }
+                            });
                         } catch (Exception ex) {
-                            StackWalker.handle(ex);
+                            StackFormatter.handle(ex);
                         }
-                    });
-                } catch (Exception ex) {
-                    StackWalker.handle(ex);
-                }
-            });
+                    }
+            );
         }
     }
 
     private void registerBlocks() {
         if (blocks == null) return;
         for (var entry : blocks.getBlocks().values()) {
-            PackManager.load(entry, e -> {
-                RegisteredObjectID id = e.id();
-                try (var sk = StackWalker.setPosition("Loading block: " + id)) {
-                    Material material = e.material();
-                    ScriptDesc scriptDesc = e.script();
+            PackManager.load(
+                    entry, e -> {
+                        RegisteredObjectID id = e.id();
+                        try (var sk = StackFormatter.setPosition("Loading block: " + id)) {
+                            Material material = e.material();
+                            ScriptDesc scriptDesc = e.script();
 
-                    ScriptExecutor executor;
-                    if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
+                            ScriptExecutor executor;
+                            if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
 
-                    PylonBlock.register(id.key(), material, PylonBlock.class);
-                    Debug.log("Registered Block: " + id.key());
-                } catch (Exception ex) {
-                    StackWalker.handle(ex);
-                }
-            });
+                            CustomBlock.register(id.key(), material, CustomBlock.class);
+                            Debug.log("Registered Block: " + id.key());
+                        } catch (Exception ex) {
+                            StackFormatter.handle(ex);
+                        }
+                    }
+            );
         }
     }
 
     private void registerFluids() {
         if (fluids == null) return;
         for (var entry : fluids.getFluids().values()) {
-            PackManager.load(entry, e -> {
-                RegisteredObjectID id = e.id();
-                Material material = e.material();
-                FluidTemperature temperature = e.temperature();
-                PylonFluid fluid = new PylonFluid(id.key(), material).addTag(temperature);
-                fluid.register();
+            PackManager.load(
+                    entry, e -> {
+                        RegisteredObjectID id = e.id();
+                        Material material = e.material();
+                        FluidTemperature temperature = e.temperature();
+                        PylonFluid fluid = new CustomFluid(id.key(), material).addTag(temperature);
+                        fluid.register();
 
-                List<PageDesc> pages = e.pages();
-                if (pages != null) pages.forEach(desc -> desc.getPage().addFluid(fluid));
-            });
+                        List<PageDesc> pages = e.pages();
+                        if (pages != null) pages.forEach(desc -> desc.getPage().addFluid(fluid));
+                    }
+            );
         }
     }
 
@@ -499,21 +515,20 @@ public class Pack implements FileObject<Pack> {
 
     public Pack register() {
         PylonRegistry.ADDONS.register(plugin());
-        StackWalker.run("Loading lang", () -> loadLang(findDir(Arrays.asList(dir.listFiles()), "lang"), getLangFolder()));
-        StackWalker.run("Loading settings", this::registerSettings);
-        StackWalker.run("Loading recipes", this::registerRecipes);
-        StackWalker.run("Loading pages", this::registerPages);
-        StackWalker.run("Loading items", this::registerItems);
-        StackWalker.run("Loading blocks", this::registerBlocks);
-        StackWalker.run("Loading fluids", this::registerFluids);
+        StackFormatter.run("Loading lang", () -> loadLang(findDir(Arrays.asList(dir.listFiles()), "lang"), getLangFolder()));
+        StackFormatter.run("Loading settings", this::registerSettings);
+        StackFormatter.run("Loading recipes", this::registerRecipes);
+        StackFormatter.run("Loading pages", this::registerPages);
+        StackFormatter.run("Loading items", this::registerItems);
+        StackFormatter.run("Loading blocks", this::registerBlocks);
+        StackFormatter.run("Loading fluids", this::registerFluids);
         PylonRegistry.ADDONS.unregister(plugin());
         plugin().registerWithPylon();
         return this;
     }
 
-    @Nullable
-    public File findDir(List<File> files, String name) {
-        return files.stream().filter(file -> file.getName().equals(name) && file.isDirectory()).findFirst().orElse(null);
+    public PackAddon plugin() {
+        return getPackNamespace().plugin();
     }
 
     @FunctionalInterface
@@ -523,9 +538,5 @@ public class Pack implements FileObject<Pack> {
         }
 
         T advance(T object);
-    }
-
-    public PackAddon plugin() {
-        return getPackNamespace().plugin();
     }
 }

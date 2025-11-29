@@ -6,7 +6,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
 
+/**
+ * @author balugaq
+ */
+@NullMarked
 public interface DataStack {
-    <T extends PylonBlock & PylonGuiBlock> void onClick(@NotNull T block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event, @NotNull Runnable callback);
+    <T extends PylonBlock & PylonGuiBlock> void onClick(T block, ClickType clickType, Player player, InventoryClickEvent event, Runnable callback);
 }

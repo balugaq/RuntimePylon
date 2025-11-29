@@ -33,24 +33,26 @@ public class PageDesc implements Deserializer<PageDesc> {
     @Override
     public List<ConfigReader<?, PageDesc>> readers() {
         return List.of(
-                ConfigReader.of(String.class, s -> {
-                    PackNamespace namespace;
-                    String k;
-                    if (s.contains(":")) {
-                        NamespacedKey key = NamespacedKey.fromString(s);
-                        if (key != null && RuntimePylon.getGuidePages().get(key) != null) {
+                ConfigReader.of(
+                        String.class, s -> {
+                            PackNamespace namespace;
+                            String k;
+                            if (s.contains(":")) {
+                                NamespacedKey key = NamespacedKey.fromString(s);
+                                if (key != null && RuntimePylon.getGuidePages().get(key) != null) {
+                                    return new PageDesc(key);
+                                }
+                                namespace = Deserializer.newDeserializer(PackDesc.class).deserialize(s.substring(0, s.indexOf(":"))).findPack().getPackNamespace();
+                                k = s.substring(s.indexOf(":") + 1);
+                            } else {
+                                namespace = this.packNamespace;
+                                k = s;
+                            }
+
+                            NamespacedKey key = InternalObjectID.of(k).register(namespace).key();
                             return new PageDesc(key);
                         }
-                        namespace = Deserializer.newDeserializer(PackDesc.class).deserialize(s.substring(0, s.indexOf(":"))).findPack().getPackNamespace();
-                        k = s.substring(s.indexOf(":") + 1);
-                    } else {
-                        namespace = this.packNamespace;
-                        k = s;
-                    }
-
-                    NamespacedKey key = InternalObjectID.of(k).register(namespace).key();
-                    return new PageDesc(key);
-                })
+                )
         );
     }
 

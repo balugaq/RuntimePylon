@@ -2,6 +2,7 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.Saveditems;
+import com.balugaq.runtimepylon.exceptions.IdConflictException;
 import com.balugaq.runtimepylon.exceptions.PackDependencyMissingException;
 import com.balugaq.runtimepylon.exceptions.PluginDependencyMissingException;
 import com.balugaq.runtimepylon.exceptions.SaveditemsNotFoundException;
@@ -30,8 +31,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * We're introducing a new concept: `Pack`
- * `Pack` is a collection set of a configuration to generate customized objects (items/blocks, etc.)
+ * We're introducing a new concept: `Pack` `Pack` is a collection set of a configuration to generate customized objects
+ * (items/blocks, etc.)
  * <p>
  * In the disk, we have the following tree structure to define a pack:
  * <ul>
@@ -43,7 +44,7 @@ import java.util.function.Consumer;
  *           <li>lang/
  *             <ul>
  *               <li>en.yml</li>
- *               <li>zh_CN.yml</li>
+ *               <li>zh-CN.yml</li>
  *             </ul>
  *           </li>
  *           <li>pages/
@@ -158,7 +159,7 @@ public @Data class PackManager {
     }
 
     public static ItemStack findSaveditem(PackDesc packDesc, SaveditemDesc itemDesc) throws
-            UnknownPackException, SaveditemsNotFoundException, UnknownSaveditemException {
+                                                                                     UnknownPackException, SaveditemsNotFoundException, UnknownSaveditemException {
         Pack pack = packDesc.findPack();
         if (pack == null) throw new UnknownPackException(packDesc);
         Saveditems saveditems = pack.getSaveditems();
@@ -177,6 +178,15 @@ public @Data class PackManager {
         }
     }
 
+    @Nullable
+    public static Pack findPack(PackDesc desc) {
+        return PackManager.getPacks().stream().filter(pack -> pack.getPackID().getId().equals(desc.getId())).findFirst().orElse(null);
+    }
+
+    public static List<Pack> getPacks() {
+        return RuntimePylon.getPackManager().packs;
+    }
+
     public void loadPacks() {
         if (!PACKS_FOLDER.exists()) PACKS_FOLDER.mkdirs();
         for (File packFolder : PACKS_FOLDER.listFiles()) {
@@ -184,16 +194,16 @@ public @Data class PackManager {
                 continue;
             }
 
-            try (var ignored = StackWalker.setPosition("Loading Pack Folder: " + packFolder.getName())) {
+            try (var ignored = StackFormatter.setPosition("Loading Pack Folder: " + packFolder.getName())) {
                 Debug.log("Loading pack: " + packFolder.getName());
                 Pack pack = FileObject.newDeserializer(Pack.class).deserialize(packFolder);
                 MinecraftVersion min = pack.getPackMinAPIVersion();
                 if (min != null && MinecraftVersion.current().isBefore(min)) {
-                    throw new UnsupportedVersionException("Current version: " + MinecraftVersion.current() + ", Minimum version to load: " + min);
+                    throw new UnsupportedVersionException("Current version is: " + MinecraftVersion.current().humanize() + ", but minimum version to load is: " + min.humanize());
                 }
                 MinecraftVersion max = pack.getPackMaxAPIVersion();
                 if (max != null && MinecraftVersion.current().isAtLeast(max)) {
-                    throw new UnsupportedVersionException("Current version: " + MinecraftVersion.current() + ", Maximum version to load: " + max);
+                    throw new UnsupportedVersionException("Current version is: " + MinecraftVersion.current().humanize() + ", but maximum version to load is: " + max.humanize());
                 }
                 MyArrayList<PluginDesc> pluginDependencies = pack.getPluginDependencies();
                 if (pluginDependencies != null) {
@@ -205,14 +215,19 @@ public @Data class PackManager {
 
                     if (!missing.isEmpty()) throw new PluginDependencyMissingException(pack, missing);
                 }
+                for (Pack pk : packs) {
+                    if (pk.getPackID().equals(pack.getPackID())) {
+                        throw new IdConflictException(pk.getPackID(), pk.getDir(), pack.getDir());
+                    }
+                }
                 packs.add(pack);
             } catch (Exception e) {
-                StackWalker.handle(e);
+                StackFormatter.handle(e);
             }
         }
 
         for (Pack pack : PackSorter.sortPacks(packs)) {
-            try (var ignored = StackWalker.setPosition("Registering Pack: " + pack.getPackID())) {
+            try (var ignored = StackFormatter.setPosition("Registering Pack: " + pack.getPackID())) {
                 MyArrayList<PackDesc> packDependencies = pack.getPackDependencies();
                 if (packDependencies != null) {
                     ArrayList<PackDesc> missing = new ArrayList<>();
@@ -226,15 +241,17 @@ public @Data class PackManager {
                 pack.register();
                 Debug.log("Registered pack: " + pack.getPackID());
             } catch (Exception e) {
-                StackWalker.handle(e);
+                StackFormatter.handle(e);
             }
         }
 
-        RuntimePylon.runTaskLater(() -> {
-            for (var postLoad : postLoads) {
-                postLoad.run();
-            }
-        }, 1L);
+        RuntimePylon.runTaskLater(
+                () -> {
+                    for (var postLoad : postLoads) {
+                        postLoad.run();
+                    }
+                }, 1L
+        );
     }
 
     public void destroy() {
@@ -247,12 +264,12 @@ public @Data class PackManager {
         try {
             ReflectionUtil.invokeMethod(BlockStorage.class, "cleanup", plugin);
         } catch (Exception e) {
-            StackWalker.handle(e);
+            StackFormatter.handle(e);
         }
         try {
             ReflectionUtil.invokeMethod(EntityStorage.class, "cleanup", plugin);
         } catch (Exception e) {
-            StackWalker.handle(e);
+            StackFormatter.handle(e);
         }
         PylonRegistry.GAMETESTS.unregisterAllFromAddon(plugin);
         PylonRegistry.ITEMS.unregisterAllFromAddon(plugin);
@@ -265,14 +282,5 @@ public @Data class PackManager {
         if (PylonRegistry.ADDONS.contains(plugin.getKey())) {
             PylonRegistry.ADDONS.unregister(plugin);
         }
-    }
-
-    public static List<Pack> getPacks() {
-        return RuntimePylon.getPackManager().packs;
-    }
-
-    @Nullable
-    public static Pack findPack(PackDesc desc) {
-        return PackManager.getPacks().stream().filter(pack -> pack.getPackID().getId().equals(desc.getId())).findFirst().orElse(null);
     }
 }

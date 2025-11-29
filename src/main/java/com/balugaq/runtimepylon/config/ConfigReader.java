@@ -20,8 +20,11 @@ public sealed interface ConfigReader<Input, Result> permits ConfigReader.ConfigR
     /**
      * Read an object into Result
      *
-     * @param o object to read
+     * @param o
+     *         object to read
+     *
      * @return Result
+     *
      * @see Deserializer#deserialize(Object)
      */
     @Nullable

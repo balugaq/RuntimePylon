@@ -1,7 +1,7 @@
 package com.balugaq.runtimepylon.pylon.item;
 
 import com.balugaq.runtimepylon.gui.GuiItem;
-import com.balugaq.runtimepylon.gui.interact.WrongStateException;
+import com.balugaq.runtimepylon.exceptions.WrongStateException;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.item.PylonItem;
@@ -10,13 +10,19 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnknownNullability;
+import org.jspecify.annotations.NullMarked;
 
 import static com.balugaq.runtimepylon.util.Lang.*;
 
+/**
+ * @author balugaq
+ */
+@NullMarked
 public class NumberStack extends PylonItem implements DataStack {
-    public String internal;
+    @UnknownNullability public String internal;
 
-    public NumberStack(@NotNull ItemStack stack) {
+    public NumberStack(ItemStack stack) {
         super(stack);
     }
 
@@ -53,11 +59,13 @@ public class NumberStack extends PylonItem implements DataStack {
     }
 
     @Override
-    public <T extends PylonBlock & PylonGuiBlock> void onClick(@NotNull T block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event, @NotNull Runnable callback) {
+    public <T extends PylonBlock & PylonGuiBlock> void onClick(T block, ClickType clickType, Player player, InventoryClickEvent event, Runnable callback) {
         player.closeInventory();
-        GuiItem.waitInput(player, number_input_1, s -> {
-            internal = s;
-            callback.run();
-        });
+        GuiItem.waitInput(
+                player, number_input_1, s -> {
+                    internal = s;
+                    callback.run();
+                }
+        );
     }
 }

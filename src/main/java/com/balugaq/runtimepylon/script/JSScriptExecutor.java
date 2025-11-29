@@ -8,12 +8,14 @@ import com.caoccao.javet.interop.V8Runtime;
 import com.caoccao.javet.values.V8Value;
 import com.caoccao.javet.values.reference.V8Script;
 import com.caoccao.javet.values.reference.V8ValueFunction;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 
 /**
  * @author lijinhong11
  */
+@NullMarked
 public class JSScriptExecutor extends ScriptExecutor {
     private final V8Runtime runtime;
     private V8Script script;
@@ -40,16 +42,6 @@ public class JSScriptExecutor extends ScriptExecutor {
         }
     }
 
-    public void close() {
-        try {
-            if (script != null) {
-                script.close();
-            }
-            runtime.close();
-        } catch (JavetException ignored) {
-        }
-    }
-
     public boolean isFunctionExists(String functionName) {
         try {
             V8Value value = runtime.getGlobalObject().get(functionName);
@@ -73,6 +65,16 @@ public class JSScriptExecutor extends ScriptExecutor {
             try (V8Value result = function.call(runtime.getGlobalObject(), parameters)) {
                 return result == null ? null : runtime.toObject(result);
             }
+        }
+    }
+
+    public void close() {
+        try {
+            if (script != null) {
+                script.close();
+            }
+            runtime.close();
+        } catch (JavetException ignored) {
         }
     }
 }

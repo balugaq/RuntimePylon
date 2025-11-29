@@ -1,13 +1,10 @@
-package com.balugaq.runtimepylon;
+package com.balugaq.runtimepylon.object;
 
+import com.balugaq.runtimepylon.RuntimePylon;
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.Locale;
@@ -33,12 +30,12 @@ public record PackAddon(String namespace, Set<Locale> languages, Material materi
         return material;
     }
 
-    public NamespacedKey key(String key) {
-        return new NamespacedKey(namespace, key);
-    }
-
     @Override
     public NamespacedKey getKey() {
         return key(namespace);
+    }
+
+    public NamespacedKey key(String key) {
+        return new NamespacedKey(namespace, key);
     }
 }

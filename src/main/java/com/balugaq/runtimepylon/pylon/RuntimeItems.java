@@ -8,7 +8,12 @@ import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 
+/**
+ * @author balugaq
+ */
+@NullMarked
 public class RuntimeItems {
     // @formatter:off
     public static final ItemStack item_hub = ItemStackBuilder.pylon(

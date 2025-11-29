@@ -1,5 +1,11 @@
 package com.balugaq.runtimepylon.util;
 
+import org.jspecify.annotations.NullMarked;
+
+/**
+ * @author balugaq
+ */
+@NullMarked
 public class Lang {
     // @formatter:off
     public static final String

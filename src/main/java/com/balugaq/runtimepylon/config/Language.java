@@ -1,11 +1,13 @@
 package com.balugaq.runtimepylon.config;
 
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * @author balugaq
+ */
 @NullMarked
 public record Language(String localeCode) implements Deserializer<Language> {
     public Language() {
@@ -24,7 +26,7 @@ public record Language(String localeCode) implements Deserializer<Language> {
     }
 
     @Override
-    public @NotNull List<ConfigReader<?, Language>> readers() {
+    public List<ConfigReader<?, Language>> readers() {
         return List.of(ConfigReader.of(String.class, Language::new));
     }
 }

@@ -8,7 +8,7 @@ import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.PreRegister;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
-import com.balugaq.runtimepylon.config.StackWalker;
+import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.config.preloads.PreparedBlock;
 import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
@@ -44,6 +44,7 @@ import java.util.Map;
  *   *script: script.js
  *   *postload: boolean
  * <p>
+ *
  * @author balugaq
  */
 @Data
@@ -60,46 +61,44 @@ public class Blocks implements FileObject<Blocks> {
     // @formatter:off
     @Override
     public List<FileReader<Blocks>> readers() {
-        return List.of(
-                dir -> {
-                    List<File> files = Arrays.stream(dir.listFiles()).toList();
-                    List<File> ymls = files.stream().filter(file -> file.getName().endsWith(".yml") || file.getName().endsWith(".yaml")).toList();
+        return List.of(dir -> {
+            List<File> files = Arrays.stream(dir.listFiles()).toList();
+            List<File> ymls = files.stream().filter(file -> file.getName().endsWith(".yml") || file.getName().endsWith(".yaml")).toList();
 
-                    for (File yml : ymls) {try (var ignored = StackWalker.setPosition("Reading file: " + StringUtil.simplifyPath(yml.getAbsolutePath()))) {
-                        var config = YamlConfiguration.loadConfiguration(yml);
+            for (File yml : ymls) {try (var ignored = StackFormatter.setPosition("Reading file: " + StringUtil.simplifyPath(yml.getAbsolutePath()))) {
+                var config = YamlConfiguration.loadConfiguration(yml);
 
-                        for (String blockKey : config.getKeys(false)) {try (var ignored1 = StackWalker.setPosition("Reading key: " + blockKey)) {
-                            if (!blockKey.matches("[a-z0-9_\\-\\./]+")) throw new IncompatibleKeyFormatException(blockKey);
+                for (String blockKey : config.getKeys(false)) {try (var ignored1 = StackFormatter.setPosition("Reading key: " + blockKey)) {
+                    if (!blockKey.matches("[a-z0-9_\\-\\./]+")) throw new IncompatibleKeyFormatException(blockKey);
 
-                            ConfigurationSection section = config.getConfigurationSection(blockKey);
-                            if (section == null) throw new InvalidDescException(blockKey);
-                            if (PreRegister.blocks(section)) continue;
+                    ConfigurationSection section = config.getConfigurationSection(blockKey);
+                    if (section == null) throw new InvalidDescException(blockKey);
+                    if (PreRegister.blocks(section)) continue;
 
-                            if (!section.contains("material")) throw new MissingArgumentException("material");
+                    if (!section.contains("material")) throw new MissingArgumentException("material");
 
-                            var s2 = section.get("material");
+                    var s2 = section.get("material");
 
-                            ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
-                            if (item == null) continue;
-                            Material dm = MaterialUtil.getDisplayMaterial(item);
-                            if (!dm.isBlock() || dm.isAir()) throw new IncompatibleMaterialException("material must be blocks: " + item.getType());
+                    ItemStack item = Deserializer.ITEMSTACK.deserialize(s2);
+                    if (item == null) continue;
+                    Material dm = MaterialUtil.getDisplayMaterial(item);
+                    if (!dm.isBlock() || dm.isAir()) throw new IncompatibleMaterialException("material must be blocks: " + item.getType());
 
-                            var id = InternalObjectID.of(blockKey).register(namespace);
+                    var id = InternalObjectID.of(blockKey).register(namespace);
 
-                            ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
+                    ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
 
-                            boolean postLoad = section.getBoolean("postload", false);
-                            blocks.put(id, new PreparedBlock(id, dm, scriptdesc, postLoad));
-                        } catch (Exception e) {
-                            StackWalker.handle(e);
-                        }}
-                    } catch (Exception e) {
-                        StackWalker.handle(e);
-                    }}
+                    boolean postLoad = section.getBoolean("postload", false);
+                    blocks.put(id, new PreparedBlock(id, dm, scriptdesc, postLoad));
+                } catch (Exception e) {
+                    StackFormatter.handle(e);
+                }}
+            } catch (Exception e) {
+                StackFormatter.handle(e);
+            }}
 
-                    return this;
-                }
-        );
+            return this;
+        });
     }
     // @formatter:off
 }
