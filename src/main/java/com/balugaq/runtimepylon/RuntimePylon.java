@@ -38,6 +38,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @Getter
     @UnknownNullability
     private static RuntimePylon instance;
+    @Getter
     private final Map<NamespacedKey, SimpleStaticGuidePage> customPages = new HashMap<>();
     private final Set<Locale> SUPPORTED_LANGUAGES = new HashSet<>();
     @UnknownNullability
@@ -49,17 +50,18 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
     public static Map<NamespacedKey, SimpleStaticGuidePage> getGuidePages() {
         var pages = new HashMap<>(PylonGuide.getRootPage().getButtons()
-                                          .stream()
-                                          .filter(button -> button instanceof PageButton)
-                                          .map(button -> ((PageButton) button).getPage())
-                                          .filter(page -> page instanceof SimpleStaticGuidePage)
-                                          .map(page -> (SimpleStaticGuidePage) page)
-                                          .collect(Collectors.toMap(
-                                                  Keyed::getKey,
-                                                  page -> page,
-                                                  (a, b) -> b
-                                          )));
+              .stream()
+              .filter(button -> button instanceof PageButton)
+              .map(button -> ((PageButton) button).getPage())
+              .filter(page -> page instanceof SimpleStaticGuidePage)
+              .map(page -> (SimpleStaticGuidePage) page)
+              .collect(Collectors.toMap(
+                      Keyed::getKey,
+                      page -> page,
+                      (a, b) -> b
+              )));
         pages.putAll(RuntimePylon.instance.customPages);
+        pages.put(PylonGuide.getRootPage().getKey(), PylonGuide.getRootPage());
         return pages;
     }
 
@@ -157,3 +159,5 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
 //todo recipe_type
 //todo research
+//todo disable message: example is missing a name translation key for item example:example_item (locale: 中文 (中国) | expected translation key: pylon.example.item.example_item.name
+//todo and then code a new translation checker

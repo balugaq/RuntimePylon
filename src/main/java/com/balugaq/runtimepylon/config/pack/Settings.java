@@ -38,6 +38,11 @@ public class Settings {
                     try {
                         targetFile.createNewFile();
                         YamlConfiguration targetConfig = YamlConfiguration.loadConfiguration(targetFile);
+                        for (String key : targetConfig.getKeys(false)) {
+                            if (key.startsWith(namespace.getNamespace() + ":")) {
+                                targetConfig.set(key, null); // delete old key
+                            }
+                        }
                         PackManager.saveConfig(config, targetConfig, targetFile);
                     } catch (IOException e) {
                         Debug.severe(e);

@@ -44,6 +44,11 @@ public class Recipes {
                 }
 
                 YamlConfiguration targetConfig = YamlConfiguration.loadConfiguration(targetFile);
+                for (String key : targetConfig.getKeys(false)) {
+                    if (key.startsWith(namespace.getNamespace() + ":")) {
+                        targetConfig.set(key, null); // delete old key
+                    }
+                }
                 PackManager.saveConfig(config, targetConfig, targetFile);
             } else if (file.isDirectory()) {
                 merge(file, new File(to, file.getName()));

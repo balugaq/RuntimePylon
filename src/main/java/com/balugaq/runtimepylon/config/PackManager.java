@@ -9,12 +9,14 @@ import com.balugaq.runtimepylon.exceptions.SaveditemsNotFoundException;
 import com.balugaq.runtimepylon.exceptions.UnknownPackException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.exceptions.UnsupportedVersionException;
+import com.balugaq.runtimepylon.object.CustomPage;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
 import io.github.pylonmc.pylon.core.block.BlockStorage;
 import io.github.pylonmc.pylon.core.entity.EntityStorage;
+import io.github.pylonmc.pylon.core.guide.button.PageButton;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.Data;
@@ -226,7 +228,7 @@ public @Data class PackManager {
             }
         }
 
-        for (Pack pack : PackSorter.sortPacks(packs)) {
+        for (Pack pack : PackSorter.sortPacks(packs)) { // fixme: wrong sort result
             try (var ignored = StackFormatter.setPosition("Registering Pack: " + pack.getPackID())) {
                 MyArrayList<PackDesc> packDependencies = pack.getPackDependencies();
                 if (packDependencies != null) {
@@ -279,6 +281,8 @@ public @Data class PackManager {
         PylonRegistry.ENTITIES.unregisterAllFromAddon(plugin);
         PylonRegistry.RECIPE_TYPES.unregisterAllFromAddon(plugin);
         PylonRegistry.RESEARCHES.unregisterAllFromAddon(plugin);
+        RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> item instanceof PageButton pb && pb.getPage() instanceof CustomPage));
+        RuntimePylon.getInstance().getCustomPages().clear();
         if (PylonRegistry.ADDONS.contains(plugin.getKey())) {
             PylonRegistry.ADDONS.unregister(plugin);
         }
