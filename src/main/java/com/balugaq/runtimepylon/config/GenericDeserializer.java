@@ -4,6 +4,9 @@ import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 
+/**
+ * @author balugaq
+ */
 @NullMarked
 public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K extends Deserializer<K>> extends Deserializer<T> {
     @ApiStatus.Internal
@@ -12,11 +15,11 @@ public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K exte
     }
 
     /**
-     * Create an instance of the object.
-     * All the data in this object are invalid.
-     * It just for call {@link #deserialize(Object)}.
+     * Create an instance of the object. All the data in this object are invalid. It just for call
+     * {@link #deserialize(Object)}.
      *
      * @return an instance of the object.
+     *
      * @author balugaq
      * @see #deserialize(Object)
      */
@@ -29,9 +32,9 @@ public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K exte
         }
     }
 
+    T setAdvancer(Pack.Advancer<K> advancer);
+
     Class<K> getGenericType();
 
     T setGenericType(Class<K> clazz);
-
-    T setAdvancer(Pack.Advancer<K> advancer);
 }

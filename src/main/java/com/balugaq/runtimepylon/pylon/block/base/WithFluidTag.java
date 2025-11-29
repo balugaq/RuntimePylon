@@ -1,11 +1,15 @@
 package com.balugaq.runtimepylon.pylon.block.base;
 
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 
+/**
+ * @author balugaq
+ */
+@NullMarked
 public interface WithFluidTag {
     @Nullable ItemStack getTag();
 
-    @NotNull WithFluidTag setTag(@Nullable ItemStack tag);
+    WithFluidTag setTag(@Nullable ItemStack tag);
 }

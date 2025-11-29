@@ -30,11 +30,6 @@ public class Scripts implements FileObject<Scripts> {
         return scripts.get(scriptDesc.getScriptName());
     }
 
-    private ScriptExecutor createScriptExecutor(File file) {
-        // todo
-        return null;
-    }
-
     public void closeAll() {
         // todo
     }
@@ -52,5 +47,10 @@ public class Scripts implements FileObject<Scripts> {
                     return this;
                 }
         );
+    }
+
+    private ScriptExecutor createScriptExecutor(File file) {
+        // todo
+        return null;
     }
 }

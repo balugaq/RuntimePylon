@@ -14,18 +14,18 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.ApiStatus.Internal;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
+import org.jspecify.annotations.NullMarked;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
- * This interface is used to deserialize a config structure, instead of file structure
- * For the example:
+ * This interface is used to deserialize a config structure, instead of file structure For the example:
  * <p>
  * <code>
  * <pre>
@@ -34,33 +34,34 @@ import java.util.Map;
  * </pre>
  * </code>
  * <p>
- * The class `Foo` must be annotated with {@code @lombok.NoArgsConstructor(force = true)}
- * to make {@link #newDeserializer(Class)} work.
+ * The class `Foo` must be annotated with {@code @lombok.NoArgsConstructor(force = true)} to make
+ * {@link #newDeserializer(Class)} work.
  *
- * @param <T> the type of the object.
+ * @param <T>
+ *         the type of the object.
+ *
  * @author balugaq
  * @see PackID
  */
 @FunctionalInterface
+@NullMarked
 public interface Deserializer<T> {
     ItemStackDeserializer ITEMSTACK = new ItemStackDeserializer();
 
-    @NotNull
     static <E extends Enum<E>> EnumDeserializer<E> enumDeserializer(Class<E> clazz) {
         return EnumDeserializer.of(clazz);
     }
 
     /**
-     * Create an instance of the object.
-     * All the data in this object are invalid.
-     * It just for call {@link #deserialize(Object)}.
+     * Create an instance of the object. All the data in this object are invalid. It just for call
+     * {@link #deserialize(Object)}.
      *
      * @return an instance of the object.
+     *
      * @author balugaq
      * @see #deserialize(Object)
      */
     @Internal
-    @NotNull
     static <T extends Deserializer<T>> T newDeserializer(Class<T> clazz) {
         try {
             return clazz.getDeclaredConstructor().newInstance();
@@ -72,8 +73,11 @@ public interface Deserializer<T> {
     /**
      * Unserializes an object.
      *
-     * @param o the object to deserialize, it may be {@link ConfigurationSection}, {@link ArrayList}, or primitive type.
+     * @param o
+     *         the object to deserialize, it may be {@link ConfigurationSection}, {@link ArrayList}, or primitive type.
+     *
      * @return an instance of the object.
+     *
      * @author balugaq
      * @see Deserializer#newDeserializer(Class)
      */
@@ -94,9 +98,9 @@ public interface Deserializer<T> {
         throw new DeserializationException(this.getClass());
     }
 
-    @NotNull
     List<ConfigReader<?, T>> readers();
 
+    @NullMarked
     class ItemStackDeserializer implements Deserializer<ItemStack> {
         public static final Map<String, String> FIELD_RENAME = Map.of(
                 "grass", "short_grass", "short_grass", "grass",
@@ -104,8 +108,27 @@ public interface Deserializer<T> {
                 "chain", "iron_chain", "iron_chain", "chain"
         );
 
+        @Override
+        public @UnknownNullability ItemStack deserialize(@Nullable Object o) {
+            try (var ignore = StackFormatter.setPosition("Reading ItemStack")) {
+                if (o == null) throw new MissingArgumentException();
+                for (ConfigReader<?, ItemStack> reader : readers()) {
+                    if (reader.type().isInstance(o)) {
+                        try {
+                            return (ItemStack) ReflectionUtil.invokeMethod(reader, "read", o);
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw e.getCause();
+                        }
+                    }
+                }
+                return null;
+            } catch (Throwable e) {
+                StackFormatter.handle(e);
+                return null;
+            }
+        }
+
         @Internal
-        @NotNull
         @SuppressWarnings("DuplicateCondition")
         private static ItemStack fromString(String s) throws DeserializationException {
             List<String> para = new ArrayList<>();
@@ -186,72 +209,58 @@ public interface Deserializer<T> {
             throw new UnknownItemException(s);
         }
 
-        @NotNull
         @Override
         public List<ConfigReader<?, ItemStack>> readers() {
             return List.of(
                     ConfigReader.of(String.class, ItemStackDeserializer::fromString),
-                    ConfigReader.of(ConfigurationSection.class, section -> {
-                        // for section, we have these fields for optional
-                        // item:
-                        //   material: minecraft:diamond // or heads: hash/base64/url
-                        //   amount: 1-99
-                        //   compounds... (// todo)
+                    ConfigReader.of(
+                            ConfigurationSection.class, section -> {
+                                // for section, we have these fields for optional
+                                // item:
+                                //   material: minecraft:diamond // or heads: hash/base64/url
+                                //   amount: 1-99
+                                //   compounds... (// todo)
 
-                        String s = section.getString("material");
-                        if (s == null) throw new MissingArgumentException("material");
-                        ItemStack item = fromString(s).clone();
-                        item.setAmount(section.getInt("amount", 1));
-                        return item;
-                    })
+                                String s = section.getString("material");
+                                if (s == null) throw new MissingArgumentException("material");
+                                ItemStack item = fromString(s).clone();
+                                item.setAmount(section.getInt("amount", 1));
+                                return item;
+                            }
+                    )
             );
-        }
-
-        @Nullable
-        @Override
-        public ItemStack deserialize(@Nullable Object o) {
-            try (var ignore = StackWalker.setPosition("Reading ItemStack")) {
-                if (o == null) throw new MissingArgumentException();
-                for (ConfigReader<?, ItemStack> reader : readers()) {
-                    if (reader.type().isInstance(o)) {
-                        try {
-                            return (ItemStack) ReflectionUtil.invokeMethod(reader, "read", o);
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            throw e.getCause();
-                        }
-                    }
-                }
-                return null;
-            } catch (Throwable e) {
-                StackWalker.handle(e);
-                return null;
-            }
         }
     }
 
+    /**
+     * @author balugaq
+     */
+    @NullMarked
     class EnumDeserializer<E extends Enum<E>> implements Deserializer<E> {
         private final Class<E> clazz;
+        private Function<String, String> preHandle = s -> s;
 
-        public EnumDeserializer(@NotNull Class<E> clazz) {
+        public EnumDeserializer(Class<E> clazz) {
             this.clazz = clazz;
         }
 
-        public static <E extends Enum<E>> EnumDeserializer<E> of(@NotNull Class<E> clazz) {
+        public static <E extends Enum<E>> EnumDeserializer<E> of(Class<E> clazz) {
             return new EnumDeserializer<>(clazz);
         }
 
-        @Override
-        public @NotNull List<ConfigReader<?, E>> readers() {
-            return List.of(
-                    ConfigReader.of(String.class, s -> Enum.valueOf(clazz, s))
-            );
+        public EnumDeserializer<E> forceUpperCase() {
+            return updatePreHandle(String::toUpperCase);
+        }
+
+        public EnumDeserializer<E> updatePreHandle(Function<String, String> preHandle) {
+            this.preHandle = preHandle.andThen(preHandle);
+            return this;
         }
 
         @SuppressWarnings("unchecked")
-        @Nullable
         @Override
-        public E deserialize(@Nullable Object o) {
-            try (var ignore = StackWalker.setPosition("Reading " + clazz.getSimpleName())) {
+        public @UnknownNullability E deserialize(@Nullable Object o) {
+            try (var ignore = StackFormatter.setPosition("Reading " + clazz.getSimpleName())) {
                 if (o == null) throw new MissingArgumentException();
                 for (ConfigReader<?, E> reader : readers()) {
                     if (reader.type().isInstance(o)) {
@@ -265,12 +274,19 @@ public interface Deserializer<T> {
                 return null;
             } catch (Throwable e) {
                 if (e instanceof IllegalArgumentException e2) {
-                    StackWalker.handle(new UnknownEnumException(clazz, e2.getMessage().substring(e2.getMessage().lastIndexOf(clazz.getSimpleName() + '.'), clazz.getSimpleName().length() + 1)));
+                    StackFormatter.handle(new UnknownEnumException(clazz, e2.getMessage()));
                 } else {
-                    StackWalker.handle(e);
+                    StackFormatter.handle(e);
                 }
                 return null;
             }
+        }
+
+        @Override
+        public List<ConfigReader<?, E>> readers() {
+            return List.of(
+                    ConfigReader.of(String.class, s -> Enum.valueOf(clazz, preHandle.apply(s)))
+            );
         }
     }
 }

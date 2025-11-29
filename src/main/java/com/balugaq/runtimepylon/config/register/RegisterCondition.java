@@ -11,7 +11,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
@@ -19,10 +18,10 @@ import java.util.List;
 /**
  * @author balugaq
  */
+@NullMarked
 public interface RegisterCondition extends Deserializer<RegisterCondition> {
     boolean pass();
 
-    @NotNull
     default List<ConfigReader<?, RegisterCondition>> readers() {
         return List.of(
                 ConfigReader.of(Boolean.class, BooleanRegisterCondition::new),

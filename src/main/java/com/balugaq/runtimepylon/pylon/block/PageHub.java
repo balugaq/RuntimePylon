@@ -2,10 +2,10 @@ package com.balugaq.runtimepylon.pylon.block;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.gui.ButtonSet;
-import com.balugaq.runtimepylon.pylon.MyBlock;
 import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import com.balugaq.runtimepylon.pylon.block.base.WithModel;
 import com.balugaq.runtimepylon.pylon.page.SearchPages;
+import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
@@ -22,8 +22,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 
@@ -32,19 +32,20 @@ import static com.balugaq.runtimepylon.gui.GuiItem.waitInput;
 import static com.balugaq.runtimepylon.util.Lang.*;
 
 @Getter
-public class PageHub extends MyBlock implements
-        PylonGuiBlock,
-        WithModel {
+@NullMarked
+public class PageHub extends PylonBlock implements
+                                        PylonGuiBlock,
+                                        WithModel {
     public @Nullable ItemStack model = null;
     public @Nullable NamespacedKey pageId = null;
     public @Nullable NamespacedKey nestedPageId = null;
     public boolean displayInRoot = true;
 
-    public PageHub(@NotNull Block block, @NotNull BlockCreateContext context) {
+    public PageHub(Block block, BlockCreateContext context) {
         super(block, context);
     }
 
-    public PageHub(@NotNull Block block, @NotNull PersistentDataContainer pdc) {
+    public PageHub(Block block, PersistentDataContainer pdc) {
         super(block, pdc);
         model = pdc.get(RuntimeKeys.model, PylonSerializers.ITEM_STACK);
         pageId = pdc.get(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY);
@@ -53,7 +54,7 @@ public class PageHub extends MyBlock implements
     }
 
     @Override
-    public void write(@NotNull PersistentDataContainer pdc) {
+    public void write(PersistentDataContainer pdc) {
         super.write(pdc);
         if (model != null) pdc.set(RuntimeKeys.model, PylonSerializers.ITEM_STACK, model);
         if (pageId != null) pdc.set(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY, pageId);
@@ -62,7 +63,7 @@ public class PageHub extends MyBlock implements
     }
 
     @Override
-    public @NotNull Gui createGui() {
+    public Gui createGui() {
         PageHubButtonSet<?> buttons = new PageHubButtonSet<>(this);
         return Gui.normal()
                 .setStructure(
@@ -84,7 +85,7 @@ public class PageHub extends MyBlock implements
     }
 
     @Override
-    public @NotNull WithModel setModel(@Nullable ItemStack model) {
+    public WithModel setModel(@Nullable ItemStack model) {
         this.model = model;
         return this;
     }
@@ -95,7 +96,7 @@ public class PageHub extends MyBlock implements
     }
 
     @Override
-    public @NotNull WithModel setItemId(@Nullable NamespacedKey itemId) {
+    public WithModel setItemId(@Nullable NamespacedKey itemId) {
         this.pageId = itemId;
         return this;
     }
@@ -103,17 +104,17 @@ public class PageHub extends MyBlock implements
 
     @Getter
     public static class PageHubButtonSet<T extends PageHub> extends ButtonSet<T> {
-        public final @NotNull AbstractItem
+        public final AbstractItem
                 registerPage,
                 setNestedPage,
                 unsetNestedPage,
                 nestedPage;
 
-        public PageHubButtonSet(@NotNull T b2) {
+        public PageHubButtonSet(T b2) {
             super(b2);
 
             registerPage = create()
-                    .item(data -> ItemStackBuilder.pylonItem(
+                    .item(data -> ItemStackBuilder.pylon(
                             Material.EMERALD_BLOCK,
                             RuntimeKeys.register_page
                     ))
@@ -131,7 +132,7 @@ public class PageHub extends MyBlock implements
             nestedPage = create()
                     .item(data -> {
                         if (data.nestedPageId == null) {
-                            return ItemStackBuilder.pylonItem(
+                            return ItemStackBuilder.pylon(
                                     Material.WHITE_STAINED_GLASS_PANE,
                                     RuntimeKeys.nested_page
                             );
@@ -142,31 +143,35 @@ public class PageHub extends MyBlock implements
                     .click((data, clickType, player, event) -> {
                         if (clickType.isLeftClick()) {
                             if (clickType.isShiftClick()) {
-                                waitInput(player, nested_page_1, pageId -> {
-                                    data.nestedPageId = assertNotNull(toNamespacedKey(pageId), nested_page_2);
-                                });
+                                waitInput(
+                                        player, nested_page_1, pageId -> {
+                                            data.nestedPageId = assertNotNull(toNamespacedKey(pageId), nested_page_2);
+                                        }
+                                );
                             } else {
-                                SearchPages.openPageSearchPage(player, page -> {
-                                    data.nestedPageId = page.getKey();
-                                    done(player, nested_page_3, page.getKey());
-                                    reopen(player);
-                                });
+                                SearchPages.openPageSearchPage(
+                                        player, page -> {
+                                            data.nestedPageId = page.getKey();
+                                            done(player, nested_page_3, page.getKey());
+                                            reopen(player);
+                                        }
+                                );
                             }
                         } else if (clickType.isRightClick()) {
                             assertNotNull(data.nestedPageId, nested_page_4);
                             // copy id
 
                             player.sendMessage(Component.text()
-                                    .content(nested_page_5)
-                                    .hoverEvent(HoverEvent.showText(Component.text(nested_page_6)))
-                                    .clickEvent(ClickEvent.copyToClipboard(data.nestedPageId.toString())));
+                                                       .content(nested_page_5)
+                                                       .hoverEvent(HoverEvent.showText(Component.text(nested_page_6)))
+                                                       .clickEvent(ClickEvent.copyToClipboard(data.nestedPageId.toString())));
                         }
 
                         return true;
                     });
 
             setNestedPage = create()
-                    .item(data -> ItemStackBuilder.pylonItem(
+                    .item(data -> ItemStackBuilder.pylon(
                             Material.GREEN_STAINED_GLASS_PANE,
                             RuntimeKeys.set_nested_page
                     ))
@@ -181,7 +186,7 @@ public class PageHub extends MyBlock implements
                     });
 
             unsetNestedPage = create()
-                    .item(data -> ItemStackBuilder.pylonItem(
+                    .item(data -> ItemStackBuilder.pylon(
                             Material.RED_STAINED_GLASS_PANE,
                             RuntimeKeys.unset_nested_page
                     ))

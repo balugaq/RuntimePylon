@@ -7,9 +7,14 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
 import org.jetbrains.annotations.Range;
+import org.jspecify.annotations.NullMarked;
 
-public class StackWalker implements AutoCloseable {
-    private static final StackWalker inst = new StackWalker();
+/**
+ * @author balugaq
+ */
+@NullMarked
+public class StackFormatter implements AutoCloseable {
+    private static final StackFormatter inst = new StackFormatter();
     @Getter
     private static final Int2ObjectOpenHashMap<String> backup = new Int2ObjectOpenHashMap<>();
     @Getter
@@ -32,7 +37,25 @@ public class StackWalker implements AutoCloseable {
         Debug.warn("-".repeat(40));
     }
 
-    public static StackWalker setPosition(@Range(from = 1, to = Integer.MAX_VALUE) int level, String position) {
+    public static void run(String position, Runnable runnable) {
+        setPosition(position);
+        runnable.run();
+        destroy();
+    }
+
+    @CanIgnoreReturnValue
+    public static StackFormatter setPosition(String position) {
+        return setPosition(positions.size() + 1, position);
+    }
+
+    @CanIgnoreReturnValue
+    public static StackFormatter destroy() {
+        syncBackup();
+        positions.remove(positions.size());
+        return inst;
+    }
+
+    public static StackFormatter setPosition(@Range(from = 1, to = Integer.MAX_VALUE) int level, String position) {
         syncBackup();
         if (level < positions.size()) {
             int c = positions.size();
@@ -45,35 +68,17 @@ public class StackWalker implements AutoCloseable {
         return inst;
     }
 
-    @CanIgnoreReturnValue
-    public static StackWalker setPosition(String position) {
-        return setPosition(positions.size() + 1, position);
-    }
-
     private static void syncBackup() {
         backup.clear();
         backup.putAll(positions);
     }
 
-    @CanIgnoreReturnValue
-    public static StackWalker destroy() {
-        syncBackup();
-        positions.remove(positions.size());
+    public static StackFormatter getInstance() {
         return inst;
-    }
-
-    public static void run(String position, Runnable runnable) {
-        setPosition(position);
-        runnable.run();
-        destroy();
     }
 
     @Override
     public void close() {
         destroy();
-    }
-
-    public static StackWalker getInstance() {
-        return inst;
     }
 }

@@ -1,7 +1,6 @@
 package com.balugaq.runtimepylon.pylon.block;
 
 import com.balugaq.runtimepylon.gui.ButtonSet;
-import com.balugaq.runtimepylon.pylon.MyBlock;
 import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import com.balugaq.runtimepylon.pylon.block.base.WithModel;
 import com.balugaq.runtimepylon.pylon.block.base.WithPage;
@@ -21,8 +20,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 
@@ -33,24 +32,25 @@ import java.util.stream.Collectors;
 import static com.balugaq.runtimepylon.util.Lang.*;
 
 @Getter
-public class ItemHub extends MyBlock implements
-        PylonGuiBlock,
-        WithModel,
-        WithPage,
-        WithRecipe,
-        WithPlaceable {
+@NullMarked
+public class ItemHub extends PylonBlock implements
+                                        PylonGuiBlock,
+                                        WithModel,
+                                        WithPage,
+                                        WithRecipe,
+                                        WithPlaceable {
     public boolean placeable = false;
     public @Nullable ItemStack model = null;
     public @Nullable NamespacedKey itemId = null;
     public @Nullable NamespacedKey pageId = null;
     public @Nullable NamespacedKey recipeTypeId = null;
-    public @NotNull Map<Integer, ItemStack> recipe = new HashMap<>();
+    public Map<Integer, ItemStack> recipe = new HashMap<>();
 
-    public ItemHub(@NotNull Block block, @NotNull BlockCreateContext context) {
+    public ItemHub(Block block, BlockCreateContext context) {
         super(block, context);
     }
 
-    public ItemHub(@NotNull Block block, @NotNull PersistentDataContainer pdc) {
+    public ItemHub(Block block, PersistentDataContainer pdc) {
         super(block, pdc);
         placeable = pdc.getOrDefault(RuntimeKeys.placeable, PylonSerializers.BOOLEAN, true);
         model = pdc.get(RuntimeKeys.model, PylonSerializers.ITEM_STACK);
@@ -60,7 +60,7 @@ public class ItemHub extends MyBlock implements
         recipe = fromArray(pdc, "recipe");
     }
 
-    public static @NotNull Map<Integer, ItemStack> fromArray(@NotNull PersistentDataContainer pdc, @NotNull String key) {
+    public static Map<Integer, ItemStack> fromArray(PersistentDataContainer pdc, String key) {
         return pdc.getKeys().stream().filter(k -> k.toString().startsWith(key))
                 .map(k -> new Pair<>(k, pdc.get(k, PylonSerializers.ITEM_STACK)))
                 .collect(Collectors.toMap(
@@ -70,7 +70,7 @@ public class ItemHub extends MyBlock implements
     }
 
     @Override
-    public void write(@NotNull PersistentDataContainer pdc) {
+    public void write(PersistentDataContainer pdc) {
         super.write(pdc);
         pdc.set(RuntimeKeys.placeable, PylonSerializers.BOOLEAN, placeable);
         if (model != null) pdc.set(RuntimeKeys.model, PylonSerializers.ITEM_STACK, model);
@@ -81,7 +81,7 @@ public class ItemHub extends MyBlock implements
     }
 
     @Override
-    public @NotNull Gui createGui() {
+    public Gui createGui() {
         ItemHubButtonSet<?> buttons = new ItemHubButtonSet<>(this);
         return Gui.normal()
                 .setStructure(
@@ -116,58 +116,58 @@ public class ItemHub extends MyBlock implements
     }
 
     @Override
-    public @NotNull WithPage setPageId(@NotNull NamespacedKey key) {
+    public WithPage setPageId(NamespacedKey key) {
         this.pageId = key;
         return this;
     }
 
     @Override
-    public @NotNull WithRecipe setRecipeTypeId(@Nullable NamespacedKey recipeTypeId) {
+    public WithRecipe setRecipeTypeId(@Nullable NamespacedKey recipeTypeId) {
         this.recipeTypeId = recipeTypeId;
         return this;
     }
 
     @Override
-    public @NotNull WithRecipe setRecipe(@NotNull Map<Integer, ItemStack> recipe) {
+    public WithRecipe setRecipe(Map<Integer, ItemStack> recipe) {
         this.recipe = recipe;
         return this;
     }
 
     @Override
-    public @NotNull WithModel setModel(@Nullable ItemStack model) {
+    public WithModel setModel(@Nullable ItemStack model) {
         this.model = model;
         return this;
     }
 
     @Override
-    public @NotNull WithModel setItemId(@Nullable NamespacedKey itemId) {
+    public WithModel setItemId(@Nullable NamespacedKey itemId) {
         this.itemId = itemId;
         return this;
     }
 
     @Override
-    public @NotNull WithPlaceable setPlaceable(boolean placeable) {
+    public WithPlaceable setPlaceable(boolean placeable) {
         this.placeable = placeable;
         return this;
     }
 
     @Getter
     public static class ItemHubButtonSet<T extends ItemHub> extends ButtonSet<T> {
-        public final @NotNull AbstractItem
+        public final AbstractItem
                 registerItem,
                 placeable;
 
-        public ItemHubButtonSet(@NotNull T b2) {
+        public ItemHubButtonSet(T b2) {
             super(b2);
             placeable = create()
                     .item(data -> {
                         if (data.isPlaceable()) {
-                            return ItemStackBuilder.pylonItem(
+                            return ItemStackBuilder.pylon(
                                     Material.LIME_STAINED_GLASS_PANE,
                                     RuntimeKeys.placeable_active
                             );
                         } else {
-                            return ItemStackBuilder.pylonItem(
+                            return ItemStackBuilder.pylon(
                                     Material.RED_STAINED_GLASS_PANE,
                                     RuntimeKeys.placeable_inactive
                             );
@@ -180,7 +180,7 @@ public class ItemHub extends MyBlock implements
                     });
 
             registerItem = create()
-                    .item(data -> ItemStackBuilder.pylonItem(
+                    .item(data -> ItemStackBuilder.pylon(
                             Material.EMERALD_BLOCK,
                             RuntimeKeys.register_item
                     ))
@@ -190,10 +190,10 @@ public class ItemHub extends MyBlock implements
                         assertNotNull(data.getItemId(), register_item_3);
                         if (assertBlock(data, WithPlaceable.class).isPlaceable()) {
                             assertTrue(data.getModel().getType().isBlock(), register_item_4);
-                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build(), data.getItemId());
+                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylon(data.getModel().getType(), data.getItemId()).build(), data.getItemId());
                             register(data.getItemId(), data.getModel().getType(), PylonBlock.class);
                         } else {
-                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylonItem(data.getModel().getType(), data.getItemId()).build());
+                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylon(data.getModel().getType(), data.getItemId()).build());
                         }
                         done(player, register_item_5, data.getItemId());
 

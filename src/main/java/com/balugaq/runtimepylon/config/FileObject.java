@@ -23,8 +23,8 @@ import java.util.List;
  * </pre>
  * </code>
  * <p>
- * The class `Foo` must be annotated with {@code @lombok.NoArgsConstructor(force = true)}
- * to make {@link #newDeserializer(Class)} work.
+ * The class `Foo` must be annotated with {@code @lombok.NoArgsConstructor(force = true)} to make
+ * {@link #newDeserializer(Class)} work.
  *
  * @author balugaq
  * @see Pack
@@ -32,11 +32,11 @@ import java.util.List;
 @NullMarked
 public interface FileObject<T> {
     /**
-     * Create an instance of the object.
-     * All the data in this object are invalid.
-     * It just for call {@link #deserialize(File)}.
+     * Create an instance of the object. All the data in this object are invalid. It just for call
+     * {@link #deserialize(File)}.
      *
      * @return an instance of the object.
+     *
      * @author balugaq
      * @see #deserialize(File)
      */
@@ -49,13 +49,14 @@ public interface FileObject<T> {
         }
     }
 
-    List<FileReader<T>> readers();
-
     /**
      * Unserializes an object.
      *
-     * @param o the object to deserialize, it may be {@link ConfigurationSection}, {@link ArrayList}, or primitive type.
+     * @param o
+     *         the object to deserialize, it may be {@link ConfigurationSection}, {@link ArrayList}, or primitive type.
+     *
      * @return an instance of the object.
+     *
      * @author balugaq
      * @see Deserializer#newDeserializer(Class)
      */
@@ -72,4 +73,6 @@ public interface FileObject<T> {
 
         throw new DeserializationException(this.getClass());
     }
+
+    List<FileReader<T>> readers();
 }

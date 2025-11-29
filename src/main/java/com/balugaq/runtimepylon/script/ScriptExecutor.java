@@ -1,6 +1,7 @@
 package com.balugaq.runtimepylon.script;
 
 import lombok.Getter;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.util.HashSet;
@@ -11,6 +12,7 @@ import java.util.Set;
  *
  * @author lijinhong11
  */
+@NullMarked
 public abstract class ScriptExecutor {
     private final Set<String> failedFunctions = new HashSet<>();
 
@@ -38,9 +40,9 @@ public abstract class ScriptExecutor {
         }
     }
 
-    public abstract void close();
-
     public abstract boolean isFunctionExists(String functionName);
 
     protected abstract Object executeFunction0(String functionName, Object... parameters) throws Exception;
+
+    public abstract void close();
 }

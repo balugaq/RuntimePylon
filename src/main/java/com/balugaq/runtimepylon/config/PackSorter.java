@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class PackSorter {
     public static List<Pack> sortPacks(List<Pack> packs) {
         Map<String, Pack> packMap = packs.stream()
-                .collect(Collectors.toMap(p -> p.getPackID().getId(), pack -> pack));
+                .collect(Collectors.toMap(p -> p.getPackID().getId(), pack -> pack, (a, b) -> a));
         Set<String> allPackNames = packMap.keySet();
 
         Map<String, Set<String>> hardDependencyGraph = buildHardDependencyGraph(packs, packMap);

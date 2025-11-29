@@ -11,23 +11,27 @@ import kotlin.Pair;
 import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.item.Item;
 
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * @author balugaq
+ */
 @Getter
+@NullMarked
 public class RecipeTypeSearchPage extends SearchPage {
-    private final @NotNull Consumer<RecipeType<? extends PylonRecipe>> consumer;
+    private final Consumer<RecipeType<? extends PylonRecipe>> consumer;
 
-    public RecipeTypeSearchPage(@NotNull Consumer<RecipeType<? extends PylonRecipe>> consumer) {
+    public RecipeTypeSearchPage(Consumer<RecipeType<? extends PylonRecipe>> consumer) {
         super(RuntimeKeys.recipe_type_search_page, Material.STONE);
         this.consumer = consumer;
     }
 
     @Override
-    public @NotNull List<Pair<Item, String>> getItemNamePairs(@NotNull Player player, @NotNull String search) {
+    public List<Pair<Item, String>> getItemNamePairs(Player player, String search) {
         return PylonRegistry.RECIPE_TYPES.getValues()
                 .stream()
                 .map(type -> new Pair<>(
@@ -39,7 +43,8 @@ public class RecipeTypeSearchPage extends SearchPage {
                                     SearchPages.triggerBackGuide(player, false);
                                     return true;
                                 }),
-                        type.getKey().toString()))
+                        type.getKey().toString()
+                ))
                 .toList();
     }
 }

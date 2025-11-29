@@ -11,23 +11,27 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
 import static com.balugaq.runtimepylon.gui.ButtonSet.done;
 import static com.balugaq.runtimepylon.util.Lang.set_temperature_1;
 
+/**
+ * @author balugaq
+ */
+@NullMarked
 public class FluidTemperatureHolder extends PylonItem implements PylonFluidTagHolder<FluidTemperature> {
     @Setter
-    public @NotNull FluidTemperature temperature = FluidTemperature.NORMAL;
+    public FluidTemperature temperature = FluidTemperature.NORMAL;
 
-    public FluidTemperatureHolder(@NotNull ItemStack stack) {
+    public FluidTemperatureHolder(ItemStack stack) {
         super(stack);
     }
 
     @Override
-    public <K extends PylonBlock & PylonGuiBlock> void onClick(@NotNull K block, @NotNull ClickType clickType, @NotNull Player player, @NotNull InventoryClickEvent event, @NotNull Runnable callback) {
+    public <K extends PylonBlock & PylonGuiBlock> void onClick(K block, ClickType clickType, Player player, InventoryClickEvent event, Runnable callback) {
         if (clickType.isLeftClick()) {
             if (clickType.isShiftClick()) {
                 switch (temperature) {
@@ -50,7 +54,7 @@ public class FluidTemperatureHolder extends PylonItem implements PylonFluidTagHo
     }
 
     @Override
-    public @NotNull FluidTemperature getTag() {
+    public FluidTemperature getTag() {
         return temperature;
     }
 }

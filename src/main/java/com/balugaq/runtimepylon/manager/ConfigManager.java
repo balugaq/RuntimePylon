@@ -5,9 +5,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,12 +17,13 @@ import java.io.Reader;
  * @author balugaq
  */
 @SuppressWarnings({"ConstantValue", "unused"})
+@NullMarked
 public class ConfigManager {
     private final JavaPlugin plugin;
     private final boolean AUTO_UPDATE;
     private final boolean DEBUG;
 
-    public ConfigManager(@NotNull JavaPlugin plugin) {
+    public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
         setupDefaultConfig();
         FileConfiguration cfg = plugin.getConfig();
@@ -56,7 +56,6 @@ public class ConfigManager {
         }
     }
 
-    @ParametersAreNonnullByDefault
     private void checkKey(FileConfiguration existingConfig, FileConfiguration resourceConfig, String key) {
         final Object currentValue = existingConfig.get(key);
         final Object newValue = resourceConfig.get(key);

@@ -8,6 +8,9 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
+/**
+ * @author balugaq
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
@@ -15,12 +18,8 @@ import java.util.List;
 public class InternalObjectID implements Deserializer<InternalObjectID> {
     private final String id;
 
-    public static InternalObjectID of(String id) {
-        return new InternalObjectID(id);
-    }
-
-    public ExternalObjectID with(PackNamespace namespace) {
-        return ExternalObjectID.of(namespace, this);
+    public RegisteredObjectID register(PackNamespace namespace) {
+        return RegisteredObjectID.of(namespace.plugin().key(id));
     }
 
     @Override
@@ -28,5 +27,9 @@ public class InternalObjectID implements Deserializer<InternalObjectID> {
         return List.of(
                 ConfigReader.of(String.class, InternalObjectID::of)
         );
+    }
+
+    public static InternalObjectID of(String id) {
+        return new InternalObjectID(id);
     }
 }

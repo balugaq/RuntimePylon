@@ -20,68 +20,76 @@ import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnknownNullability;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * @author balugaq
+ */
+@NullMarked
 public class RuntimePylon extends JavaPlugin implements PylonAddon {
-
     @Getter
+    @UnknownNullability
     private static RuntimePylon instance;
-    public Map<NamespacedKey, SimpleStaticGuidePage> customPages = new HashMap<>();
+    @Getter
+    private final Map<NamespacedKey, SimpleStaticGuidePage> customPages = new HashMap<>();
+    private final Set<Locale> SUPPORTED_LANGUAGES = new HashSet<>();
+    @UnknownNullability
     private ConfigManager configManager;
+    @UnknownNullability
     private IntegrationManager integrationManager;
+    @UnknownNullability
     private PackManager packManager;
 
-    @NotNull
     public static Map<NamespacedKey, SimpleStaticGuidePage> getGuidePages() {
         var pages = new HashMap<>(PylonGuide.getRootPage().getButtons()
-                .stream()
-                .filter(button -> button instanceof PageButton)
-                .map(button -> ((PageButton) button).getPage())
-                .filter(page -> page instanceof SimpleStaticGuidePage)
-                .map(page -> (SimpleStaticGuidePage) page)
-                .collect(Collectors.toMap(
-                        Keyed::getKey,
-                        page -> page,
-                        (a, b) -> b
-                )));
+              .stream()
+              .filter(button -> button instanceof PageButton)
+              .map(button -> ((PageButton) button).getPage())
+              .filter(page -> page instanceof SimpleStaticGuidePage)
+              .map(page -> (SimpleStaticGuidePage) page)
+              .collect(Collectors.toMap(
+                      Keyed::getKey,
+                      page -> page,
+                      (a, b) -> b
+              )));
         pages.putAll(RuntimePylon.instance.customPages);
+        pages.put(PylonGuide.getRootPage().getKey(), PylonGuide.getRootPage());
         return pages;
     }
 
-    public static void runTaskLater(@NotNull Runnable runnable, long delay) {
+    public static void runTaskLater(Runnable runnable, long delay) {
         Bukkit.getScheduler().runTaskLater(getInstance(), runnable, delay);
     }
 
-    public static void runTaskAsyncLater(@NotNull Runnable runnable, long delay) {
+    public static void runTaskAsyncLater(Runnable runnable, long delay) {
         Bukkit.getScheduler().runTaskLaterAsynchronously(getInstance(), runnable, delay);
     }
 
-    @NotNull
     public static ConfigManager getConfigManager() {
         return instance.configManager;
     }
 
-    @NotNull
     public static IntegrationManager getIntegrationManager() {
         return instance.integrationManager;
     }
 
-    @NotNull
     public static PackManager getPackManager() {
         return instance.packManager;
     }
 
-    public void registerCustomPage(@NotNull SimpleStaticGuidePage page) {
+    public void registerCustomPage(SimpleStaticGuidePage page) {
         customPages.put(page.getKey(), page);
     }
 
-    public void unregisterCustomPage(@NotNull SimpleStaticGuidePage page) {
+    public void unregisterCustomPage(SimpleStaticGuidePage page) {
         customPages.remove(page.getKey());
     }
 
@@ -94,6 +102,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         // `/runtime clearall` to clear all
         // `/runtime reloadpacks` to reload packs
         instance = this;
+        addSupportedLanguages(Locale.ENGLISH);
 
         // registerWithPylon();
         PylonRegistry.ADDONS.register(this);
@@ -112,9 +121,11 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
             Debug.trace(e);
         }
 
-        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-            commands.registrar().register(RuntimePylonCommand.ROOT);
-        });
+        getLifecycleManager().registerEventHandler(
+                LifecycleEvents.COMMANDS, commands -> {
+                    commands.registrar().register(RuntimePylonCommand.ROOT);
+                }
+        );
 
         Bukkit.getServer().getPluginManager().registerEvents(new ChatInputListener(), this);
 
@@ -122,26 +133,31 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         registerWithPylon(); // todo: rewrite lang translation check
     }
 
+    public void addSupportedLanguages(Locale languages) {
+        SUPPORTED_LANGUAGES.add(languages);
+    }
+
     @Override
-    public @NotNull JavaPlugin getJavaPlugin() {
+    public JavaPlugin getJavaPlugin() {
         return instance;
     }
 
     @Override
-    public @NotNull Set<@NotNull Locale> getLanguages() {
-        return Set.of(
-                Locale.ENGLISH,
-                Locale.SIMPLIFIED_CHINESE
-        );
+    public Set<Locale> getLanguages() {
+        return SUPPORTED_LANGUAGES;
     }
 
     @Override
-    public @NotNull Material getMaterial() {
+    public Material getMaterial() {
         return Material.COPPER_INGOT;
     }
 
-    @Override
-    public boolean suppressAddonNameWarning() {
-        return true;
+    public void addSupportedLanguages(Set<Locale> languages) {
+        SUPPORTED_LANGUAGES.addAll(languages);
     }
 }
+
+//todo recipe_type
+//todo research
+//todo disable message: example is missing a name translation key for item example:example_item (locale: 中文 (中国) | expected translation key: pylon.example.item.example_item.name
+//todo and then code a new translation checker

@@ -2,20 +2,29 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.Saveditems;
+import com.balugaq.runtimepylon.exceptions.IdConflictException;
 import com.balugaq.runtimepylon.exceptions.PackDependencyMissingException;
 import com.balugaq.runtimepylon.exceptions.PluginDependencyMissingException;
 import com.balugaq.runtimepylon.exceptions.SaveditemsNotFoundException;
 import com.balugaq.runtimepylon.exceptions.UnknownPackException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.exceptions.UnsupportedVersionException;
+import com.balugaq.runtimepylon.object.CustomPage;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
+import com.balugaq.runtimepylon.util.ReflectionUtil;
+import io.github.pylonmc.pylon.core.addon.PylonAddon;
+import io.github.pylonmc.pylon.core.block.BlockStorage;
+import io.github.pylonmc.pylon.core.entity.EntityStorage;
+import io.github.pylonmc.pylon.core.guide.button.PageButton;
+import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
@@ -24,8 +33,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * We're introducing a new concept: `Pack`
- * `Pack` is a collection set of a configuration to generate customized objects (items/blocks, etc.)
+ * We're introducing a new concept: `Pack` `Pack` is a collection set of a configuration to generate customized objects
+ * (items/blocks, etc.)
  * <p>
  * In the disk, we have the following tree structure to define a pack:
  * <ul>
@@ -37,7 +46,7 @@ import java.util.function.Consumer;
  *           <li>lang/
  *             <ul>
  *               <li>en.yml</li>
- *               <li>zh_CN.yml</li>
+ *               <li>zh-CN.yml</li>
  *             </ul>
  *           </li>
  *           <li>pages/
@@ -103,19 +112,19 @@ import java.util.function.Consumer;
  * In pack.yml:
  * | Property Type | Property | Description | Pattern | Example |
  * | ------------- | -------- | ----------- | ------- | ------- |
- * | String | PackID | is the identifier of a pack | `A-Za-z0-9_+-`| mypack |
- * | String | PackNamespace | is the namespace of a pack | `a-z0-9_-.` | mypack |
- * | String | PackVersion | is the version of a pack | `A-Za-z0-9_+-./()` | 1.0.0 |
- * | String | *PackMinAPIVersion | defines the minimum API version to run this pack | 1.21.3 |
- * | String | *PackMaxAPIVersion | defines the maximum API version to run this pack | 1.21.9 |
- * | List<String> | *LoadBefores | defines what packs should be loaded before this | - | [mypack1, mypack2] |
- * | List<String> | *PackDependencies | is the pack dependencies | - | [mypack1, mypack2] |
- * | List<String> | *PluginDependencies | is the plugin dependencies | - | [plugin1, plugin2] |
- * | String | *Author | is the author of a pack | - | balugaq |
- * | List<String> | *Authors | is the authors of a pack | - | [balugaq, balugaq2] |
- * | List<String> | *Contributors | is the contributors of a pack | - | [balugaq, balugaq2] |
- * | String | *Website | is the website of a pack | - | `https://github.com/balugaq/RuntimePylon` |
- * | String | *GitHubUpdateLink | is the update link of a pack | - | `https://github.com/balugaq/RuntimePylon/releases` |
+ * | String | id | is the identifier of a pack | `A-Za-z0-9_+-`| mypack |
+ * | String | version | is the version of a pack | `A-Za-z0-9_+-./()` | 1.0.0 |
+ * | String | *minAPIVersion | defines the minimum API version to run this pack | 1.21.3 |
+ * | String | *maxAPIVersion | defines the maximum API version to run this pack | 1.21.9 |
+ * | List<String> | *loadBefores | defines what packs should be loaded before this | - | [mypack1, mypack2] |
+ * | List<String> | *packDependencies | is the pack dependencies | - | [mypack1, mypack2] |
+ * | List<String> | *pluginDependencies | is the plugin dependencies | - | [plugin1, plugin2] |
+ * | String | *author | is the author of a pack | - | balugaq |
+ * | List<String> | *authors | is the authors of a pack | - | [balugaq, balugaq2] |https://github.com/balugaq/RuntimePylon/releases
+ * | List<String> | *contributors | is the contributors of a pack | - | [balugaq, balugaq2] |
+ * | String | *website | is the website of a pack | - | `https://github.com/balugaq/RuntimePylon` |
+ * | String | *githubUpdateLink | is the update link of a pack | - | `https://github.com/balugaq/RuntimePylon/releases` |
+ * | List<String> | *languages | defines what languages are supported by this pack | - | [en, zh-CN] |
  * Properties tagged with * are optional
  * <p>
  * IDs:
@@ -152,7 +161,7 @@ public @Data class PackManager {
     }
 
     public static ItemStack findSaveditem(PackDesc packDesc, SaveditemDesc itemDesc) throws
-            UnknownPackException, SaveditemsNotFoundException, UnknownSaveditemException {
+                                                                                     UnknownPackException, SaveditemsNotFoundException, UnknownSaveditemException {
         Pack pack = packDesc.findPack();
         if (pack == null) throw new UnknownPackException(packDesc);
         Saveditems saveditems = pack.getSaveditems();
@@ -171,6 +180,15 @@ public @Data class PackManager {
         }
     }
 
+    @Nullable
+    public static Pack findPack(PackDesc desc) {
+        return PackManager.getPacks().stream().filter(pack -> pack.getPackID().getId().equals(desc.getId())).findFirst().orElse(null);
+    }
+
+    public static List<Pack> getPacks() {
+        return RuntimePylon.getPackManager().packs;
+    }
+
     public void loadPacks() {
         if (!PACKS_FOLDER.exists()) PACKS_FOLDER.mkdirs();
         for (File packFolder : PACKS_FOLDER.listFiles()) {
@@ -178,18 +196,18 @@ public @Data class PackManager {
                 continue;
             }
 
-            try (var sk = StackWalker.setPosition("Loading Pack Folder: " + packFolder.getName())) {
+            try (var ignored = StackFormatter.setPosition("Loading Pack Folder: " + packFolder.getName())) {
                 Debug.log("Loading pack: " + packFolder.getName());
                 Pack pack = FileObject.newDeserializer(Pack.class).deserialize(packFolder);
                 MinecraftVersion min = pack.getPackMinAPIVersion();
                 if (min != null && MinecraftVersion.current().isBefore(min)) {
-                    throw new UnsupportedVersionException("Current version: " + MinecraftVersion.current() + ", Minimum version to load: " + min);
+                    throw new UnsupportedVersionException("Current version is: " + MinecraftVersion.current().humanize() + ", but minimum version to load is: " + min.humanize());
                 }
                 MinecraftVersion max = pack.getPackMaxAPIVersion();
                 if (max != null && MinecraftVersion.current().isAtLeast(max)) {
-                    throw new UnsupportedVersionException("Current version: " + MinecraftVersion.current() + ", Maximum version to load: " + max);
+                    throw new UnsupportedVersionException("Current version is: " + MinecraftVersion.current().humanize() + ", but maximum version to load is: " + max.humanize());
                 }
-                UnsArrayList<PluginDesc> pluginDependencies = pack.getPluginDependencies();
+                MyArrayList<PluginDesc> pluginDependencies = pack.getPluginDependencies();
                 if (pluginDependencies != null) {
                     ArrayList<PluginDesc> missing = new ArrayList<>();
                     for (PluginDesc pluginDependency : pluginDependencies) {
@@ -199,16 +217,20 @@ public @Data class PackManager {
 
                     if (!missing.isEmpty()) throw new PluginDependencyMissingException(pack, missing);
                 }
+                for (Pack pk : packs) {
+                    if (pk.getPackID().equals(pack.getPackID())) {
+                        throw new IdConflictException(pk.getPackID(), pk.getDir(), pack.getDir());
+                    }
+                }
                 packs.add(pack);
-                Debug.log("Loaded pack: " + pack.getPackID());
             } catch (Exception e) {
-                StackWalker.handle(e);
+                StackFormatter.handle(e);
             }
         }
 
-        for (Pack pack : PackSorter.sortPacks(packs)) {
-            try (var sk = StackWalker.setPosition("Registering Pack: " + pack.getPackID())) {
-                UnsArrayList<PackDesc> packDependencies = pack.getPackDependencies();
+        for (Pack pack : PackSorter.sortPacks(packs)) { // fixme: wrong sort result
+            try (var ignored = StackFormatter.setPosition("Registering Pack: " + pack.getPackID())) {
+                MyArrayList<PackDesc> packDependencies = pack.getPackDependencies();
                 if (packDependencies != null) {
                     ArrayList<PackDesc> missing = new ArrayList<>();
                     for (PackDesc packDependency : packDependencies) {
@@ -221,22 +243,48 @@ public @Data class PackManager {
                 pack.register();
                 Debug.log("Registered pack: " + pack.getPackID());
             } catch (Exception e) {
-                StackWalker.handle(e);
+                StackFormatter.handle(e);
             }
         }
 
-        RuntimePylon.runTaskLater(() -> {
-            for (var postLoad : postLoads) {
-                postLoad.run();
-            }
-        }, 1L);
+        RuntimePylon.runTaskLater(
+                () -> {
+                    for (var postLoad : postLoads) {
+                        postLoad.run();
+                    }
+                }, 1L
+        );
     }
 
     public void destroy() {
+        packs.forEach(PackManager::unload);
         packs.clear();
     }
 
-    public static List<Pack> getPacks() {
-        return RuntimePylon.getPackManager().packs;
+    public static void unload(Pack pack) {
+        PylonAddon plugin = pack.plugin();
+        try {
+            ReflectionUtil.invokeMethod(BlockStorage.class, "cleanup", plugin);
+        } catch (Exception e) {
+            StackFormatter.handle(e);
+        }
+        try {
+            ReflectionUtil.invokeMethod(EntityStorage.class, "cleanup", plugin);
+        } catch (Exception e) {
+            StackFormatter.handle(e);
+        }
+        PylonRegistry.GAMETESTS.unregisterAllFromAddon(plugin);
+        PylonRegistry.ITEMS.unregisterAllFromAddon(plugin);
+        PylonRegistry.ITEM_TAGS.unregisterAllFromAddon(plugin);
+        PylonRegistry.FLUIDS.unregisterAllFromAddon(plugin);
+        PylonRegistry.BLOCKS.unregisterAllFromAddon(plugin);
+        PylonRegistry.ENTITIES.unregisterAllFromAddon(plugin);
+        PylonRegistry.RECIPE_TYPES.unregisterAllFromAddon(plugin);
+        PylonRegistry.RESEARCHES.unregisterAllFromAddon(plugin);
+        RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> item instanceof PageButton pb && pb.getPage() instanceof CustomPage));
+        RuntimePylon.getInstance().getCustomPages().clear();
+        if (PylonRegistry.ADDONS.contains(plugin.getKey())) {
+            PylonRegistry.ADDONS.unregister(plugin);
+        }
     }
 }

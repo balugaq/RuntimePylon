@@ -5,7 +5,6 @@ import com.balugaq.runtimepylon.config.Deserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
@@ -22,18 +21,20 @@ public class RegisterConditions implements Deserializer<RegisterConditions> {
     private List<RegisterCondition> conditions;
 
     @Override
-    public @NotNull List<ConfigReader<?, RegisterConditions>> readers() {
+    public List<ConfigReader<?, RegisterConditions>> readers() {
         return List.of(
                 ConfigReader.of(String.class, s -> new RegisterConditions(List.of(Deserializer.newDeserializer(RegisterCondition.class).deserialize(s)))),
-                ConfigReader.of(List.class, lst -> {
-                    List<RegisterCondition> conditions = new ArrayList<>();
-                    for (Object o : lst) {
-                        if (o instanceof String) {
-                            conditions.add(Deserializer.newDeserializer(RegisterCondition.class).deserialize(o));
+                ConfigReader.of(
+                        List.class, lst -> {
+                            List<RegisterCondition> conditions = new ArrayList<>();
+                            for (Object o : lst) {
+                                if (o instanceof String) {
+                                    conditions.add(Deserializer.newDeserializer(RegisterCondition.class).deserialize(o));
+                                }
+                            }
+                            return new RegisterConditions(conditions);
                         }
-                    }
-                    return new RegisterConditions(conditions);
-                })
+                )
         );
     }
 

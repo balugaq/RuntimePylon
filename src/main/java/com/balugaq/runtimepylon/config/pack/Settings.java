@@ -1,7 +1,5 @@
 package com.balugaq.runtimepylon.config.pack;
 
-import com.balugaq.runtimepylon.config.ExternalObjectID;
-import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.PackManager;
 import com.balugaq.runtimepylon.util.Debug;
 import lombok.AllArgsConstructor;
@@ -34,12 +32,17 @@ public class Settings {
         for (File file : from.listFiles()) {
             if (file.isFile() && file.getName().matches("[a-z0-9_\\-\\./]+\\.yml$")) {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                File targetFile = new File(to, ExternalObjectID.of(namespace, InternalObjectID.of(file.getName())).id());
+                File targetFile = new File(to, file.getName());
 
                 if (!targetFile.exists()) {
                     try {
                         targetFile.createNewFile();
                         YamlConfiguration targetConfig = YamlConfiguration.loadConfiguration(targetFile);
+                        for (String key : targetConfig.getKeys(false)) {
+                            if (key.startsWith(namespace.getNamespace() + ":")) {
+                                targetConfig.set(key, null); // delete old key
+                            }
+                        }
                         PackManager.saveConfig(config, targetConfig, targetFile);
                     } catch (IOException e) {
                         Debug.severe(e);

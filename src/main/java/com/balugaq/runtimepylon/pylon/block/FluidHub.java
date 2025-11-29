@@ -1,13 +1,13 @@
 package com.balugaq.runtimepylon.pylon.block;
 
 import com.balugaq.runtimepylon.gui.ButtonSet;
-import com.balugaq.runtimepylon.pylon.MyBlock;
 import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import com.balugaq.runtimepylon.pylon.block.base.WithFluidTag;
 import com.balugaq.runtimepylon.pylon.block.base.WithModel;
 import com.balugaq.runtimepylon.pylon.block.base.WithRecipe;
 import com.balugaq.runtimepylon.pylon.item.fluid.PylonFluidTagHolder;
 import com.balugaq.runtimepylon.util.Key;
+import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
 import io.github.pylonmc.pylon.core.datatypes.PylonSerializers;
@@ -23,8 +23,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 
@@ -36,22 +36,23 @@ import static com.balugaq.runtimepylon.util.Lang.*;
 
 // todo: page.addFluid
 @Getter
-public class FluidHub extends MyBlock implements
-        PylonGuiBlock,
-        WithModel,
-        WithRecipe,
-        WithFluidTag {
+@NullMarked
+public class FluidHub extends PylonBlock implements
+                                         PylonGuiBlock,
+                                         WithModel,
+                                         WithRecipe,
+                                         WithFluidTag {
     public @Nullable ItemStack model = null;
     public @Nullable ItemStack tag = null;
     public @Nullable NamespacedKey itemId = null;
     public @Nullable NamespacedKey recipeTypeId = null;
-    public @NotNull Map<Integer, ItemStack> recipe = new HashMap<>();
+    public Map<Integer, ItemStack> recipe = new HashMap<>();
 
-    public FluidHub(@NotNull Block block, @NotNull BlockCreateContext context) {
+    public FluidHub(Block block, BlockCreateContext context) {
         super(block, context);
     }
 
-    public FluidHub(@NotNull Block block, @NotNull PersistentDataContainer pdc) {
+    public FluidHub(Block block, PersistentDataContainer pdc) {
         super(block, pdc);
         model = pdc.get(RuntimeKeys.model, PylonSerializers.ITEM_STACK);
         tag = pdc.get(RuntimeKeys.tag, PylonSerializers.ITEM_STACK);
@@ -60,7 +61,7 @@ public class FluidHub extends MyBlock implements
         recipe = fromArray(pdc, "recipe");
     }
 
-    public static @NotNull Map<Integer, ItemStack> fromArray(@NotNull PersistentDataContainer pdc, @NotNull String key) {
+    public static Map<Integer, ItemStack> fromArray(PersistentDataContainer pdc, String key) {
         return pdc.getKeys().stream().filter(k -> k.toString().startsWith(key))
                 .map(k -> new Pair<>(k, pdc.get(k, PylonSerializers.ITEM_STACK)))
                 .collect(Collectors.toMap(
@@ -70,7 +71,7 @@ public class FluidHub extends MyBlock implements
     }
 
     @Override
-    public void write(@NotNull PersistentDataContainer pdc) {
+    public void write(PersistentDataContainer pdc) {
         super.write(pdc);
         if (model != null) pdc.set(RuntimeKeys.model, PylonSerializers.ITEM_STACK, model);
         if (tag != null) pdc.set(RuntimeKeys.tag, PylonSerializers.ITEM_STACK, tag);
@@ -80,7 +81,7 @@ public class FluidHub extends MyBlock implements
     }
 
     @Override
-    public @NotNull Gui createGui() {
+    public Gui createGui() {
         FluidHubButtonSet<?> buttons = new FluidHubButtonSet<>(this);
         return Gui.normal()
                 .setStructure(
@@ -120,46 +121,46 @@ public class FluidHub extends MyBlock implements
     }
 
     @Override
-    public @NotNull WithRecipe setRecipeTypeId(@Nullable NamespacedKey recipeTypeId) {
+    public WithRecipe setRecipeTypeId(@Nullable NamespacedKey recipeTypeId) {
         this.recipeTypeId = recipeTypeId;
         return this;
     }
 
     @Override
-    public @NotNull WithRecipe setRecipe(@NotNull Map<Integer, ItemStack> recipe) {
+    public WithRecipe setRecipe(Map<Integer, ItemStack> recipe) {
         this.recipe = recipe;
         return this;
     }
 
     @Override
-    public @NotNull WithModel setModel(@Nullable ItemStack model) {
+    public WithModel setModel(@Nullable ItemStack model) {
         this.model = model;
         return this;
     }
 
     @Override
-    public @NotNull WithModel setItemId(@Nullable NamespacedKey itemId) {
+    public WithModel setItemId(@Nullable NamespacedKey itemId) {
         this.itemId = itemId;
         return this;
     }
 
     @Override
-    public @NotNull WithFluidTag setTag(@Nullable ItemStack tag) {
+    public WithFluidTag setTag(@Nullable ItemStack tag) {
         this.tag = tag;
         return this;
     }
 
     public static class FluidHubButtonSet<T extends FluidHub> extends ButtonSet<T> {
-        public @NotNull AbstractItem
+        public AbstractItem
                 registerFluid,
                 tag,
                 setTag,
                 unsetTag;
 
-        public FluidHubButtonSet(@NotNull T b2) {
+        public FluidHubButtonSet(T b2) {
             super(b2);
             registerFluid = create()
-                    .item(block -> ItemStackBuilder.pylonItem(
+                    .item(block -> ItemStackBuilder.pylon(
                             Material.EMERALD_BLOCK,
                             RuntimeKeys.register_fluid
                     ))
@@ -173,7 +174,7 @@ public class FluidHub extends MyBlock implements
                         return false;
                     });
             tag = create()
-                    .item(data -> data.getTag() != null ? ItemStackBuilder.of(data.getTag()) : ItemStackBuilder.pylonItem(
+                    .item(data -> data.getTag() != null ? ItemStackBuilder.of(data.getTag()) : ItemStackBuilder.pylon(
                             Material.WHITE_STAINED_GLASS_PANE,
                             RuntimeKeys.tag
                     ))
@@ -181,16 +182,18 @@ public class FluidHub extends MyBlock implements
                         ItemStack currentItem = event.getCurrentItem();
                         PylonItem stack = PylonItem.fromStack(currentItem);
                         if (stack instanceof PylonFluidTagHolder<?> ds) {
-                            ds.onClick(data, clickType, player, event, () -> {
-                                data.setTag(currentItem);
-                                reopen(player);
-                            });
+                            ds.onClick(
+                                    data, clickType, player, event, () -> {
+                                        data.setTag(currentItem);
+                                        reopen(player);
+                                    }
+                            );
                         }
 
                         return true;
                     });
             setTag = create()
-                    .item(block -> ItemStackBuilder.pylonItem(
+                    .item(block -> ItemStackBuilder.pylon(
                             Material.GOLD_BLOCK,
                             RuntimeKeys.set_tag
                     ))
@@ -203,7 +206,7 @@ public class FluidHub extends MyBlock implements
                         return false;
                     });
             unsetTag = create()
-                    .item(block -> ItemStackBuilder.pylonItem(
+                    .item(block -> ItemStackBuilder.pylon(
                             Material.IRON_BLOCK,
                             RuntimeKeys.unset_tag
                     ))
@@ -217,7 +220,7 @@ public class FluidHub extends MyBlock implements
                     });
         }
 
-        public static @NotNull PylonFluidTag parseTag(@Nullable ItemStack tagItem) {
+        public static PylonFluidTag parseTag(@Nullable ItemStack tagItem) {
             PylonItem pylon = assertNotNull(PylonItem.fromStack(tagItem), parse_tag_1);
             assertTrue(pylon instanceof PylonFluidTagHolder<?>, parse_tag_2);
             return ((PylonFluidTagHolder<?>) pylon).getTag();
