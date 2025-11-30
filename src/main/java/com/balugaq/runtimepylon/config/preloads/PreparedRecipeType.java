@@ -1,23 +1,25 @@
 package com.balugaq.runtimepylon.config.preloads;
 
-import com.balugaq.runtimepylon.config.MyArrayList;
-import com.balugaq.runtimepylon.config.PageDesc;
 import com.balugaq.runtimepylon.config.PostLoadable;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
-import org.bukkit.Material;
+import com.balugaq.runtimepylon.object.CustomRecipeType;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author balugaq
  */
 @NullMarked
-public record PreparedPage(
+public record PreparedRecipeType(
         RegisteredObjectID id,
-        Material material,
+        List<String> structure,
+        @Nullable CustomRecipeType.ItemStackProvider guiProvider,
+        @Nullable Map<String, CustomRecipeType.Handler> configReader,
         @Nullable ScriptDesc script,
-        @Nullable MyArrayList<PageDesc> parents,
         boolean postLoad
 ) implements PostLoadable {
 }

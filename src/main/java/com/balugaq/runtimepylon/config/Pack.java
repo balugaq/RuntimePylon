@@ -11,6 +11,7 @@ import com.balugaq.runtimepylon.config.pack.PackID;
 import com.balugaq.runtimepylon.config.pack.PackNamespace;
 import com.balugaq.runtimepylon.config.pack.PackVersion;
 import com.balugaq.runtimepylon.config.pack.Pages;
+import com.balugaq.runtimepylon.config.pack.RecipeTypes;
 import com.balugaq.runtimepylon.config.pack.Recipes;
 import com.balugaq.runtimepylon.config.pack.Saveditems;
 import com.balugaq.runtimepylon.config.pack.Scripts;
@@ -24,6 +25,8 @@ import com.balugaq.runtimepylon.object.CustomBlock;
 import com.balugaq.runtimepylon.object.CustomFluid;
 import com.balugaq.runtimepylon.object.CustomItem;
 import com.balugaq.runtimepylon.object.CustomPage;
+import com.balugaq.runtimepylon.object.CustomRecipe;
+import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.object.PackAddon;
 import com.balugaq.runtimepylon.script.ScriptExecutor;
 import com.balugaq.runtimepylon.util.Debug;
@@ -31,6 +34,7 @@ import com.balugaq.runtimepylon.util.MinecraftVersion;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
+import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -65,7 +69,10 @@ import java.util.function.Function;
  *           <li>items/</li>
  *           <li>blocks/</li>
  *           <li>fluids/</li>
+ *           <li>recipe_types</li>
  *           <li>recipes/</li>
+ *           <li>multiblocks</li> // todo: loadRecipeType:
+ *           <li>machines</li> // todo: loadRecipeType:
  *           <li>settings/</li>
  *           <li>scripts/</li>
  *           <li>saveditems/</li>
@@ -120,6 +127,8 @@ public class Pack implements FileObject<Pack> {
     @Nullable
     private final Fluids fluids;
     @Nullable
+    private final RecipeTypes recipeTypes;
+    @Nullable
     private final Recipes recipes;
     @Nullable
     private final Settings settings;
@@ -135,6 +144,7 @@ public class Pack implements FileObject<Pack> {
     public static <T extends Enum<T>> T readEnum(ConfigurationSection config, Class<T> clazz, String path, Advancer<Deserializer.EnumDeserializer<T>> advancer) {
         if (!config.contains(path)) throw new MissingArgumentException(path);
         String s = config.getString(path);
+        if (s == null) throw new MissingArgumentException(clazz);
         T value = advancer.advance(Deserializer.enumDeserializer(clazz))
                 .deserialize(s);
         if (value == null) throw new UnknownEnumException(clazz, s);
@@ -250,6 +260,15 @@ public class Pack implements FileObject<Pack> {
                             .deserialize(fluidsFolder);
                 StackFormatter.destroy();
 
+                StackFormatter.setPosition("Reading Recipe Types");
+                RecipeTypes recipeTypes = null;
+                var recipesTypesFolder = findDir(files, "recipe_types");
+                if (recipesTypesFolder != null)
+                    recipeTypes = new RecipeTypes()
+                                 .setPackNamespace(namespace)
+                                 .deserialize(recipesTypesFolder);
+                StackFormatter.destroy();
+
                 StackFormatter.setPosition("Reading recipes");
                 Recipes recipes = null;
                 var recipesFolder = findDir(files, "recipes");
@@ -300,6 +319,7 @@ public class Pack implements FileObject<Pack> {
                         items,
                         blocks,
                         fluids,
+                        recipeTypes,
                         recipes,
                         settings,
                         scripts,
@@ -403,6 +423,12 @@ public class Pack implements FileObject<Pack> {
                     entry, e -> {
                         RegisteredObjectID id = e.id();
                         try (var sk = StackFormatter.setPosition("Loading page: " + id)) {
+                            ScriptDesc scriptDesc = entry.script();
+
+                            ScriptExecutor executor;
+                            if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
+                            // todo: executor
+
                             Material icon = e.material();
                             CustomPage page = new CustomPage(id.key(), icon);
                             if (e.parents() == null) {
@@ -434,6 +460,7 @@ public class Pack implements FileObject<Pack> {
 
                             ScriptExecutor executor;
                             if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
+                            // todo: executor
 
                             if (blocks != null && blocks.getBlocks().containsKey(id)) {
                                 CustomItem.register(CustomItem.class, icon, id.key());
@@ -471,6 +498,7 @@ public class Pack implements FileObject<Pack> {
 
                             ScriptExecutor executor;
                             if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
+                            // todo: executor
 
                             CustomBlock.register(id.key(), material, CustomBlock.class);
                             Debug.log("Registered Block: " + id.key());
@@ -495,6 +523,26 @@ public class Pack implements FileObject<Pack> {
 
                         List<PageDesc> pages = e.pages();
                         if (pages != null) pages.forEach(desc -> desc.getPage().addFluid(fluid));
+                    }
+            );
+        }
+    }
+
+    private void registerRecipeTypes() {
+        if (recipeTypes == null) return;
+        for (var entry : recipeTypes.getRecipeTypes().values()) {
+            PackManager.load(
+                    entry, e -> {
+                        RegisteredObjectID id = e.id();
+
+                        ScriptDesc scriptDesc = e.script();
+
+                        ScriptExecutor executor;
+                        if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
+                        // todo: executor
+
+                        CustomRecipeType recipeType = new CustomRecipeType(id.key(), e.structure(), e.guiProvider(), e.configReader());
+                        recipeType.register();
                     }
             );
         }
