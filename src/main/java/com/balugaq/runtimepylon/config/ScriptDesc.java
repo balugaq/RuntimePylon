@@ -16,11 +16,11 @@ import java.util.List;
 @NoArgsConstructor(force = true)
 @NullMarked
 public class ScriptDesc implements Deserializer<ScriptDesc>, Examinable<ScriptDesc> {
-    private final String scriptName; // e. g. myscript.js
+    private final String scriptPath; // e. g. myscript.js
 
     @Override
     public ScriptDesc examine() throws ExamineFailedException {
-        if (!scriptName.matches("[A-Za-z0-9_+-]+")) {
+        if (!scriptPath.matches("[A-Za-z0-9_+\\-/]+")) {
             throw new ExamineFailedException("Pack Desc must be [A-Za-z0-9_+-]+");
         }
         return this;

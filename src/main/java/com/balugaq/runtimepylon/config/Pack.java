@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
+import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.Author;
 import com.balugaq.runtimepylon.config.pack.Blocks;
@@ -17,24 +18,23 @@ import com.balugaq.runtimepylon.config.pack.Saveditems;
 import com.balugaq.runtimepylon.config.pack.Scripts;
 import com.balugaq.runtimepylon.config.pack.Settings;
 import com.balugaq.runtimepylon.config.pack.WebsiteLink;
+import com.balugaq.runtimepylon.exceptions.InvalidStructureException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.exceptions.PackException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
-import com.balugaq.runtimepylon.object.CustomBlock;
+import com.balugaq.runtimepylon.object.blocks.CustomBlock;
 import com.balugaq.runtimepylon.object.CustomFluid;
 import com.balugaq.runtimepylon.object.CustomItem;
 import com.balugaq.runtimepylon.object.CustomPage;
-import com.balugaq.runtimepylon.object.CustomRecipe;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.object.PackAddon;
-import com.balugaq.runtimepylon.script.ScriptExecutor;
+import com.balugaq.runtimepylon.object.blocks.CustomMultiBlock;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
-import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -85,7 +85,7 @@ import java.util.function.Function;
  * @author balugaq
  */
 @Slf4j
-@SuppressWarnings({"unchecked", "RegExpRedundantEscape", "ResultOfMethodCallIgnored", "UnusedAssignment", "unused"})
+@SuppressWarnings({"unchecked", "RegExpRedundantEscape", "ResultOfMethodCallIgnored", "unused"})
 @Data
 @RequiredArgsConstructor
 @NoArgsConstructor(force = true)
@@ -184,6 +184,11 @@ public class Pack implements FileObject<Pack> {
         return object;
     }
 
+    public static void guiStructurePrecheck(List<String> list) throws InvalidStructureException {
+        if (list.isEmpty() || list.size() > 5)
+            throw new InvalidStructureException(list);
+    }
+
     @Override
     public List<FileReader<Pack>> readers() {
         return List.of(dir -> {
@@ -223,6 +228,37 @@ public class Pack implements FileObject<Pack> {
                 RuntimePylon.getInstance().addSupportedLanguages(locales);
                 Material material = Pack.readEnum(config, Material.class, "material", Deserializer.EnumDeserializer::forceUpperCase);
                 PackNamespace namespace = PackNamespace.warp(id, locales, material);
+
+                StackFormatter.setPosition("Reading recipes");
+                Recipes recipes = null;
+                var recipesFolder = findDir(files, "recipes");
+                if (recipesFolder != null)
+                    recipes = new Recipes(recipesFolder, namespace);
+                StackFormatter.destroy();
+
+                StackFormatter.setPosition("Reading settings");
+                Settings settings = null;
+                var settingsFolder = findDir(files, "settings");
+                if (settingsFolder != null)
+                    settings = new Settings(settingsFolder, namespace);
+                StackFormatter.destroy();
+
+                StackFormatter.setPosition("Reading scripts");
+                Scripts scripts = null;
+                var scriptsFolder = findDir(files, "scripts");
+                if (scriptsFolder != null)
+                    scripts = new Scripts()
+                            .deserialize(scriptsFolder);
+                StackFormatter.destroy();
+                namespace.setScripts(scripts);
+
+                StackFormatter.setPosition("Reading saveditems");
+                Saveditems saveditems = null;
+                var saveditemsFolder = findDir(files, "saveditems");
+                if (saveditemsFolder != null)
+                    saveditems = new Saveditems()
+                            .deserialize(saveditemsFolder);
+                StackFormatter.destroy();
 
                 StackFormatter.setPosition("Reading pages");
                 Pages pages = null;
@@ -267,36 +303,6 @@ public class Pack implements FileObject<Pack> {
                     recipeTypes = new RecipeTypes()
                                  .setPackNamespace(namespace)
                                  .deserialize(recipesTypesFolder);
-                StackFormatter.destroy();
-
-                StackFormatter.setPosition("Reading recipes");
-                Recipes recipes = null;
-                var recipesFolder = findDir(files, "recipes");
-                if (recipesFolder != null)
-                    recipes = new Recipes(recipesFolder, namespace);
-                StackFormatter.destroy();
-
-                StackFormatter.setPosition("Reading settings");
-                Settings settings = null;
-                var settingsFolder = findDir(files, "settings");
-                if (settingsFolder != null)
-                    settings = new Settings(settingsFolder, namespace);
-                StackFormatter.destroy();
-
-                StackFormatter.setPosition("Reading scripts");
-                Scripts scripts = null;
-                var scriptsFolder = findDir(files, "scripts");
-                if (scriptsFolder != null)
-                    scripts = new Scripts()
-                            .deserialize(scriptsFolder);
-                StackFormatter.destroy();
-
-                StackFormatter.setPosition("Reading saveditems");
-                Saveditems saveditems = null;
-                var saveditemsFolder = findDir(files, "saveditems");
-                if (saveditemsFolder != null)
-                    saveditems = new Saveditems()
-                            .deserialize(saveditemsFolder);
                 StackFormatter.destroy();
 
                 return new Pack(
@@ -423,12 +429,6 @@ public class Pack implements FileObject<Pack> {
                     entry, e -> {
                         RegisteredObjectID id = e.id();
                         try (var sk = StackFormatter.setPosition("Loading page: " + id)) {
-                            ScriptDesc scriptDesc = entry.script();
-
-                            ScriptExecutor executor;
-                            if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
-                            // todo: executor
-
                             Material icon = e.material();
                             CustomPage page = new CustomPage(id.key(), icon);
                             if (e.parents() == null) {
@@ -438,7 +438,7 @@ public class Pack implements FileObject<Pack> {
                                     parent.getPage().addPage(page);
                                 }
                             }
-                            RuntimePylon.getInstance().registerCustomPage(page);
+                            GlobalVars.putCustomPage(page.getKey(), page);
                             Debug.log("Registered Page: " + id.key());
                         } catch (Exception ex) {
                             StackFormatter.handle(ex);
@@ -456,11 +456,6 @@ public class Pack implements FileObject<Pack> {
                         RegisteredObjectID id = e.id();
                         try (var sk = StackFormatter.setPosition("Loading item: " + id)) {
                             ItemStack icon = entry.icon();
-                            ScriptDesc scriptDesc = entry.script();
-
-                            ScriptExecutor executor;
-                            if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
-                            // todo: executor
 
                             if (blocks != null && blocks.getBlocks().containsKey(id)) {
                                 CustomItem.register(CustomItem.class, icon, id.key());
@@ -494,13 +489,12 @@ public class Pack implements FileObject<Pack> {
                         RegisteredObjectID id = e.id();
                         try (var sk = StackFormatter.setPosition("Loading block: " + id)) {
                             Material material = e.material();
-                            ScriptDesc scriptDesc = e.script();
 
-                            ScriptExecutor executor;
-                            if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
-                            // todo: executor
-
-                            CustomBlock.register(id.key(), material, CustomBlock.class);
+                            if (GlobalVars.getMultiBlockComponents(id.key()).isEmpty()) {
+                                CustomBlock.register(id.key(), material, CustomBlock.class);
+                            } else {
+                                CustomMultiBlock.register(id.key(), material, CustomMultiBlock.class);
+                            }
                             Debug.log("Registered Block: " + id.key());
                         } catch (Exception ex) {
                             StackFormatter.handle(ex);
@@ -535,12 +529,6 @@ public class Pack implements FileObject<Pack> {
                     entry, e -> {
                         RegisteredObjectID id = e.id();
 
-                        ScriptDesc scriptDesc = e.script();
-
-                        ScriptExecutor executor;
-                        if (scripts != null && scriptDesc != null) executor = scripts.findScript(scriptDesc);
-                        // todo: executor
-
                         CustomRecipeType recipeType = new CustomRecipeType(id.key(), e.structure(), e.guiProvider(), e.configReader());
                         recipeType.register();
                     }
@@ -570,6 +558,7 @@ public class Pack implements FileObject<Pack> {
         StackFormatter.run("Loading items", this::registerItems);
         StackFormatter.run("Loading blocks", this::registerBlocks);
         StackFormatter.run("Loading fluids", this::registerFluids);
+        StackFormatter.run("Loading recipe types", this::registerRecipeTypes);
         PylonRegistry.ADDONS.unregister(plugin());
         plugin().registerWithPylon();
         return this;
@@ -579,6 +568,9 @@ public class Pack implements FileObject<Pack> {
         return getPackNamespace().plugin();
     }
 
+    /**
+     * @author balugaq
+     */
     @FunctionalInterface
     public interface Advancer<T> extends Function<T, T> {
         default T apply(T object) {

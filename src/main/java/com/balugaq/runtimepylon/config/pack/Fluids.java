@@ -68,12 +68,9 @@ public class Fluids implements FileObject<Fluids> {
             List<File> ymls = files.stream().filter(file -> file.getName().endsWith(".yml") || file.getName().endsWith(".yaml")).toList();
             for (File yml : ymls) {try (var ignored = StackFormatter.setPosition("Reading file: " + StringUtil.simplifyPath(yml.getAbsolutePath()))) {
                 var config = YamlConfiguration.loadConfiguration(yml);
-                for (String fluidKey : config.getKeys(false)) {try (var ignored1 = StackFormatter.setPosition("Reading key: " + fluidKey)) {
-                    if (!fluidKey.matches("[a-z0-9_\\-\\./]+")) throw new IncompatibleKeyFormatException(fluidKey);
-
-                    ConfigurationSection section = config.getConfigurationSection(fluidKey);
-                    if (section == null) throw new InvalidDescException(fluidKey);
-                    if (PreRegister.blocks(section)) continue;
+                for (String key : config.getKeys(false)) {try (var ignored1 = StackFormatter.setPosition("Reading key: " + key)) {
+                    var section = PreRegister.read(config, key);
+                    if (section == null) continue;
 
                     if (!section.contains("material")) throw new MissingArgumentException("material");
 
@@ -84,7 +81,7 @@ public class Fluids implements FileObject<Fluids> {
                     Material dm = MaterialUtil.getDisplayMaterial(item);
                     if (!dm.isItem() || dm.isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
 
-                    var id = InternalObjectID.of(fluidKey).register(namespace);
+                    var id = InternalObjectID.of(key).register(namespace);
                     var ts = section.getString("temperature");
                     if (ts == null) {
                         ts = FluidTemperature.NORMAL.name();

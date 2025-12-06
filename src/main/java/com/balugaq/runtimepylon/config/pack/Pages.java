@@ -69,12 +69,9 @@ public class Pages implements FileObject<Pages> {
             for (File yml : ymls) {try (var ignored = StackFormatter.setPosition("Reading file: " + StringUtil.simplifyPath(yml.getAbsolutePath()))) {
                 var config = YamlConfiguration.loadConfiguration(yml);
 
-                for (String pageKey : config.getKeys(false)) {try (var ignored1 = StackFormatter.setPosition("Reading key: " + pageKey)) {
-                    if (!pageKey.matches("[a-z0-9_\\-\\./]+")) throw new IncompatibleKeyFormatException(pageKey);
-
-                    ConfigurationSection section = config.getConfigurationSection(pageKey);
-                    if (section == null) throw new InvalidDescException(pageKey);
-                    if (PreRegister.blocks(section)) continue;
+                for (String key : config.getKeys(false)) {try (var ignored1 = StackFormatter.setPosition("Reading key: " + key)) {
+                    var section = PreRegister.read(config, key);
+                    if (section == null) continue;
 
                     if (!section.contains("material")) throw new MissingArgumentException("material");
 
@@ -83,13 +80,14 @@ public class Pages implements FileObject<Pages> {
                     if (item == null) continue;
                     Material dm = MaterialUtil.getDisplayMaterial(item);
                     if (!dm.isItem() || dm.isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
-                    var id = InternalObjectID.of(pageKey).register(namespace);
+                    var id = InternalObjectID.of(key).register(namespace);
 
                     ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
+                    namespace.registerScript(id, scriptdesc);
                     MyArrayList<PageDesc> parents = (MyArrayList<@NotNull PageDesc>) Pack.readOrNull(section, MyArrayList.class, PageDesc.class, "parents", e -> e.setPackNamespace(namespace));
 
                     boolean postLoad = section.getBoolean("postload", false);
-                    pages.put(id, new PreparedPage(id, dm, scriptdesc, parents, postLoad));
+                    pages.put(id, new PreparedPage(id, dm, parents, postLoad));
                 } catch (Exception e) {
                     StackFormatter.handle(e);
                 }}

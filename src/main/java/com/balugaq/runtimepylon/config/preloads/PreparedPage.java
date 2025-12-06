@@ -16,7 +16,6 @@ import org.jspecify.annotations.NullMarked;
 public record PreparedPage(
         RegisteredObjectID id,
         Material material,
-        @Nullable ScriptDesc script,
         @Nullable MyArrayList<PageDesc> parents,
         boolean postLoad
 ) implements PostLoadable {

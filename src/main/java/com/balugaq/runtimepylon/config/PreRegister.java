@@ -1,7 +1,11 @@
 package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.config.register.RegisterConditions;
+import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
+import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 /**
@@ -9,7 +13,18 @@ import org.jspecify.annotations.NullMarked;
  */
 @NullMarked
 public class PreRegister {
-    public static boolean blocks(ConfigurationSection section) {
+    @Nullable
+    public static ConfigurationSection read(FileConfiguration config, String key) {
+        if (!key.matches("[a-z0-9_\\-./]+")) throw new IncompatibleKeyFormatException(key);
+
+        ConfigurationSection section = config.getConfigurationSection(key);
+        if (section == null) throw new InvalidDescException(key);
+        if (PreRegister.blocks(section)) return null;
+
+        return section;
+    }
+
+    private static boolean blocks(ConfigurationSection section) {
         Object o = section.get("register-conditions");
         if (o != null) {
             RegisterConditions conditions = Deserializer.newDeserializer(RegisterConditions.class).deserialize(o);

@@ -4,6 +4,7 @@ import com.balugaq.runtimepylon.config.PostLoadable;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
+import com.balugaq.runtimepylon.object.ItemStackProvider;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
@@ -17,9 +18,8 @@ import java.util.Map;
 public record PreparedRecipeType(
         RegisteredObjectID id,
         List<String> structure,
-        @Nullable CustomRecipeType.ItemStackProvider guiProvider,
+        @Nullable ItemStackProvider guiProvider,
         @Nullable Map<String, CustomRecipeType.Handler> configReader,
-        @Nullable ScriptDesc script,
         boolean postLoad
 ) implements PostLoadable {
 }

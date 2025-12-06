@@ -44,7 +44,7 @@ import java.util.Map;
  * <p>
  * [Internal object ID]:
  *   icon: [Material Format]
- *   *script: script.js
+ *   *script: [ScriptDesc]
  *   *page: [PageDesc]
  *   *pages:
  *   - [PageDesc]
@@ -73,12 +73,9 @@ public class Items implements FileObject<Items> {
             for (File yml : ymls) {try (var ignored = StackFormatter.setPosition("Reading file: " + StringUtil.simplifyPath(yml.getAbsolutePath()))) {
                 var config = YamlConfiguration.loadConfiguration(yml);
 
-                for (String itemKey : config.getKeys(false)) {try (var ignored1 = StackFormatter.setPosition("Reading key: " + itemKey)) {
-                    if (!itemKey.matches("[a-z0-9_\\-\\./]+")) throw new IncompatibleKeyFormatException(itemKey);
-
-                    ConfigurationSection section = config.getConfigurationSection(itemKey);
-                    if (section == null) throw new InvalidDescException(itemKey);
-                    if (PreRegister.blocks(section)) continue;
+                for (String key : config.getKeys(false)) {try (var ignored1 = StackFormatter.setPosition("Reading key: " + key)) {
+                    var section = PreRegister.read(config, key);
+                    if (section == null) continue;
 
                     if (!section.contains("icon")) throw new MissingArgumentException("icon");
 
@@ -88,10 +85,12 @@ public class Items implements FileObject<Items> {
                     Material dm = MaterialUtil.getDisplayMaterial(item);
                     if (!dm.isItem() || dm.isAir()) throw new IncompatibleMaterialException("material must be items: " + item.getType());
 
-                    var id = InternalObjectID.of(itemKey).register(namespace);
+                    var id = InternalObjectID.of(key).register(namespace);
                     ItemStack icon = ItemStackBuilder.pylon(dm, id.key()).amount(item.getAmount()).build();
 
                     ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
+                    namespace.registerScript(id, scriptdesc);
+
                     PageDesc page = Pack.readOrNull(section, PageDesc.class, "page", t -> t.setPackNamespace(getNamespace()));
                     MyArrayList<PageDesc> pages = Pack.readOrNull(section, MyArrayList.class, PageDesc.class, "pages", t -> t.setPackNamespace(getNamespace()));
                     if (page != null) {
@@ -100,7 +99,7 @@ public class Items implements FileObject<Items> {
                     }
 
                     boolean postLoad = section.getBoolean("postload", false);
-                    items.put(id, new PreparedItem(id, icon, scriptdesc, pages, postLoad));
+                    items.put(id, new PreparedItem(id, icon, pages, postLoad));
                 } catch (Exception e) {
                     StackFormatter.handle(e);
                 }}
