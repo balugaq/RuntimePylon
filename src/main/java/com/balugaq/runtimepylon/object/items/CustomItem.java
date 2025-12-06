@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon.object;
+package com.balugaq.runtimepylon.object.items;
 
 import io.github.pylonmc.pylon.core.item.PylonItem;
 import org.bukkit.inventory.ItemStack;

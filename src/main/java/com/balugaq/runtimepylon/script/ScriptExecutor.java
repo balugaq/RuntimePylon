@@ -1,6 +1,10 @@
 package com.balugaq.runtimepylon.script;
 
+import com.balugaq.runtimepylon.GlobalVars;
+import com.balugaq.runtimepylon.util.Debug;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
@@ -23,26 +27,28 @@ public abstract class ScriptExecutor {
         this.file = file;
     }
 
-    public final Object executeFunction(String functionName, Object... parameters) {
+    @CanIgnoreReturnValue
+    public final GlobalVars.Result<?> executeFunction(String functionName, Object... parameters) {
         if (failedFunctions.contains(functionName)) {
-            return null;
+            return GlobalVars.Result.EMPTY;
         }
 
         if (!isFunctionExists(functionName)) {
-            return null;
+            return GlobalVars.Result.EMPTY;
         }
 
         try {
-            return executeFunction0(functionName, parameters);
+            return GlobalVars.Result.of(executeFunction0(functionName, parameters));
         } catch (Exception e) {
+            Debug.severe(e);
             failedFunctions.add(functionName);
-            return null;
+            return GlobalVars.Result.EMPTY;
         }
     }
 
     public abstract boolean isFunctionExists(String functionName);
 
-    protected abstract Object executeFunction0(String functionName, Object... parameters) throws Exception;
+    protected abstract @Nullable Object executeFunction0(String functionName, Object... parameters) throws Exception;
 
     public abstract void close();
 }

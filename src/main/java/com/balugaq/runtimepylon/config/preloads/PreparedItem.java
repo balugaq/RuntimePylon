@@ -3,7 +3,6 @@ package com.balugaq.runtimepylon.config.preloads;
 import com.balugaq.runtimepylon.config.PageDesc;
 import com.balugaq.runtimepylon.config.PostLoadable;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
-import com.balugaq.runtimepylon.config.ScriptDesc;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
@@ -17,7 +16,6 @@ import java.util.List;
 public record PreparedItem(
         RegisteredObjectID id,
         ItemStack icon,
-        @Nullable ScriptDesc script,
         @Nullable List<PageDesc> pages,
         boolean postLoad
 ) implements PostLoadable {

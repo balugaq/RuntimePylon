@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
+import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.Saveditems;
 import com.balugaq.runtimepylon.exceptions.IdConflictException;
@@ -73,6 +74,12 @@ import java.util.function.Consumer;
  *               <li>fluids-partB.yml</li>
  *             </ul>
  *           </li>
+ *           <li>recipe_types/
+ *               <ul>
+ *                   <li>recipe-types-partA.yml</li>
+ *                   <li>recipe-types-partB.yml</li>
+ *               </ul>
+ *           </li>
  *           <li>recipes/
  *             <ul>
  *               <li>minecraft/
@@ -132,8 +139,7 @@ import java.util.function.Consumer;
  * | ------- | ------- | ----------- | ------- | -------- |
  * | String | Pack ID | is the identifier of a pack | `A-Za-z0-9_+-` | Abc |
  * | String | Internal object ID | is the identifier of an object in your own pack | `a-z0-9_-./` | abc |
- * | String | External object ID | is the identifier of an object for external packs to access | - | mypack_abc |
- * | NamespacedKey | Registered object ID | is the identifier of an object that registered in PylonCore | - | runtimepylon:mypack_abc |
+ * | NamespacedKey | Registered object ID | is the identifier of an object that registered in PylonCore | - | mypack:abc |
  *
  * @author balugaq
  */
@@ -259,6 +265,7 @@ public @Data class PackManager {
     public void destroy() {
         packs.forEach(PackManager::unload);
         packs.clear();
+        GlobalVars.destroy();
     }
 
     public static void unload(Pack pack) {
@@ -282,7 +289,6 @@ public @Data class PackManager {
         PylonRegistry.RECIPE_TYPES.unregisterAllFromAddon(plugin);
         PylonRegistry.RESEARCHES.unregisterAllFromAddon(plugin);
         RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> item instanceof PageButton pb && pb.getPage() instanceof CustomPage));
-        RuntimePylon.getInstance().getCustomPages().clear();
         if (PylonRegistry.ADDONS.contains(plugin.getKey())) {
             PylonRegistry.ADDONS.unregister(plugin);
         }

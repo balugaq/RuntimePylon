@@ -14,10 +14,14 @@ import com.balugaq.runtimepylon.config.pack.WebsiteLink;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MessageUtil;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
+import com.balugaq.runtimepylon.util.ReflectionUtil;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.github.pylonmc.pylon.core.PylonCore;
+import io.github.pylonmc.pylon.core.recipe.RecipeType;
+import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.datacomponent.DataComponentTypes;
@@ -38,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -167,6 +172,8 @@ public class RuntimePylonCommand {
             registryInfo.add(pack.getBlocks().getBlocks().size() + " Blocks");
         if (pack.getFluids() != null)
             registryInfo.add(pack.getFluids().getFluids().size() + " Fluids");
+        if (pack.getRecipeTypes() != null)
+            registryInfo.add(pack.getRecipeTypes().getRecipeTypes().size() + " Recipe Types");
         if (pack.getScripts() != null)
             registryInfo.add(pack.getScripts().getScripts().size() + " Scripts");
         return registryInfo;
@@ -239,6 +246,19 @@ public class RuntimePylonCommand {
 
     private int loadPacks(CommandContext<CommandSourceStack> ctx) {
         RuntimePylon.getPackManager().loadPacks();
+        // reload recipes
+        for (RecipeType<?> type : PylonRegistry.RECIPE_TYPES.getValues()) {
+            try {
+                ReflectionUtil.getValue(type, "registeredRecipes", Map.class).clear();
+            } catch (Exception e) {
+                Debug.warn(e);
+            }
+        }
+        try {
+            ReflectionUtil.invokeMethod(PylonCore.INSTANCE, "loadRecipes");
+        } catch (Exception e) {
+            Debug.warn(e);
+        }
         return Command.SINGLE_SUCCESS;
     }
 

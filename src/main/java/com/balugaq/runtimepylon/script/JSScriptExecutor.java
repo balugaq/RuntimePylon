@@ -1,13 +1,13 @@
 package com.balugaq.runtimepylon.script;
 
-import com.balugaq.runtimepylon.script.callbacks.PylonCallbackReceiver;
-import com.balugaq.runtimepylon.script.callbacks.RuntimePylonCallbackReceiver;
+import com.balugaq.runtimepylon.script.callbacks.APICallbacks;
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interop.V8Host;
 import com.caoccao.javet.interop.V8Runtime;
 import com.caoccao.javet.values.V8Value;
 import com.caoccao.javet.values.reference.V8Script;
 import com.caoccao.javet.values.reference.V8ValueFunction;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
@@ -32,8 +32,7 @@ public class JSScriptExecutor extends ScriptExecutor {
 
     private void load() {
         try {
-            runtime.getGlobalObject().bind(new PylonCallbackReceiver());
-            runtime.getGlobalObject().bind(new RuntimePylonCallbackReceiver());
+            runtime.getGlobalObject().bind(new APICallbacks());
 
             script = runtime.getExecutor(getFile()).compileV8Script();
             script.executeVoid();
@@ -56,6 +55,7 @@ public class JSScriptExecutor extends ScriptExecutor {
     }
 
     @Override
+    @Nullable
     protected Object executeFunction0(String functionName, Object... parameters) throws Exception {
         try (V8Value value = runtime.getGlobalObject().get(functionName)) {
             if (!(value instanceof V8ValueFunction function)) {
