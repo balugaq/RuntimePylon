@@ -48,16 +48,16 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
     public static Map<NamespacedKey, SimpleStaticGuidePage> getGuidePages() {
         var pages = new HashMap<>(PylonGuide.getRootPage().getButtons()
-              .stream()
-              .filter(button -> button instanceof PageButton)
-              .map(button -> ((PageButton) button).getPage())
-              .filter(page -> page instanceof SimpleStaticGuidePage)
-              .map(page -> (SimpleStaticGuidePage) page)
-              .collect(Collectors.toMap(
-                      Keyed::getKey,
-                      page -> page,
-                      (a, b) -> b
-              )));
+                                          .stream()
+                                          .filter(button -> button instanceof PageButton)
+                                          .map(button -> ((PageButton) button).getPage())
+                                          .filter(page -> page instanceof SimpleStaticGuidePage)
+                                          .map(page -> (SimpleStaticGuidePage) page)
+                                          .collect(Collectors.toMap(
+                                                  Keyed::getKey,
+                                                  page -> page,
+                                                  (a, b) -> b
+                                          )));
         pages.putAll(GlobalVars.getCustomPages());
         pages.put(PylonGuide.getRootPage().getKey(), PylonGuide.getRootPage());
         return pages;

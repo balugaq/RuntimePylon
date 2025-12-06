@@ -146,14 +146,6 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     }
 
     @Override
-    public void tick(final double deltaSeconds) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "tick",
-                this, deltaSeconds
-        ));
-    }
-
-    @Override
     public void onFlowerPotManipulated(final PlayerFlowerPotManipulateEvent event) {
         GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
                 "onFlowerPotManipulated",
@@ -194,17 +186,17 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     }
 
     @Override
-    public void onResonate(final BellResonateEvent event) {
+    public void onRing(final BellRingEvent event) {
         GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onResonate",
+                "onRing",
                 this, event
         ));
     }
 
     @Override
-    public void onRing(final BellRingEvent event) {
+    public void onResonate(final BellResonateEvent event) {
         GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onRing",
+                "onResonate",
                 this, event
         ));
     }
@@ -318,14 +310,6 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     }
 
     @Override
-    public void onFertilize(final BlockFertilizeEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onFertilize",
-                this, event
-        ));
-    }
-
-    @Override
     public void onGrow(final BlockGrowEvent event) {
         GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
                 "onGrow",
@@ -334,9 +318,9 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     }
 
     @Override
-    public void onChangePage(final PlayerLecternPageChangeEvent event) {
+    public void onFertilize(final BlockFertilizeEvent event) {
         GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onChangePage",
+                "onFertilize",
                 this, event
         ));
     }
@@ -358,13 +342,29 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     }
 
     @Override
-    public boolean isAsync() {
-        return settings.get("async", ConfigAdapter.BOOLEAN, false);
+    public void onChangePage(final PlayerLecternPageChangeEvent event) {
+        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
+                "onChangePage",
+                this, event
+        ));
     }
 
     @Override
     public int getTickInterval() {
         return settings.get("tick-interval", ConfigAdapter.INT, PylonConfig.getDefaultTickInterval());
+    }
+
+    @Override
+    public boolean isAsync() {
+        return settings.get("async", ConfigAdapter.BOOLEAN, false);
+    }
+
+    @Override
+    public void tick(final double deltaSeconds) {
+        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
+                "tick",
+                this, deltaSeconds
+        ));
     }
 
     @Override
@@ -448,17 +448,17 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     }
 
     @Override
-    public void onOpen(@NotNull final PlayerOpenSignEvent event) {
+    public void onSignChange(@NotNull final SignChangeEvent event) {
         GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onOpen",
+                "onSignChange",
                 this, event
         ));
     }
 
     @Override
-    public void onSignChange(@NotNull final SignChangeEvent event) {
+    public void onOpen(@NotNull final PlayerOpenSignEvent event) {
         GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onSignChange",
+                "onOpen",
                 this, event
         ));
     }

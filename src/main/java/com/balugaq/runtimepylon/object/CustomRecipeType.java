@@ -76,6 +76,7 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
     private final List<String> structure;
     private final ItemStackProvider provider;
     private final Map<String, Handler> configReader;
+
     public CustomRecipeType(final NamespacedKey key, List<String> structure, @Nullable ItemStackProvider guiProvider, @Nullable Map<String, Handler> configReader) {
         super(key);
         this.structure = structure;
@@ -117,12 +118,68 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
         return new CustomRecipe(this, key, inputs, results, other);
     }
 
-    @NullMarked
-    public record Handler(ConfigAdapter<?> adapter, @Nullable Object defaultValue) implements Deserializer<Handler> {
-        public Handler {
+    private List<FluidOrItem> readResults(Object object) {
+        List<FluidOrItem> s = new ArrayList<>();
+        for (RecipeInput r : readInputs(object)) {
+            if (r instanceof RecipeInput.Item item) {
+                for (ItemTypeWrapper wrapper : item.getItems()) {
+                    s.add(FluidOrItem.of(wrapper.createItemStack()));
+                }
+            } else if (r instanceof RecipeInput.Fluid fluid) {
+                for (PylonFluid f : fluid.fluids()) {
+                    s.add(FluidOrItem.of(f, fluid.amountMillibuckets()));
+                }
+            }
+        }
+        return s;
+    }
+
+    private List<RecipeInput> readInputs(Object object) {
+        List<RecipeInput> s = new ArrayList<>();
+        switch (object) {
+            case ItemStack stack -> {
+                return List.of(RecipeInput.of(stack));
+            }
+            case PylonFluid fluid -> {
+                return List.of(RecipeInput.of(fluid, 1));
+            }
+            case RecipeInput.Item item -> {
+                return List.of(item);
+            }
+            case RecipeInput.Fluid fluid -> {
+                return List.of(fluid);
+            }
+            case FluidOrItem.Item item -> {
+                return List.of(RecipeInput.of(item.item()));
+            }
+            case FluidOrItem.Fluid fluid -> {
+                return List.of(RecipeInput.of(fluid.fluid(), fluid.amountMillibuckets()));
+            }
+            case List<?> list -> {
+                for (Object o : list) {
+                    List<RecipeInput> r = readInputs(o);
+                    s.addAll(r);
+                }
+                return s;
+            }
+            case Set<?> set -> {
+                for (Object o : set) {
+                    List<RecipeInput> r = readInputs(o);
+                    s.addAll(r);
+                }
+                return s;
+            }
+            default -> {
+            }
         }
 
+        return s;
+    }
+
+    @NullMarked
+    public record Handler(ConfigAdapter<?> adapter, @Nullable Object defaultValue) implements Deserializer<Handler> {
         public static final Map<String, ConfigAdapter<?>> adapters = new HashMap<>();
+
         static {
             adapters.put("BYTE", ConfigAdapter.BYTE);
             adapters.put("SHORT", ConfigAdapter.SHORT);
@@ -149,6 +206,9 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
             adapters.put("ITEM_TAG", ConfigAdapter.ITEM_TAG);
             adapters.put("CULLING_PRESET", ConfigAdapter.CULLING_PRESET);
             adapters.put("WAILA_DISPLAY", ConfigAdapter.WAILA_DISPLAY);
+        }
+
+        public Handler {
         }
 
         private static ConfigAdapter<?> readConfigAdapter(List<String> parts) {
@@ -202,80 +262,23 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
 
         @Override
         public List<ConfigReader<?, Handler>> readers() {
-            return List.of(ConfigReader.of(String.class, s -> {
-                String[] a = s.split(";", 1);
-                if (a.length == 0) {
-                    return this;
-                }
+            return List.of(ConfigReader.of(
+                    String.class, s -> {
+                        String[] a = s.split(";", 1);
+                        if (a.length == 0) {
+                            return this;
+                        }
 
-                String[] parts = a[0].split("-");
-                var adt = readConfigAdapter(List.of(parts));
+                        String[] parts = a[0].split("-");
+                        var adt = readConfigAdapter(List.of(parts));
 
-                if (a.length > 1) {
-                    String def = a[1];
-                    return new Handler(adt, adt.convert(def));
-                }
-                return this;
-            }));
+                        if (a.length > 1) {
+                            String def = a[1];
+                            return new Handler(adt, adt.convert(def));
+                        }
+                        return this;
+                    }
+            ));
         }
-    }
-
-    private List<FluidOrItem> readResults(Object object) {
-        List<FluidOrItem> s = new ArrayList<>();
-        for (RecipeInput r : readInputs(object)) {
-            if (r instanceof RecipeInput.Item item) {
-                for (ItemTypeWrapper wrapper : item.getItems()) {
-                    s.add(FluidOrItem.of(wrapper.createItemStack()));
-                }
-            }
-            else if (r instanceof RecipeInput.Fluid fluid) {
-                for (PylonFluid f : fluid.fluids()) {
-                    s.add(FluidOrItem.of(f, fluid.amountMillibuckets()));
-                }
-            }
-        }
-        return s;
-    }
-
-    private List<RecipeInput> readInputs(Object object) {
-        List<RecipeInput> s = new ArrayList<>();
-        switch (object) {
-            case ItemStack stack -> {
-                return List.of(RecipeInput.of(stack));
-            }
-            case PylonFluid fluid -> {
-                return List.of(RecipeInput.of(fluid, 1));
-            }
-            case RecipeInput.Item item -> {
-                return List.of(item);
-            }
-            case RecipeInput.Fluid fluid -> {
-                return List.of(fluid);
-            }
-            case FluidOrItem.Item item -> {
-                return List.of(RecipeInput.of(item.item()));
-            }
-            case FluidOrItem.Fluid fluid -> {
-                return List.of(RecipeInput.of(fluid.fluid(), fluid.amountMillibuckets()));
-            }
-            case List<?> list -> {
-                for (Object o : list) {
-                    List<RecipeInput> r = readInputs(o);
-                    s.addAll(r);
-                }
-                return s;
-            }
-            case Set<?> set -> {
-                for (Object o : set) {
-                    List<RecipeInput> r = readInputs(o);
-                    s.addAll(r);
-                }
-                return s;
-            }
-            default -> {
-            }
-        }
-
-        return s;
     }
 }

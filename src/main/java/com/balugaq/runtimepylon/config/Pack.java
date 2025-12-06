@@ -23,12 +23,12 @@ import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.exceptions.PackException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
-import com.balugaq.runtimepylon.object.blocks.CustomBlock;
 import com.balugaq.runtimepylon.object.CustomFluid;
 import com.balugaq.runtimepylon.object.CustomItem;
 import com.balugaq.runtimepylon.object.CustomPage;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.object.PackAddon;
+import com.balugaq.runtimepylon.object.blocks.CustomBlock;
 import com.balugaq.runtimepylon.object.blocks.CustomMultiBlock;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
@@ -301,8 +301,8 @@ public class Pack implements FileObject<Pack> {
                 var recipesTypesFolder = findDir(files, "recipe_types");
                 if (recipesTypesFolder != null)
                     recipeTypes = new RecipeTypes()
-                                 .setPackNamespace(namespace)
-                                 .deserialize(recipesTypesFolder);
+                            .setPackNamespace(namespace)
+                            .deserialize(recipesTypesFolder);
                 StackFormatter.destroy();
 
                 return new Pack(

@@ -10,7 +10,6 @@ import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.fluid.FluidPointType;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
-import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import lombok.Getter;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockFace;
@@ -63,6 +62,7 @@ public class GlobalVars {
     public static GlobalVars.Result<Gui> getGuiO(NamespacedKey key) {
         return GlobalVars.Result.of(guis.get(key));
     }
+
     public static void putScript(NamespacedKey key, ScriptExecutor script) {
         scripts.put(key, script);
     }
@@ -171,6 +171,7 @@ public class GlobalVars {
     public static class ResultL2<T> {
         @Nullable
         public final T result;
+
         public ResultL2(@Nullable T result) {
             this.result = result;
         }
@@ -186,7 +187,8 @@ public class GlobalVars {
      * @author balugaq
      */
     @NullMarked
-    public record FluidBlockData(@Unmodifiable List<SingletonFluidBlockData> data) implements Iterable<SingletonFluidBlockData> {
+    public record FluidBlockData(
+            @Unmodifiable List<SingletonFluidBlockData> data) implements Iterable<SingletonFluidBlockData> {
         @Unmodifiable
         public static final FluidBlockData EMPTY = new FluidBlockData(List.of());
 
@@ -200,20 +202,23 @@ public class GlobalVars {
      * @author balugaq
      */
     @NullMarked
-    public record SingletonFluidBlockData(FluidPointType fluidPointType, BlockFace face, boolean allowVerticalFaces) implements Deserializer<SingletonFluidBlockData> {
+    public record SingletonFluidBlockData(FluidPointType fluidPointType, BlockFace face,
+                                          boolean allowVerticalFaces) implements Deserializer<SingletonFluidBlockData> {
         public SingletonFluidBlockData() {
             this(FluidPointType.INTERSECTION, BlockFace.NORTH, true);
         }
 
         @Override
         public List<ConfigReader<?, SingletonFluidBlockData>> readers() {
-            return List.of(ConfigReader.of(ConfigurationSection.class, section -> {
-                FluidPointType type = Optional.ofNullable(Pack.readEnumOrNull(section, FluidPointType.class, "type"))
-                        .orElse(FluidPointType.INTERSECTION);
-                BlockFace face = Optional.ofNullable(Pack.readEnumOrNull(section, BlockFace.class, "face"))
-                        .orElse(BlockFace.NORTH);
-                return new SingletonFluidBlockData(type, face, section.getBoolean("allowVerticalFaces", true));
-            }));
+            return List.of(ConfigReader.of(
+                    ConfigurationSection.class, section -> {
+                        FluidPointType type = Optional.ofNullable(Pack.readEnumOrNull(section, FluidPointType.class, "type"))
+                                .orElse(FluidPointType.INTERSECTION);
+                        BlockFace face = Optional.ofNullable(Pack.readEnumOrNull(section, BlockFace.class, "face"))
+                                .orElse(BlockFace.NORTH);
+                        return new SingletonFluidBlockData(type, face, section.getBoolean("allowVerticalFaces", true));
+                    }
+            ));
         }
     }
 
@@ -221,7 +226,8 @@ public class GlobalVars {
      * @author balugaq
      */
     @NullMarked
-    public record FluidBufferBlockData(@Unmodifiable List<SingletonFluidBufferBlockData> data) implements Iterable<SingletonFluidBufferBlockData> {
+    public record FluidBufferBlockData(
+            @Unmodifiable List<SingletonFluidBufferBlockData> data) implements Iterable<SingletonFluidBufferBlockData> {
         @Unmodifiable
         public static final FluidBufferBlockData EMPTY = new FluidBufferBlockData(List.of());
 
@@ -239,20 +245,23 @@ public class GlobalVars {
      * @author balugaq
      */
     @NullMarked
-    public record SingletonFluidBufferBlockData(PylonFluid fluid, double capacity, boolean input, boolean output) implements Deserializer<SingletonFluidBufferBlockData> {
+    public record SingletonFluidBufferBlockData(PylonFluid fluid, double capacity, boolean input,
+                                                boolean output) implements Deserializer<SingletonFluidBufferBlockData> {
         public SingletonFluidBufferBlockData() {
             this(null, 0, true, true);
         }
 
         @Override
         public List<ConfigReader<?, SingletonFluidBufferBlockData>> readers() {
-            return List.of(ConfigReader.of(ConfigurationSection.class, section -> {
-                PylonFluid fluid = Deserializer.PYLON_FLUID.deserialize(section.get("fluid"));
-                double capacity = section.getDouble("capacity", 0);
-                boolean input = section.getBoolean("input", true);
-                boolean output = section.getBoolean("output", true);
-                return new SingletonFluidBufferBlockData(fluid, capacity, input, output);
-            }));
+            return List.of(ConfigReader.of(
+                    ConfigurationSection.class, section -> {
+                        PylonFluid fluid = Deserializer.PYLON_FLUID.deserialize(section.get("fluid"));
+                        double capacity = section.getDouble("capacity", 0);
+                        boolean input = section.getBoolean("input", true);
+                        boolean output = section.getBoolean("output", true);
+                        return new SingletonFluidBufferBlockData(fluid, capacity, input, output);
+                    }
+            ));
         }
     }
 }

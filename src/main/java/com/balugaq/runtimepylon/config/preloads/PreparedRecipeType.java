@@ -2,7 +2,6 @@ package com.balugaq.runtimepylon.config.preloads;
 
 import com.balugaq.runtimepylon.config.PostLoadable;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
-import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.object.ItemStackProvider;
 import org.jetbrains.annotations.Nullable;

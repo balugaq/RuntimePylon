@@ -9,9 +9,6 @@ import com.balugaq.runtimepylon.exceptions.UnknownItemException;
 import com.balugaq.runtimepylon.exceptions.UnknownMultiblockComponentException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
-import com.github.shynixn.mccoroutine.bukkit.MCCoroutine;
-import com.github.shynixn.mccoroutine.bukkit.MCCoroutineKt;
-import io.github.pylonmc.pylon.core.PylonCore;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.entity.EntityStorage;
@@ -22,7 +19,6 @@ import io.github.pylonmc.pylon.core.item.PylonItemSchema;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -333,12 +329,14 @@ public interface Deserializer<T> {
         @Override
         public List<ConfigReader<?, PylonFluid>> readers() {
             return List.of(
-                    ConfigReader.of(String.class, s -> {
-                        NamespacedKey key = NamespacedKey.fromString(s);
-                        if (key == null) return null;
+                    ConfigReader.of(
+                            String.class, s -> {
+                                NamespacedKey key = NamespacedKey.fromString(s);
+                                if (key == null) return null;
 
-                        return PylonRegistry.FLUIDS.get(key);
-                    })
+                                return PylonRegistry.FLUIDS.get(key);
+                            }
+                    )
             );
         }
     }
@@ -351,47 +349,48 @@ public interface Deserializer<T> {
         @Override
         public List<ConfigReader<?, PylonSimpleMultiblock.MultiblockComponent>> readers() {
             return List.of(
-                    ConfigReader.of(String.class, s -> {
-                        List<PylonSimpleMultiblock.MultiblockComponent> list = new ArrayList<>();
-                        if (s.contains("|")) {
-                            for (var s2 : s.split("\\|")) {
-                                list.add(Deserializer.MULTIBLOCK_COMPONENT.deserialize(s2.trim()));
-                            }
-                        } else {
-                            if (s.startsWith("minecraft:")) {
-                                if (s.contains("[")) {
-                                    var mat = s.substring(10, s.indexOf("["));
-                                    Material material = Deserializer.enumDeserializer(Material.class).deserialize(mat);
-                                    var data = s.substring(s.indexOf("[") + 1);
-                                    list.add(new PylonSimpleMultiblock.VanillaBlockdataMultiblockComponent(material.createBlockData(data)));
+                    ConfigReader.of(
+                            String.class, s -> {
+                                List<PylonSimpleMultiblock.MultiblockComponent> list = new ArrayList<>();
+                                if (s.contains("|")) {
+                                    for (var s2 : s.split("\\|")) {
+                                        list.add(Deserializer.MULTIBLOCK_COMPONENT.deserialize(s2.trim()));
+                                    }
                                 } else {
-                                    var mat = s.substring(10);
-                                    list.add(new PylonSimpleMultiblock.VanillaMultiblockComponent(Deserializer.enumDeserializer(Material.class).deserialize(mat)));
+                                    if (s.startsWith("minecraft:")) {
+                                        if (s.contains("[")) {
+                                            var mat = s.substring(10, s.indexOf("["));
+                                            Material material = Deserializer.enumDeserializer(Material.class).deserialize(mat);
+                                            var data = s.substring(s.indexOf("[") + 1);
+                                            list.add(new PylonSimpleMultiblock.VanillaBlockdataMultiblockComponent(material.createBlockData(data)));
+                                        } else {
+                                            var mat = s.substring(10);
+                                            list.add(new PylonSimpleMultiblock.VanillaMultiblockComponent(Deserializer.enumDeserializer(Material.class).deserialize(mat)));
+                                        }
+                                    } else {
+                                        var key = NamespacedKey.fromString(s);
+                                        if (key == null) throw new UnknownMultiblockComponentException(s);
+                                        if (!PylonRegistry.BLOCKS.contains(key)) {
+                                            throw new UnknownMultiblockComponentException(s);
+                                        }
+                                        list.add(new PylonSimpleMultiblock.PylonMultiblockComponent(key));
+                                    }
                                 }
-                            } else {
-                                var key = NamespacedKey.fromString(s);
-                                if (key == null) throw new UnknownMultiblockComponentException(s);
-                                if (!PylonRegistry.BLOCKS.contains(key)) {
-                                    throw new UnknownMultiblockComponentException(s);
-                                }
-                                list.add(new PylonSimpleMultiblock.PylonMultiblockComponent(key));
+
+                                List<BlockData> blockDataList = list.stream().map(c -> switch (c) {
+                                    case PylonSimpleMultiblock.PylonMultiblockComponent c2 ->
+                                            List.of(PylonRegistry.BLOCKS.get(c2.key()).getMaterial().createBlockData());
+                                    case PylonSimpleMultiblock.VanillaMultiblockComponent c2 ->
+                                            c2.component1().stream().map(Material::createBlockData).toList();
+                                    case PylonSimpleMultiblock.VanillaBlockdataMultiblockComponent c2 ->
+                                            c2.component1();
+                                    case MyMultiBlockComponent c2 -> c2.getBlockDataList();
+                                    default -> null;
+                                }).filter(Objects::nonNull).flatMap(Collection::stream).toList();
+
+                                return new MyMultiBlockComponent(list, blockDataList);
                             }
-                        }
-
-                        List<BlockData> blockDataList = list.stream().map(c -> switch (c) {
-                            case PylonSimpleMultiblock.PylonMultiblockComponent c2 ->
-                                    List.of(PylonRegistry.BLOCKS.get(c2.key()).getMaterial().createBlockData());
-                            case PylonSimpleMultiblock.VanillaMultiblockComponent c2 ->
-                                    c2.component1().stream().map(Material::createBlockData).toList();
-                            case PylonSimpleMultiblock.VanillaBlockdataMultiblockComponent c2 ->
-                                    c2.component1();
-                            case MyMultiBlockComponent c2 ->
-                                    c2.getBlockDataList();
-                            default -> null;
-                        }).filter(Objects::nonNull).flatMap(Collection::stream).toList();
-
-                        return new MyMultiBlockComponent(list, blockDataList);
-                    })
+                    )
             );
         }
     }
@@ -404,11 +403,13 @@ public interface Deserializer<T> {
         @Override
         public List<ConfigReader<?, Vector3i>> readers() {
             return List.of(
-                    ConfigReader.of(String.class, s -> {
-                        String[] split = s.split(";");
-                        if (split.length != 3) throw new IllegalArgumentException("Invalid vector3i format");
-                        return new Vector3i(Integer.parseInt(split[0]), Integer.parseInt(split[1]), Integer.parseInt(split[2]));
-                    })
+                    ConfigReader.of(
+                            String.class, s -> {
+                                String[] split = s.split(";");
+                                if (split.length != 3) throw new IllegalArgumentException("Invalid vector3i format");
+                                return new Vector3i(Integer.parseInt(split[0]), Integer.parseInt(split[1]), Integer.parseInt(split[2]));
+                            }
+                    )
             );
         }
     }
@@ -440,12 +441,14 @@ public interface Deserializer<T> {
 
             if (blockDataList.size() > 1) {
                 AtomicInteger i = new AtomicInteger(0);
-                RuntimePylon.runTaskTimer(() -> {
-                    while (display.isValid()) {
-                        display.setBlock(blockDataList.get(i.getAndIncrement()));
-                        i.set(i.get() % blockDataList.size());
-                    }
-                }, 20, 20);
+                RuntimePylon.runTaskTimer(
+                        () -> {
+                            while (display.isValid()) {
+                                display.setBlock(blockDataList.get(i.getAndIncrement()));
+                                i.set(i.get() % blockDataList.size());
+                            }
+                        }, 20, 20
+                );
             }
 
             return display.getUniqueId();
