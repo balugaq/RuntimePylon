@@ -216,6 +216,9 @@ public class GlobalVars {
                                 .orElse(FluidPointType.INTERSECTION);
                         BlockFace face = Optional.ofNullable(Pack.readEnumOrNull(section, BlockFace.class, "face"))
                                 .orElse(BlockFace.NORTH);
+                        if (!face.isCartesian()) {
+                            throw new IllegalArgumentException("Expected cartesian blockfaces, but invalid face: " + face);
+                        }
                         return new SingletonFluidBlockData(type, face, section.getBoolean("allowVerticalFaces", true));
                     }
             ));
