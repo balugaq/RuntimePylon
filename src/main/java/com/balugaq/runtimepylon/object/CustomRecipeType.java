@@ -2,25 +2,21 @@ package com.balugaq.runtimepylon.object;
 
 import com.balugaq.runtimepylon.config.ConfigReader;
 import com.balugaq.runtimepylon.config.Deserializer;
+import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.config.ConfigSection;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
-import io.github.pylonmc.pylon.core.guide.button.FluidButton;
-import io.github.pylonmc.pylon.core.guide.button.ItemButton;
 import io.github.pylonmc.pylon.core.item.ItemTypeWrapper;
 import io.github.pylonmc.pylon.core.recipe.ConfigurableRecipeType;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
-import io.github.pylonmc.pylon.core.util.gui.GuiItems;
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.gui.Gui;
-import xyz.xenondevs.invui.item.Item;
-import xyz.xenondevs.invui.item.impl.SimpleItem;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -34,40 +30,7 @@ import java.util.Set;
  */
 @NullMarked
 public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
-    public static final Item EMPTY = new SimpleItem(ItemStack.empty());
 
-    /**
-     * a~z: input item
-     * 1-9:: output item
-     * B: background item
-     * I: input border
-     * O: output border
-     */
-    public static final ItemStackProvider DEFAULT_GUI_PROVIDER = (c, r) -> {
-        if (r != null) {
-            if ('a' <= c && c <= 'z') {
-                var i = r.getInputs();
-                var k = c - 'a';
-                if (k >= i.size()) return () -> EMPTY;
-                var s = i.get(k);
-                if (s instanceof RecipeInput.Item item) return () -> ItemButton.from(item);
-                else if (s instanceof RecipeInput.Fluid fluid) return () -> new FluidButton(fluid);
-            }
-            if ('1' <= c && c <= '9') {
-                var o = r.getResults();
-                var k = c - '1';
-                if (k >= o.size()) return () -> EMPTY;
-                var s = o.get(k);
-                if (s instanceof FluidOrItem.Item item) return () -> ItemButton.from(item.item());
-                else if (s instanceof FluidOrItem.Fluid fluid)
-                    return () -> new FluidButton(fluid.amountMillibuckets(), fluid.fluid());
-            }
-        }
-        if (c == 'B') return GuiItems::background;
-        if (c == 'I') return GuiItems::input;
-        if (c == 'O') return GuiItems::output;
-        return () -> EMPTY;
-    };
     public static final Map<String, Handler> DEFAULT_CONFIG_READER = Map.of(
             "inputs", new Handler(ConfigAdapter.LIST.from(ConfigAdapter.RECIPE_INPUT), new ArrayList<>()),
             "results", new Handler(ConfigAdapter.LIST.from(ConfigAdapter.FLUID_OR_ITEM), new ArrayList<>())
@@ -80,7 +43,7 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
     public CustomRecipeType(final NamespacedKey key, List<String> structure, @Nullable ItemStackProvider guiProvider, @Nullable Map<String, Handler> configReader) {
         super(key);
         this.structure = structure;
-        this.provider = guiProvider == null ? DEFAULT_GUI_PROVIDER : guiProvider;
+        this.provider = guiProvider == null ? Pack.DEFAULT_GUI_PROVIDER : guiProvider;
         this.configReader = configReader == null ? DEFAULT_CONFIG_READER : configReader;
     }
 
@@ -98,7 +61,7 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
             }
         }
         for (char c : set) {
-            gui.addIngredient(c, (provider == null ? DEFAULT_GUI_PROVIDER : provider).display(c, recipe));
+            gui.addIngredient(c, (provider == null ? Pack.DEFAULT_GUI_PROVIDER : provider).display(c, recipe));
         }
         return gui.build();
     }

@@ -1,7 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.config.pack.PackNamespace;
-import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.object.ItemStackProvider;
 import io.github.pylonmc.pylon.core.guide.button.ItemButton;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
@@ -43,7 +42,7 @@ public class GuiReader {
                         return () -> map.get(c);
                     }
 
-                    return CustomRecipeType.DEFAULT_GUI_PROVIDER.display(c, r);
+                    return Pack.DEFAULT_GUI_PROVIDER.display(c, r);
                 });
             }
         } else if (scriptDesc != null) {

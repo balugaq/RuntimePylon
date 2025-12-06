@@ -24,9 +24,10 @@ import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.exceptions.PackException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
 import com.balugaq.runtimepylon.object.CustomFluid;
-import com.balugaq.runtimepylon.object.CustomItem;
+import com.balugaq.runtimepylon.object.items.CustomItem;
 import com.balugaq.runtimepylon.object.CustomPage;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
+import com.balugaq.runtimepylon.object.ItemStackProvider;
 import com.balugaq.runtimepylon.object.PackAddon;
 import com.balugaq.runtimepylon.object.blocks.CustomBlock;
 import com.balugaq.runtimepylon.object.blocks.CustomMultiBlock;
@@ -35,7 +36,12 @@ import com.balugaq.runtimepylon.util.MinecraftVersion;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
+import io.github.pylonmc.pylon.core.guide.button.FluidButton;
+import io.github.pylonmc.pylon.core.guide.button.ItemButton;
+import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
+import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
+import io.github.pylonmc.pylon.core.util.gui.GuiItems;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +52,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
+import xyz.xenondevs.invui.item.Item;
+import xyz.xenondevs.invui.item.impl.SimpleItem;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,6 +100,39 @@ import java.util.function.Function;
 @NullMarked
 public class Pack implements FileObject<Pack> {
     public static final File pylonCore = new File(RuntimePylon.getInstance().getDataFolder().getParent(), "PylonCore");
+    public static final Item EMPTY = new SimpleItem(ItemStack.empty());
+    /**
+     * a~z: input item
+     * 1-9:: output item
+     * B: background item
+     * I: input border
+     * O: output border
+     */
+    public static final ItemStackProvider DEFAULT_GUI_PROVIDER = (c, r) -> {
+        if (r != null) {
+            if ('a' <= c && c <= 'z') {
+                var i = r.getInputs();
+                var k = c - 'a';
+                if (k >= i.size()) return () -> EMPTY;
+                var s = i.get(k);
+                if (s instanceof RecipeInput.Item item) return () -> ItemButton.from(item);
+                else if (s instanceof RecipeInput.Fluid fluid) return () -> new FluidButton(fluid);
+            }
+            if ('1' <= c && c <= '9') {
+                var o = r.getResults();
+                var k = c - '1';
+                if (k >= o.size()) return () -> EMPTY;
+                var s = o.get(k);
+                if (s instanceof FluidOrItem.Item item) return () -> ItemButton.from(item.item());
+                else if (s instanceof FluidOrItem.Fluid fluid)
+                    return () -> new FluidButton(fluid.amountMillibuckets(), fluid.fluid());
+            }
+        }
+        if (c == 'B') return GuiItems::background;
+        if (c == 'I') return GuiItems::input;
+        if (c == 'O') return GuiItems::output;
+        return () -> EMPTY;
+    };
     private final File dir;
     private final PackID packID;
     private final PackNamespace packNamespace;
