@@ -34,9 +34,7 @@ public class SaveditemDesc implements Deserializer<SaveditemDesc>, Examinable<Sa
 
     @Override
     public List<ConfigReader<?, SaveditemDesc>> readers() {
-        return List.of(
-                ConfigReader.of(File.class, SaveditemDesc::new)
-        );
+        return ConfigReader.list(File.class, SaveditemDesc::new);
     }
 
 }

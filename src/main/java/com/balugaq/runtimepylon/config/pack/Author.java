@@ -31,8 +31,6 @@ public class Author implements Deserializer<Author>, Examinable<Author> {
 
     @Override
     public List<ConfigReader<?, Author>> readers() {
-        return List.of(
-                ConfigReader.of(String.class, Author::new)
-        );
+        return ConfigReader.list(String.class, Author::new);
     }
 }

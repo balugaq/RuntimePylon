@@ -33,27 +33,25 @@ public class RecipeTypeDesc implements Deserializer<RecipeTypeDesc> {
 
     @Override
     public List<ConfigReader<?, RecipeTypeDesc>> readers() {
-        return List.of(
-                ConfigReader.of(
-                        String.class, s -> {
-                            PackNamespace namespace;
-                            String k;
-                            if (s.contains(":")) {
-                                NamespacedKey key = NamespacedKey.fromString(s);
-                                if (key != null && PylonRegistry.RECIPE_TYPES.get(key) != null) {
-                                    return new RecipeTypeDesc(key);
-                                }
-                                namespace = Deserializer.newDeserializer(PackDesc.class).deserialize(s.substring(0, s.indexOf(":"))).findPack().getPackNamespace();
-                                k = s.substring(s.indexOf(":") + 1);
-                            } else {
-                                namespace = this.packNamespace;
-                                k = s;
-                            }
-
-                            NamespacedKey key = InternalObjectID.of(k).register(namespace).key();
+        return ConfigReader.list(
+                String.class, s -> {
+                    PackNamespace namespace;
+                    String k;
+                    if (s.contains(":")) {
+                        NamespacedKey key = NamespacedKey.fromString(s);
+                        if (key != null && PylonRegistry.RECIPE_TYPES.get(key) != null) {
                             return new RecipeTypeDesc(key);
                         }
-                )
+                        namespace = Deserializer.newDeserializer(PackDesc.class).deserialize(s.substring(0, s.indexOf(":"))).findPack().getPackNamespace();
+                        k = s.substring(s.indexOf(":") + 1);
+                    } else {
+                        namespace = this.packNamespace;
+                        k = s;
+                    }
+
+                    NamespacedKey key = InternalObjectID.of(k).register(namespace).key();
+                    return new RecipeTypeDesc(key);
+                }
         );
     }
 

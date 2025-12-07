@@ -31,8 +31,6 @@ public class PackID implements Deserializer<PackID>, Examinable<PackID> {
 
     @Override
     public List<ConfigReader<?, PackID>> readers() {
-        return List.of(
-                ConfigReader.of(String.class, PackID::new)
-        );
+        return ConfigReader.list(String.class, PackID::new);
     }
 }

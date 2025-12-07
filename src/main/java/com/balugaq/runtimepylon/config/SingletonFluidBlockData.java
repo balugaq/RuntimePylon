@@ -20,7 +20,7 @@ public record SingletonFluidBlockData(FluidPointType fluidPointType, BlockFace f
 
     @Override
     public List<ConfigReader<?, SingletonFluidBlockData>> readers() {
-        return List.of(ConfigReader.of(
+        return ConfigReader.list(
                 ConfigurationSection.class, section -> {
                     FluidPointType type = Optional.ofNullable(Pack.readEnumOrNull(section, FluidPointType.class, "type"))
                             .orElse(FluidPointType.INTERSECTION);
@@ -31,6 +31,6 @@ public record SingletonFluidBlockData(FluidPointType fluidPointType, BlockFace f
                     }
                     return new SingletonFluidBlockData(type, face, section.getBoolean("allowVerticalFaces", true));
                 }
-        ));
+        );
     }
 }

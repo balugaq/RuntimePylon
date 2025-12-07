@@ -3,6 +3,7 @@ package com.balugaq.runtimepylon.object.items;
 import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.object.Scriptable;
 import com.destroystokyo.paper.event.player.PlayerReadyArrowEvent;
+import io.github.pylonmc.pylon.core.config.PylonConfig;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.item.base.PylonArmor;
@@ -54,10 +55,9 @@ import org.jspecify.annotations.NullMarked;
  */
 @NullMarked
 public class CustomItem extends PylonItem implements PylonArmor, PylonArrow, PylonBlockInteractor, PylonBow, PylonBrewingStandFuel,
-                                                     PylonBucket, PylonConsumable, PylonDispensable, PylonInteractor,
-                                                     PylonInventoryEffectItem, PylonInventoryTicker, PylonItemDamageable, PylonItemEntityInteractor,
-                                                     PylonLingeringPotion, PylonSplashPotion, PylonTool, PylonUnmergeable, PylonWeapon,
-                                                     VanillaCookingFuel, Scriptable {
+                                                     PylonBucket, PylonConsumable, PylonDispensable, PylonInteractor, PylonInventoryEffectItem,
+                                                     PylonInventoryTicker, PylonItemDamageable, PylonItemEntityInteractor, PylonLingeringPotion,
+                                                     PylonSplashPotion, PylonTool, PylonUnmergeable, PylonWeapon, VanillaCookingFuel, Scriptable {
     public CustomItem(final ItemStack stack) {
         super(stack);
     }
@@ -94,7 +94,7 @@ public class CustomItem extends PylonItem implements PylonArmor, PylonArrow, Pyl
 
     @Override
     public long getTickInterval() {
-        return 0;
+        return getSettings().get("tick-interval", ConfigAdapter.LONG, (long) PylonConfig.getDefaultTickInterval());
     }
 
     @Override

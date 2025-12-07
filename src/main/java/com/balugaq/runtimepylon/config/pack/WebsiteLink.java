@@ -31,8 +31,6 @@ public class WebsiteLink implements Deserializer<WebsiteLink>, Examinable<Websit
 
     @Override
     public List<ConfigReader<?, WebsiteLink>> readers() {
-        return List.of(
-                ConfigReader.of(String.class, WebsiteLink::new)
-        );
+        return ConfigReader.list(String.class, WebsiteLink::new);
     }
 }

@@ -24,9 +24,7 @@ public class InternalObjectID implements Deserializer<InternalObjectID> {
 
     @Override
     public List<ConfigReader<?, InternalObjectID>> readers() {
-        return List.of(
-                ConfigReader.of(String.class, InternalObjectID::of)
-        );
+        return ConfigReader.list(String.class, InternalObjectID::of);
     }
 
     public static InternalObjectID of(String id) {

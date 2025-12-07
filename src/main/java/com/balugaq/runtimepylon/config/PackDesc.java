@@ -30,10 +30,10 @@ public class PackDesc implements Deserializer<PackDesc>, Examinable<PackDesc> {
 
     @Override
     public List<ConfigReader<?, PackDesc>> readers() {
-        return List.of(
-                ConfigReader.of(String.class, PackDesc::new),
-                ConfigReader.of(PackID.class, p -> new PackDesc(p.getId())),
-                ConfigReader.of(Pack.class, p -> new PackDesc(p.getPackID().getId()))
+        return ConfigReader.list(
+                String.class, PackDesc::new,
+                PackID.class, p -> new PackDesc(p.getId()),
+                Pack.class, p -> new PackDesc(p.getPackID().getId())
         );
     }
 

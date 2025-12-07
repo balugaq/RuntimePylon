@@ -18,7 +18,7 @@ public record SingletonFluidBufferBlockData(PylonFluid fluid, double capacity, b
 
     @Override
     public List<ConfigReader<?, SingletonFluidBufferBlockData>> readers() {
-        return List.of(ConfigReader.of(
+        return ConfigReader.list(
                 ConfigurationSection.class, section -> {
                     PylonFluid fluid = Deserializer.PYLON_FLUID.deserialize(section.get("fluid"));
                     double capacity = section.getDouble("capacity", 0);
@@ -26,6 +26,6 @@ public record SingletonFluidBufferBlockData(PylonFluid fluid, double capacity, b
                     boolean output = section.getBoolean("output", true);
                     return new SingletonFluidBufferBlockData(fluid, capacity, input, output);
                 }
-        ));
+        );
     }
 }

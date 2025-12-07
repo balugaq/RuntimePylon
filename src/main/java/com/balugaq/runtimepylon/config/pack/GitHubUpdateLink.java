@@ -31,8 +31,6 @@ public class GitHubUpdateLink implements Deserializer<GitHubUpdateLink>, Examina
 
     @Override
     public List<ConfigReader<?, GitHubUpdateLink>> readers() {
-        return List.of(
-                ConfigReader.of(String.class, GitHubUpdateLink::new)
-        );
+        return ConfigReader.list(String.class, GitHubUpdateLink::new);
     }
 }

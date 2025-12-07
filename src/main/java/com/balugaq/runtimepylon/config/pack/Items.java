@@ -46,6 +46,9 @@ import java.util.Map;
  *   *pages:
  *   - [PageDesc]
  *   *postload: boolean
+ *   *equipment-type: [Key]
+ * <p>
+ * [Key]: [NamespacedKey]
  * <p>
  *
  * @author balugaq

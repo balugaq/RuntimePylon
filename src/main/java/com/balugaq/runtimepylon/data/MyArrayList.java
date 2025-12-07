@@ -46,7 +46,7 @@ public class MyArrayList<T extends Deserializer<T>> extends ArrayList<T> impleme
 
     @Override
     public List<ConfigReader<?, MyArrayList<T>>> readers() {
-        return List.of(ConfigReader.of(
+        return ConfigReader.list(
                 List.class, lst -> {
                     var serializer = advancer.advance(Deserializer.newDeserializer(getGenericType()));
                     MyArrayList<T> res = new MyArrayList<>();
@@ -59,6 +59,6 @@ public class MyArrayList<T extends Deserializer<T>> extends ArrayList<T> impleme
                     }
                     return res;
                 }
-        ));
+        );
     }
 }
