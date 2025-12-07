@@ -10,6 +10,7 @@ import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import lombok.Getter;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
@@ -37,6 +38,11 @@ public class GlobalVars {
     private static final @Getter KeyedMap<Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent>> multiBlockComponents = new KeyedMap<>();
     private static final @Getter KeyedMap<RecipeType<?>> loadRecipeTypes = new KeyedMap<>();
     private static final @Getter KeyedMap<Key> equipmentTypes = new KeyedMap<>();
+
+    public static final LegacyComponentSerializer COMPONENT_SERIALIZER = LegacyComponentSerializer.legacyAmpersand()
+            .toBuilder()
+            .hexColors()
+            .build();
 
     static {
         guis.defaultReturnValue(Gui.normal().setStructure("B B B B B B B B B").addIngredient('B', ItemProvider.EMPTY).build());

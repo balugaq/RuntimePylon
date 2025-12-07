@@ -15,9 +15,16 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
- * A collection for pack scripts
+ * A collection for pack scripts.
+ * <p>
+ * Some special scripts have specific file names:
+ * <ul>
+ *     <li>Init script: init.js</li>
+ *     <li>Event listener script: events.js</li>
+ * </ul>
  *
  * @author lijinhong11
  */
@@ -25,6 +32,11 @@ import java.util.Map;
 @NoArgsConstructor(force = true)
 @NullMarked
 public class Scripts implements FileObject<Scripts> {
+    public static final String INIT_SCRIPT_FILE = "init.js";
+    public static final String EVENTS_SCRIPT_FILE = "events.js";
+
+    @Nullable
+    private ScriptExecutor eventsScript;
     private final Map<String, ScriptExecutor> scripts = new HashMap<>();
 
     @Nullable
@@ -33,16 +45,27 @@ public class Scripts implements FileObject<Scripts> {
     }
 
     public void closeAll() {
-        // todo
+        for (ScriptExecutor executor : scripts.values()) {
+            executor.close();
+        }
     }
 
     @Override
     public List<FileReader<Scripts>> readers() {
         return List.of(
                 dir -> {
-                    for (File file : dir.listFiles()) {
+                    for (File file : Objects.requireNonNull(dir.listFiles())) {
                         if (!file.isFile()) continue;
                         if (!file.getName().endsWith(".js")) continue;
+                        if (INIT_SCRIPT_FILE.equals(file.getName())) {
+                            ScriptExecutor executor = createJSScriptExecutor(file);
+                            executor.executeFunction("init");
+                            continue;
+                        }
+                        if (EVENTS_SCRIPT_FILE.equals(file.getName())) {
+                            eventsScript = createJSScriptExecutor(file);
+                            continue;
+                        }
                         scripts.put(StringUtil.simplifyPath(file.getPath()), createJSScriptExecutor(file));
                     }
 

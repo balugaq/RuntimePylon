@@ -271,6 +271,9 @@ public @Data class PackManager {
 
     public static void unload(Pack pack) {
         PylonAddon plugin = pack.plugin();
+
+        pack.getScripts().closeAll();
+
         try {
             ReflectionUtil.invokeMethod(BlockStorage.class, "cleanup", plugin);
         } catch (Exception e) {

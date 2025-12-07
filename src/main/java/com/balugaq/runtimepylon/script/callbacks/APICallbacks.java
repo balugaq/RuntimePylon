@@ -1,9 +1,20 @@
 package com.balugaq.runtimepylon.script.callbacks;
 
+import com.balugaq.runtimepylon.GlobalVars;
+import com.balugaq.runtimepylon.RuntimePylon;
 import com.caoccao.javet.annotations.V8Function;
+import io.github.pylonmc.pylon.core.addon.PylonAddon;
+import io.github.pylonmc.pylon.core.block.PylonBlockSchema;
+import io.github.pylonmc.pylon.core.entity.PylonEntitySchema;
+import io.github.pylonmc.pylon.core.fluid.PylonFluid;
+import io.github.pylonmc.pylon.core.item.PylonItemSchema;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
+import io.github.pylonmc.pylon.core.registry.PylonRegistryKey;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.logging.Logger;
 
 /**
  * @author lijinhong11
@@ -11,17 +22,47 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public class APICallbacks {
     @V8Function
-    public boolean containsItem(NamespacedKey key) {
-        return PylonRegistry.ITEMS.contains(key);
+    public Logger getLogger() {
+        return RuntimePylon.getInstance().getLogger();
     }
 
     @V8Function
-    public boolean containsBlock(NamespacedKey key) {
-        return PylonRegistry.BLOCKS.contains(key);
+    public PylonRegistry<PylonItemSchema> getItemRegistry() {
+        return PylonRegistry.ITEMS;
+    }
+
+    @V8Function
+    public PylonRegistry<PylonBlockSchema> getBlockRegistry() {
+        return PylonRegistry.BLOCKS;
+    }
+
+    @V8Function
+    public PylonRegistry<PylonEntitySchema> getEntityRegistry() {
+        return PylonRegistry.ENTITIES;
+    }
+
+    @V8Function
+    public PylonRegistry<PylonFluid> getFluidRegistry() {
+        return PylonRegistry.FLUIDS;
+    }
+
+    @V8Function
+    public PylonRegistry<PylonAddon> getAddonRegistry() {
+        return PylonRegistry.ADDONS;
+    }
+
+    @V8Function
+    public PylonRegistry<?> getPylonRegistry(NamespacedKey key) {
+        return PylonRegistry.getRegistry(new PylonRegistryKey<>(key));
     }
 
     @V8Function
     public NamespacedKey createKey(String namespace, String key) {
         return new NamespacedKey(namespace, key);
+    }
+
+    @V8Function
+    public void sendMessage(Player player, String message) {
+        player.sendMessage(GlobalVars.COMPONENT_SERIALIZER.deserialize(message));
     }
 }
