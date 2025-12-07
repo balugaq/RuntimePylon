@@ -1,0 +1,131 @@
+name: Bug汇报
+description: 反馈本插件的Bug或问题
+labels: [ "bug" ]
+assignees:
+  - balugaq
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 欢迎来到 RuntimePylon 的问题追踪器
+        你正在反馈 RuntimePylon 出现的 Bug。
+
+        <strong><i>你必须填写标注为星号（*）的表单项</i></strong>
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 检查项目
+      description: 在汇报之前，你需要确认
+      options:
+        - label: 你已经检验过下载的文件的校验和，确认已完整下载文件
+        - label: 你没有对下载的文件内容进行任何更改
+        - label: 你已经寻找过[已知问题列表](https://github.com/balugaq/RuntimePylon/issues)，且没有找到相同的问题
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: |
+        详细描述你要汇报的问题
+        提供详细的信息能让我们更快地处理问题
+      placeholder: 只说"不能用"没法让开发者定位问题。
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤
+      description: |
+        请详细描述如何才能复现该问题
+        如果有视频，请在此提供视频链接
+      placeholder: |
+        1. xxx
+        2. xxx
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 预期行为
+      description: |
+        你觉得应该发生什么
+        有时候，问题的原因是你误解了某个功能。
+    validations:
+      required: true
+
+  - type: input
+    id: server-log
+    attributes:
+      label: 服务器日志
+      description: |
+        请查看服务器日志中是否包含任何报错，如果有请上传至 [https://mclo.gs/](https://mclo.gs/) 并在此填入链接。
+        **不要直接在这里粘贴日志**
+      placeholder: https://mclo.gs/...
+    validations:
+      required: false
+
+  - type: input
+    id: error-report
+    attributes:
+      label: 错误报告
+      description: |
+        如果服务器日志中提到了`/plugins/Slimefun/error-reports`中的文件（即错误报告）
+        请上传至 [https://mclo.gs/](https://mclo.gs/) 并在此填入链接。
+        **不要直接在这里粘贴错误报告**
+      placeholder: https://mclo.gs/...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: server-brand
+    attributes:
+      label: 服务端品牌
+      description: 请选择你服务端所使用的品牌
+      options:
+        - Paper
+        - Purpur
+        - Airplane
+        - Leaf
+        - Folia
+        - 其他 (请在问题描述里写明)
+    validations:
+      required: true
+
+  - type: input
+    id: server-minecraft-version
+    attributes:
+      label: 服务器 Minecraft 版本
+      description: 请填写你的服务器 Minecraft 版本
+    validations:
+      required: true
+
+  - type: textarea
+    id: pyloncore-version
+    attributes:
+      label: PylonCore版本
+      description: |
+        请填写PylonCore版本
+    validations:
+      required: true
+  
+  - type: textarea
+    id: pylonbase-version
+    attributes:
+      label: PylonBase版本
+      description: |
+        请填写PylonBase版本
+    validations:
+      required: true
+
+  - type: input
+    id: version-plugin
+    attributes:
+      label: 插件版本
+      description: |
+        请填写插件版本
+    validations:
+      required: true

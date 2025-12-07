@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import org.joml.Vector3i;
 import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.gui.Gui;
+import xyz.xenondevs.invui.item.ItemProvider;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -38,7 +39,7 @@ public class GlobalVars {
     private static final @Getter KeyedMap<Key> equipmentTypes = new KeyedMap<>();
 
     static {
-        guis.defaultReturnValue(Gui.normal().build());
+        guis.defaultReturnValue(Gui.normal().setStructure("B B B B B B B B B").addIngredient('B', ItemProvider.EMPTY).build());
         fluidBlockDatas.defaultReturnValue(FluidBlockData.EMPTY);
         fluidBufferBlockDatas.defaultReturnValue(FluidBufferBlockData.EMPTY);
         multiBlockComponents.defaultReturnValue(Map.of());
