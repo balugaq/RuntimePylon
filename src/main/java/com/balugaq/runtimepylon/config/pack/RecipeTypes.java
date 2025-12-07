@@ -11,6 +11,7 @@ import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.config.preloads.PreparedRecipeType;
 import com.balugaq.runtimepylon.config.register.PreRegister;
+import com.balugaq.runtimepylon.exceptions.InvalidStructureException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.util.StringUtil;
@@ -84,6 +85,7 @@ public class RecipeTypes implements FileObject<RecipeTypes> {
 
                             if (!section.contains("structure")) throw new MissingArgumentException("structure");
                             var gui = GuiReader.read(section, namespace, scriptdesc);
+                            if (gui == GuiReader.Result.EMPTY) throw new InvalidStructureException(gui.structure());
 
                             boolean postLoad = section.getBoolean("postload", false);
                             recipeTypes.put(id, new PreparedRecipeType(id, gui.structure(), gui.provider(), loader, postLoad));

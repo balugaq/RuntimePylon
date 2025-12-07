@@ -235,7 +235,7 @@ public @Data class PackManager {
             }
         }
 
-        for (Pack pack : PackSorter.sortPacks(packs)) { // fixme: wrong sort result, remove `loadbefore` in `dependency_pack`
+        for (Pack pack : PackSorter.sortPacks(packs)) {
             try (var ignored = StackFormatter.setPosition("Registering Pack: " + pack.getPackID())) {
                 MyArrayList<PackDesc> packDependencies = pack.getPackDependencies();
                 if (packDependencies != null) {

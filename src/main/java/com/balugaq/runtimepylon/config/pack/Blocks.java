@@ -144,7 +144,8 @@ public class Blocks implements FileObject<Blocks> {
 
                     // gui
                     var gui = GuiReader.read(section, namespace, scriptdesc);
-                    GlobalVars.putGui(id.key(), CustomRecipeType.makeGui(gui.structure(), gui.provider(), Gui.normal(), null));
+                    if (gui != GuiReader.Result.EMPTY)
+                        GlobalVars.putGui(id.key(), CustomRecipeType.makeGui(gui.structure(), gui.provider(), Gui.normal(), null));
 
                     // fluid-block
                     if (section.contains("fluid-block")) {
