@@ -1,8 +1,9 @@
-package com.balugaq.runtimepylon.config;
+package com.balugaq.runtimepylon.config.register;
 
-import com.balugaq.runtimepylon.config.register.RegisterConditions;
+import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.InvalidDescException;
+import lombok.experimental.UtilityClass;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.Nullable;
@@ -12,6 +13,7 @@ import org.jspecify.annotations.NullMarked;
  * @author balugaq
  */
 @NullMarked
+@UtilityClass
 public class PreRegister {
     @Nullable
     public static ConfigurationSection read(FileConfiguration config, String key) {

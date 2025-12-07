@@ -27,6 +27,6 @@ public record Language(String localeCode) implements Deserializer<Language> {
 
     @Override
     public List<ConfigReader<?, Language>> readers() {
-        return List.of(ConfigReader.of(String.class, Language::new));
+        return ConfigReader.list(String.class, Language::new);
     }
 }

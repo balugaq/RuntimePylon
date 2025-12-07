@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
  * @author balugaq
  */
 @NullMarked
+@UtilityClass
 public class PackSorter {
     public static List<Pack> sortPacks(List<Pack> packs) {
         Map<String, Pack> packMap = packs.stream()

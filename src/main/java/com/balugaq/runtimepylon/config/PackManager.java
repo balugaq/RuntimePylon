@@ -3,6 +3,7 @@ package com.balugaq.runtimepylon.config;
 import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.Saveditems;
+import com.balugaq.runtimepylon.data.MyArrayList;
 import com.balugaq.runtimepylon.exceptions.IdConflictException;
 import com.balugaq.runtimepylon.exceptions.PackDependencyMissingException;
 import com.balugaq.runtimepylon.exceptions.PluginDependencyMissingException;

@@ -31,8 +31,6 @@ public class Contributor implements Deserializer<Contributor>, Examinable<Contri
 
     @Override
     public List<ConfigReader<?, Contributor>> readers() {
-        return List.of(
-                ConfigReader.of(String.class, Contributor::new)
-        );
+        return ConfigReader.list(String.class, Contributor::new);
     }
 }

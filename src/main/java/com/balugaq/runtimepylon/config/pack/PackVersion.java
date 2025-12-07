@@ -31,10 +31,10 @@ public class PackVersion implements Deserializer<PackVersion>, Examinable<PackVe
 
     @Override
     public List<ConfigReader<?, PackVersion>> readers() {
-        return List.of(
-                ConfigReader.of(String.class, PackVersion::new),
-                ConfigReader.of(Long.class, l -> new PackVersion(l.toString())),
-                ConfigReader.of(Double.class, d -> new PackVersion(d.toString()))
+        return ConfigReader.list(
+                String.class, PackVersion::new,
+                Long.class, l -> new PackVersion(l.toString()),
+                Double.class, d -> new PackVersion(d.toString())
         );
     }
 }

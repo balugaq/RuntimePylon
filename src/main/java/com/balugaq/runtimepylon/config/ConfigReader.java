@@ -4,6 +4,7 @@ import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -11,6 +12,21 @@ import java.util.function.Function;
  */
 @NullMarked
 public sealed interface ConfigReader<Input, Result> permits ConfigReader.ConfigReaderImpl {
+    static <Input, Result> List<ConfigReader<?, Result>> list(Class<Input> clazz, Function<Input, @Nullable Result> function) {
+        return List.of(of(clazz, function));
+    }
+
+    static <Input, Input2, Result> List<ConfigReader<?, Result>> list(Class<Input> clazz1, Function<Input, @Nullable Result> function1,
+                                                                  Class<Input2> clazz2, Function<Input2, @Nullable Result> function2) {
+        return List.of(of(clazz1, function1), of(clazz2, function2));
+    }
+
+    static <Input, Input2, Input3, Result> List<ConfigReader<?, Result>> list(Class<Input> clazz1, Function<Input, @Nullable Result> function1,
+                                                                  Class<Input2> clazz2, Function<Input2, @Nullable Result> function2,
+                                                                  Class<Input3> clazz3, Function<Input3, @Nullable Result> function3) {
+        return List.of(of(clazz1, function1), of(clazz2, function2), of(clazz3, function3));
+    }
+
     static <Input, Result> ConfigReader<Input, Result> of(Class<Input> clazz, Function<Input, @Nullable Result> function) {
         return new ConfigReaderImpl<>(clazz, function);
     }

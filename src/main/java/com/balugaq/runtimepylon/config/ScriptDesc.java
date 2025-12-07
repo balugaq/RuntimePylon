@@ -28,8 +28,6 @@ public class ScriptDesc implements Deserializer<ScriptDesc>, Examinable<ScriptDe
 
     @Override
     public List<ConfigReader<?, ScriptDesc>> readers() {
-        return List.of(
-                ConfigReader.of(String.class, ScriptDesc::new)
-        );
+        return ConfigReader.list(String.class, ScriptDesc::new);
     }
 }

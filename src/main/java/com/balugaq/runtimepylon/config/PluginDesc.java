@@ -31,9 +31,7 @@ public class PluginDesc implements Deserializer<PluginDesc>, Examinable<PluginDe
 
     @Override
     public List<ConfigReader<?, PluginDesc>> readers() {
-        return List.of(
-                ConfigReader.of(String.class, PluginDesc::new)
-        );
+        return ConfigReader.list(String.class, PluginDesc::new);
     }
 
     @Nullable
