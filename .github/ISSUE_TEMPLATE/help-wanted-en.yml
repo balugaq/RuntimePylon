@@ -1,0 +1,59 @@
+name: Request Help
+description: Request help
+labels: [ "help wanted" ]
+assignees:
+  - balugaq
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Welcome to the RuntimePylon Issue Tracker
+        You are requesting help to resolve an issue with RuntimePylon.
+
+        <strong><i>You must fill out the fields marked with an asterisk (*)</i></strong>
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Before reporting, you need to confirm
+      options:
+        - label: You have searched the [list of known issues](https://github.com/balugaq/RuntimePylon/issues) and have not found the same issue
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Issue Description
+      description: |
+        Describe the issue you want to report in detail
+        Providing detailed information can help us process the issue faster
+      placeholder: Simply saying "it doesn't work" doesn't help developers to locate the problem.
+    validations:
+      required: true
+
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft Version
+      description: Please fill in your Minecraft version
+    validations:
+      required: true
+
+  - type: textarea
+    id: slimefun-version
+    attributes:
+      label: Slimefun Version
+      description: |
+        Please fill in the Slimefun version
+        (e.g., v4.9-canary-08120db)
+        If you have administrative privileges, it is recommended to run the `/sf versions` command, take a screenshot, and upload all the output here.
+    validations:
+      required: true
+
+  - type: input
+    id: version-plugin
+    attributes:
+      label: Plugin Version
+      description: |
+        Please fill in the plugin version

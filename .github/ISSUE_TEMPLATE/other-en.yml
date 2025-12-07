@@ -1,0 +1,30 @@
+name: Other Issues
+description: Other issues
+labels: [ "need tag" ]
+assignees:
+  - balugaq
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Welcome to the RuntimePylon Issue Tracker
+        
+        <strong><i>You must fill out the fields marked with an asterisk (*)</i></strong>
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Before reporting, you need to confirm
+      options:
+        - label: You have searched the [list of known issues](https://github.com/balugaq/RuntimePylon/issues) and have not found the same suggestion
+          required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Issue Description
+      description: |
+        Describe your issue in detail
+    validations:
+      required: true

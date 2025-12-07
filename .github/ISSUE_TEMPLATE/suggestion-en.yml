@@ -1,0 +1,47 @@
+name: Development Suggestion Feedback
+description: Submit development suggestions
+labels: [ "suggestion" ]
+assignees:
+  - balugaq
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Welcome to the RuntimePylon Issue Tracker
+        You are submitting a development suggestion for RuntimePylon.
+        
+        <strong><i>You must fill out the fields marked with an asterisk (*)</i></strong>
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Before reporting, you need to confirm
+      options:
+        - label: You have searched the [list of known issues](https://github.com/balugaq/RuntimePylon/issues) and have not found the same suggestion
+          required: true
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason for Suggestion
+      description: |
+        Describe in detail why you are making this suggestion
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggestion Details
+      description: |
+        Provide a detailed description of the feature or improvement you are proposing
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: |
+        If available, please provide more information.

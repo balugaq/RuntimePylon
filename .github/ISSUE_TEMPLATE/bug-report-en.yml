@@ -1,0 +1,131 @@
+name: Bug Report
+description: Report bugs or issues for this plugin
+labels: [ "bug" ]
+assignees:
+  - balugaq
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Welcome to the RuntimePylon Issue Tracker
+        You are reporting a bug in RuntimePylon.
+
+        <strong><i>You must fill out the fields marked with an asterisk (*)</i></strong>
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Before reporting, you need to confirm
+      options:
+        - label: You have verified the checksum of the downloaded file to ensure it is fully downloaded
+        - label: You have not made any changes to the content of the downloaded file
+        - label: You have searched the [list of known issues](https://github.com/balugaq/RuntimePylon/issues) and have not found the same issue
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Issue Description
+      description: |
+        Describe the issue you want to report in detail
+        Providing detailed information can help us process the issue faster
+      placeholder: Simply saying "it doesn't work" doesn't help developers to locate the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: |
+        Please describe in detail how to reproduce the issue
+        If there is a video, please provide the video link here
+      placeholder: |
+        1. xxx
+        2. xxx
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: |
+        What you think should happen
+        Sometimes, the issue is caused by a misunderstanding of a feature.
+    validations:
+      required: true
+
+  - type: input
+    id: server-log
+    attributes:
+      label: Server Log
+      description: |
+        Please check if there are any errors in the server log, and if so, upload them to [https://mclo.gs/](https://mclo.gs/) and enter the link here.
+        **Do not paste the log directly here**
+      placeholder: https://mclo.gs/...
+    validations:
+      required: false
+
+  - type: input
+    id: error-report
+    attributes:
+      label: Error Report
+      description: |
+        If the server log mentions files in `/plugins/Slimefun/error-reports` (i.e., error reports)
+        Please upload them to [https://mclo.gs/](https://mclo.gs/) and enter the link here.
+        **Do not paste the error report directly here**
+      placeholder: https://mclo.gs/...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: server-brand
+    attributes:
+      label: Server Brand
+      description: Please select the brand your server is using
+      options:
+        - Paper
+        - Purpur
+        - Airplane
+        - Leaf
+        - Folia
+        - Other (please specify in the issue description)
+    validations:
+      required: true
+
+  - type: input
+    id: server-minecraft-version
+    attributes:
+      label: Server Minecraft Version
+      description: Please fill in your Server Minecraft version
+    validations:
+      required: true
+  
+  - type: textarea
+    id: pyloncore-version
+    attributes:
+      label: PylonCore Version
+      description: |
+        Please fill in the PylonCore version
+    validations:
+      required: true
+  
+  - type: textarea
+    id: pylonbase-version
+    attributes:
+      label: PylonBase Version
+      description: |
+        Please fill in the PylonBase version
+    validations:
+      required: true
+
+  - type: input
+    id: version-plugin
+    attributes:
+      label: Plugin Version
+      description: |
+        Please fill in the plugin version
+    validations:
+      required: true
