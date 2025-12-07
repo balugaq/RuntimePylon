@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon.object;
+package com.balugaq.runtimepylon.data;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.bukkit.NamespacedKey;

@@ -14,23 +14,25 @@ import com.balugaq.runtimepylon.config.pack.PackVersion;
 import com.balugaq.runtimepylon.config.pack.Pages;
 import com.balugaq.runtimepylon.config.pack.RecipeTypes;
 import com.balugaq.runtimepylon.config.pack.Recipes;
+import com.balugaq.runtimepylon.config.pack.Researches;
 import com.balugaq.runtimepylon.config.pack.Saveditems;
 import com.balugaq.runtimepylon.config.pack.Scripts;
 import com.balugaq.runtimepylon.config.pack.Settings;
 import com.balugaq.runtimepylon.config.pack.WebsiteLink;
+import com.balugaq.runtimepylon.data.MyArrayList;
 import com.balugaq.runtimepylon.exceptions.InvalidStructureException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.exceptions.PackException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
 import com.balugaq.runtimepylon.object.CustomFluid;
-import com.balugaq.runtimepylon.object.items.CustomItem;
 import com.balugaq.runtimepylon.object.CustomPage;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.object.ItemStackProvider;
 import com.balugaq.runtimepylon.object.PackAddon;
 import com.balugaq.runtimepylon.object.blocks.CustomBlock;
 import com.balugaq.runtimepylon.object.blocks.CustomMultiBlock;
+import com.balugaq.runtimepylon.object.items.CustomItem;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
@@ -72,6 +74,7 @@ import java.util.function.Function;
  *       <li>pack_id/
  *         <ul>
  *           <li>pack.yml</li>
+ *           <li>researches.yml</li>
  *           <li>lang/</li>
  *           <li>pages/</li>
  *           <li>items/</li>
@@ -102,11 +105,7 @@ public class Pack implements FileObject<Pack> {
     public static final File pylonCore = new File(RuntimePylon.getInstance().getDataFolder().getParent(), "PylonCore");
     public static final Item EMPTY = new SimpleItem(ItemStack.empty());
     /**
-     * a~z: input item
-     * 1-9:: output item
-     * B: background item
-     * I: input border
-     * O: output border
+     * a~z: input item 1-9:: output item B: background item I: input border O: output border
      */
     public static final ItemStackProvider DEFAULT_GUI_PROVIDER = (c, r) -> {
         if (r != null) {
@@ -173,6 +172,7 @@ public class Pack implements FileObject<Pack> {
     private final Recipes recipes;
     @Nullable
     private final Settings settings;
+    private final Researches researches;
     @Nullable
     private final Scripts scripts;
     @Nullable
@@ -284,6 +284,10 @@ public class Pack implements FileObject<Pack> {
                     settings = new Settings(settingsFolder, namespace);
                 StackFormatter.destroy();
 
+                StackFormatter.setPosition("Reading researches");
+                Researches researches = new Researches(dir, namespace);
+                StackFormatter.destroy();
+
                 StackFormatter.setPosition("Reading scripts");
                 Scripts scripts = null;
                 var scriptsFolder = findDir(files, "scripts");
@@ -369,6 +373,7 @@ public class Pack implements FileObject<Pack> {
                         recipeTypes,
                         recipes,
                         settings,
+                        researches,
                         scripts,
                         saveditems
                 );
@@ -580,6 +585,14 @@ public class Pack implements FileObject<Pack> {
     private void registerRecipes() {
         if (recipes == null) return;
         recipes.mergeTo(getRecipesFolder());
+    }
+
+    private void registerResearches() {
+        researches.mergeTo(getResearchesFolder());
+    }
+
+    public File getResearchesFolder() {
+        return new File(pylonCore, "researches");
     }
 
     public File getRecipesFolder() {

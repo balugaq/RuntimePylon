@@ -1,6 +1,5 @@
 package com.balugaq.runtimepylon.config;
 
-import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.PackID;
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
@@ -11,23 +10,16 @@ import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
-import io.github.pylonmc.pylon.core.entity.EntityStorage;
-import io.github.pylonmc.pylon.core.entity.display.BlockDisplayBuilder;
-import io.github.pylonmc.pylon.core.entity.display.transform.TransformBuilder;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.item.PylonItemSchema;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.ApiStatus.Internal;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.ApiStatus.Obsolete;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 import org.joml.Vector3i;
@@ -39,8 +31,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 /**
@@ -83,7 +73,7 @@ public interface Deserializer<T> {
      * @author balugaq
      * @see #deserialize(Object)
      */
-    @Internal
+    @Obsolete
     static <T extends Deserializer<T>> T newDeserializer(Class<T> clazz) {
         try {
             return clazz.getDeclaredConstructor().newInstance();
@@ -384,7 +374,7 @@ public interface Deserializer<T> {
                                             c2.component1().stream().map(Material::createBlockData).toList();
                                     case PylonSimpleMultiblock.VanillaBlockdataMultiblockComponent c2 ->
                                             c2.component1();
-                                    case MyMultiBlockComponent c2 -> c2.getBlockDataList();
+                                    case MyMultiBlockComponent c2 -> c2.blockDataList();
                                     default -> null;
                                 }).filter(Objects::nonNull).flatMap(Collection::stream).toList();
 
@@ -402,56 +392,15 @@ public interface Deserializer<T> {
     class Vector3iDeserializer implements Deserializer<Vector3i> {
         @Override
         public List<ConfigReader<?, Vector3i>> readers() {
-            return List.of(
-                    ConfigReader.of(
-                            String.class, s -> {
-                                String[] split = s.split(";");
-                                if (split.length != 3) throw new IllegalArgumentException("Invalid vector3i format");
-                                return new Vector3i(Integer.parseInt(split[0]), Integer.parseInt(split[1]), Integer.parseInt(split[2]));
-                            }
-                    )
+            return List.of(ConfigReader.of(
+                                   String.class, s -> {
+                                       String[] split = s.split(";");
+                                       if (split.length != 3) throw new IllegalArgumentException("Invalid vector3i format");
+                                       return new Vector3i(Integer.parseInt(split[0]), Integer.parseInt(split[1]), Integer.parseInt(split[2]));
+                                   }
+                           )
             );
         }
     }
 
-    /**
-     * @author balugaq
-     */
-    @NullMarked
-    @Data
-    @RequiredArgsConstructor
-    class MyMultiBlockComponent implements PylonSimpleMultiblock.MultiblockComponent {
-        private final List<? extends PylonSimpleMultiblock.MultiblockComponent> components;
-        private final List<BlockData> blockDataList;
-
-        @Override
-        public boolean matches(@NotNull final Block block) {
-            return components.stream().anyMatch(c -> c.matches(block));
-        }
-
-        @Override
-        public @NotNull UUID spawnGhostBlock(@NotNull final Block block) {
-
-            var display = new BlockDisplayBuilder()
-                    .material(blockDataList.getFirst().getMaterial())
-                    .glow(Color.WHITE)
-                    .transformation(new TransformBuilder().scale(0.5))
-                    .build(block.getLocation().toCenterLocation());
-            EntityStorage.add(new PylonSimpleMultiblock.MultiblockGhostBlock(display, String.join(", ", blockDataList.stream().map(Object::toString).toList())));
-
-            if (blockDataList.size() > 1) {
-                AtomicInteger i = new AtomicInteger(0);
-                RuntimePylon.runTaskTimer(
-                        () -> {
-                            while (display.isValid()) {
-                                display.setBlock(blockDataList.get(i.getAndIncrement()));
-                                i.set(i.get() % blockDataList.size());
-                            }
-                        }, 20, 20
-                );
-            }
-
-            return display.getUniqueId();
-        }
-    }
 }

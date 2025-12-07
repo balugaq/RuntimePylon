@@ -1,19 +1,16 @@
 package com.balugaq.runtimepylon;
 
-import com.balugaq.runtimepylon.config.ConfigReader;
-import com.balugaq.runtimepylon.config.Deserializer;
-import com.balugaq.runtimepylon.config.Pack;
-import com.balugaq.runtimepylon.object.KeyedMap;
+import com.balugaq.runtimepylon.config.FluidBlockData;
+import com.balugaq.runtimepylon.config.FluidBufferBlockData;
+import com.balugaq.runtimepylon.data.KeyedMap;
 import com.balugaq.runtimepylon.script.ScriptExecutor;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
-import io.github.pylonmc.pylon.core.fluid.FluidPointType;
-import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
+import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import lombok.Getter;
+import net.kyori.adventure.key.Key;
 import org.bukkit.NamespacedKey;
-import org.bukkit.block.BlockFace;
-import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jetbrains.annotations.Unmodifiable;
@@ -21,35 +18,38 @@ import org.joml.Vector3i;
 import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.gui.Gui;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @author balugaq
  */
 @NullMarked
 public class GlobalVars {
+    public static final @Getter Key PLACEHOLDER_KEY = com.balugaq.runtimepylon.util.Key.create("placeholder").key();
     private static final @Getter KeyedMap<ScriptExecutor> scripts = new KeyedMap<>();
     private static final @Getter KeyedMap<Gui> guis = new KeyedMap<>();
     private static final @Getter KeyedMap<SimpleStaticGuidePage> customPages = new KeyedMap<>();
     private static final @Getter KeyedMap<FluidBlockData> fluidBlockDatas = new KeyedMap<>();
     private static final @Getter KeyedMap<FluidBufferBlockData> fluidBufferBlockDatas = new KeyedMap<>();
     private static final @Getter KeyedMap<Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent>> multiBlockComponents = new KeyedMap<>();
+    private static final @Getter KeyedMap<RecipeType<?>> loadRecipeTypes = new KeyedMap<>();
+    private static final @Getter KeyedMap<Key> equipmentTypes = new KeyedMap<>();
 
     static {
         guis.defaultReturnValue(Gui.normal().build());
         fluidBlockDatas.defaultReturnValue(FluidBlockData.EMPTY);
         fluidBufferBlockDatas.defaultReturnValue(FluidBufferBlockData.EMPTY);
         multiBlockComponents.defaultReturnValue(Map.of());
+        equipmentTypes.defaultReturnValue(PLACEHOLDER_KEY);
     }
 
     public static void destroy() {
         guis.clear();
     }
 
+    @CanIgnoreReturnValue
     public static Gui putGui(NamespacedKey key, Gui gui) {
         guis.put(key, gui);
         return gui;
@@ -59,64 +59,102 @@ public class GlobalVars {
         return guis.get(key);
     }
 
-    public static GlobalVars.Result<Gui> getGuiO(NamespacedKey key) {
-        return GlobalVars.Result.of(guis.get(key));
+    public static Result<Gui> getGuiO(NamespacedKey key) {
+        return Result.of(guis.get(key));
     }
 
-    public static void putScript(NamespacedKey key, ScriptExecutor script) {
+    @CanIgnoreReturnValue
+    public static ScriptExecutor putScript(NamespacedKey key, ScriptExecutor script) {
         scripts.put(key, script);
+        return script;
     }
 
     public static ScriptExecutor getScript(NamespacedKey key) {
         return scripts.get(key);
     }
 
-    public static GlobalVars.Result<ScriptExecutor> getScriptO(NamespacedKey key) {
-        return GlobalVars.Result.of(scripts.get(key));
+    public static Result<ScriptExecutor> getScriptO(NamespacedKey key) {
+        return Result.of(scripts.get(key));
     }
 
-    public static void putCustomPage(NamespacedKey key, SimpleStaticGuidePage page) {
+    @CanIgnoreReturnValue
+    public static SimpleStaticGuidePage putCustomPage(NamespacedKey key, SimpleStaticGuidePage page) {
         customPages.put(key, page);
+        return page;
     }
 
     public static SimpleStaticGuidePage getCustomPage(NamespacedKey key) {
         return customPages.get(key);
     }
 
-    public static GlobalVars.Result<SimpleStaticGuidePage> getCustomPageO(NamespacedKey key) {
-        return GlobalVars.Result.of(customPages.get(key));
+    public static Result<SimpleStaticGuidePage> getCustomPageO(NamespacedKey key) {
+        return Result.of(customPages.get(key));
     }
 
-    public static void putFluidBlockData(NamespacedKey key, FluidBlockData data) {
+    @CanIgnoreReturnValue
+    public static FluidBlockData putFluidBlockData(NamespacedKey key, FluidBlockData data) {
         fluidBlockDatas.put(key, data);
+        return data;
     }
 
     public static FluidBlockData getFluidBlockData(NamespacedKey key) {
         return fluidBlockDatas.get(key);
     }
 
-    public static GlobalVars.Result<FluidBlockData> getFluidBlockDataO(NamespacedKey key) {
-        return GlobalVars.Result.of(fluidBlockDatas.get(key));
+    public static Result<FluidBlockData> getFluidBlockDataO(NamespacedKey key) {
+        return Result.of(fluidBlockDatas.get(key));
     }
 
-    public static void putFluidBufferBlockData(NamespacedKey key, FluidBufferBlockData data) {
+    @CanIgnoreReturnValue
+    public static FluidBufferBlockData putFluidBufferBlockData(NamespacedKey key, FluidBufferBlockData data) {
         fluidBufferBlockDatas.put(key, data);
+        return data;
     }
 
     public static FluidBufferBlockData getFluidBufferBlockData(NamespacedKey key) {
         return fluidBufferBlockDatas.get(key);
     }
 
-    public static GlobalVars.Result<FluidBufferBlockData> getFluidBufferBlockDataO(NamespacedKey key) {
-        return GlobalVars.Result.of(fluidBufferBlockDatas.get(key));
+    public static Result<FluidBufferBlockData> getFluidBufferBlockDataO(NamespacedKey key) {
+        return Result.of(fluidBufferBlockDatas.get(key));
     }
 
-    public static void putMultiBlockComponents(NamespacedKey key, Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent> components) {
+    @CanIgnoreReturnValue
+    public static Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent> putMultiBlockComponents(NamespacedKey key, Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent> components) {
         multiBlockComponents.put(key, components);
+        return components;
     }
 
     public static Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent> getMultiBlockComponents(NamespacedKey key) {
         return multiBlockComponents.get(key);
+    }
+
+    @CanIgnoreReturnValue
+    public static RecipeType<?> putLoadRecipeType(NamespacedKey key, RecipeType<?> recipeType) {
+        loadRecipeTypes.put(key, recipeType);
+        return recipeType;
+    }
+
+    public static RecipeType<?> getLoadRecipeType(NamespacedKey key) {
+        return loadRecipeTypes.get(key);
+    }
+
+    public static Result<RecipeType<?>> getLoadRecipeTypeO(NamespacedKey key) {
+        return Result.of(loadRecipeTypes.get(key));
+    }
+
+    @CanIgnoreReturnValue
+    public static Key putEquipmentType(NamespacedKey key, Key equipmentType) {
+        equipmentTypes.put(key, equipmentType);
+        return equipmentType;
+    }
+
+    public static Key getEquipmentType(NamespacedKey key) {
+        return equipmentTypes.get(key);
+    }
+
+    public static Result<Key> getEquipmentTypeO(NamespacedKey key) {
+        return Result.of(equipmentTypes.get(key));
     }
 
     /**
@@ -156,6 +194,12 @@ public class GlobalVars {
             return this;
         }
 
+        @CanIgnoreReturnValue
+        public ResultL2<T> ifPresent(Supplier<T> callable) {
+            return new ResultL2<>(callable.get());
+        }
+
+        @CanIgnoreReturnValue
         public <K> ResultL2<T> ifPresent(Class<K> clazz, Consumer<K> consumer) {
             if (result != null && clazz.isInstance(result)) {
                 consumer.accept(clazz.cast(result));
@@ -181,90 +225,10 @@ public class GlobalVars {
                 runnable.run();
             }
         }
-    }
 
-    /**
-     * @author balugaq
-     */
-    @NullMarked
-    public record FluidBlockData(
-            @Unmodifiable List<SingletonFluidBlockData> data) implements Iterable<SingletonFluidBlockData> {
-        @Unmodifiable
-        public static final FluidBlockData EMPTY = new FluidBlockData(List.of());
-
-        @Override
-        public Iterator<SingletonFluidBlockData> iterator() {
-            return data.iterator();
-        }
-    }
-
-    /**
-     * @author balugaq
-     */
-    @NullMarked
-    public record SingletonFluidBlockData(FluidPointType fluidPointType, BlockFace face,
-                                          boolean allowVerticalFaces) implements Deserializer<SingletonFluidBlockData> {
-        public SingletonFluidBlockData() {
-            this(FluidPointType.INTERSECTION, BlockFace.NORTH, true);
-        }
-
-        @Override
-        public List<ConfigReader<?, SingletonFluidBlockData>> readers() {
-            return List.of(ConfigReader.of(
-                    ConfigurationSection.class, section -> {
-                        FluidPointType type = Optional.ofNullable(Pack.readEnumOrNull(section, FluidPointType.class, "type"))
-                                .orElse(FluidPointType.INTERSECTION);
-                        BlockFace face = Optional.ofNullable(Pack.readEnumOrNull(section, BlockFace.class, "face"))
-                                .orElse(BlockFace.NORTH);
-                        if (!face.isCartesian()) {
-                            throw new IllegalArgumentException("Expected cartesian blockfaces, but invalid face: " + face);
-                        }
-                        return new SingletonFluidBlockData(type, face, section.getBoolean("allowVerticalFaces", true));
-                    }
-            ));
-        }
-    }
-
-    /**
-     * @author balugaq
-     */
-    @NullMarked
-    public record FluidBufferBlockData(
-            @Unmodifiable List<SingletonFluidBufferBlockData> data) implements Iterable<SingletonFluidBufferBlockData> {
-        @Unmodifiable
-        public static final FluidBufferBlockData EMPTY = new FluidBufferBlockData(List.of());
-
-        public FluidBufferBlockData(List<SingletonFluidBufferBlockData> data) {
-            this.data = data;
-        }
-
-        @Override
-        public Iterator<SingletonFluidBufferBlockData> iterator() {
-            return data.iterator();
-        }
-    }
-
-    /**
-     * @author balugaq
-     */
-    @NullMarked
-    public record SingletonFluidBufferBlockData(PylonFluid fluid, double capacity, boolean input,
-                                                boolean output) implements Deserializer<SingletonFluidBufferBlockData> {
-        public SingletonFluidBufferBlockData() {
-            this(null, 0, true, true);
-        }
-
-        @Override
-        public List<ConfigReader<?, SingletonFluidBufferBlockData>> readers() {
-            return List.of(ConfigReader.of(
-                    ConfigurationSection.class, section -> {
-                        PylonFluid fluid = Deserializer.PYLON_FLUID.deserialize(section.get("fluid"));
-                        double capacity = section.getDouble("capacity", 0);
-                        boolean input = section.getBoolean("input", true);
-                        boolean output = section.getBoolean("output", true);
-                        return new SingletonFluidBufferBlockData(fluid, capacity, input, output);
-                    }
-            ));
+        @UnknownNullability
+        public T orElse(@Nullable T other) {
+            return result != null ? result : other;
         }
     }
 }

@@ -4,6 +4,7 @@ import com.balugaq.runtimepylon.config.pack.PackNamespace;
 import com.balugaq.runtimepylon.object.ItemStackProvider;
 import io.github.pylonmc.pylon.core.guide.button.ItemButton;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
+import lombok.experimental.UtilityClass;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -18,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author balugaq
  */
 @NullMarked
+@UtilityClass
 public class GuiReader {
     public static Result read(ConfigurationSection section, PackNamespace namespace, @Nullable ScriptDesc scriptDesc) {
         if (!section.contains("structure")) {

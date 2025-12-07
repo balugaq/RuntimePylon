@@ -1,6 +1,7 @@
 package com.balugaq.runtimepylon.object.blocks;
 
 import com.balugaq.runtimepylon.GlobalVars;
+import com.balugaq.runtimepylon.object.Scriptable;
 import com.destroystokyo.paper.event.block.BeaconEffectEvent;
 import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
@@ -34,9 +35,7 @@ import io.github.pylonmc.pylon.core.block.base.PylonTrialVault;
 import io.github.pylonmc.pylon.core.block.base.PylonUnloadBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockBreakContext;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
-import io.github.pylonmc.pylon.core.config.Config;
 import io.github.pylonmc.pylon.core.config.PylonConfig;
-import io.github.pylonmc.pylon.core.config.Settings;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.event.PylonBlockUnloadEvent;
 import io.papermc.paper.event.block.BeaconActivatedEvent;
@@ -94,9 +93,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                                                        PylonGrowable, PylonJumpBlock, PylonLeaf, PylonLectern, PylonNoteBlock,
                                                        PylonPiston, PylonRedstoneBlock, PylonShearable, PylonSign, PylonSneakableBlock,
                                                        PylonSponge, PylonTargetBlock, PylonTNT, PylonTrialVault, PylonUnloadBlock,
-                                                       PylonGuiBlock {
-    public final Config settings = Settings.get(getKey());
-
+                                                       PylonGuiBlock, Scriptable {
     public CustomBlock(final Block block) {
         super(block);
     }
@@ -117,10 +114,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
 
     @Override
     public void onInteract(final PlayerInteractEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onPreInteract",
-                this, event
-        ));
+        callScriptA("onPreInteract", this, event);
 
         if (!event.getAction().isRightClick()
                 || event.getPlayer().isSneaking()
@@ -139,344 +133,219 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                 .build()
                 .open();
 
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onPostInteract",
-                this, event
-        ));
+        callScriptA("onPostInteract", this, event);
     }
 
     @Override
     public void onFlowerPotManipulated(final PlayerFlowerPotManipulateEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onFlowerPotManipulated",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onActivated(final BeaconActivatedEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onActivated",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onDeactivated(final BeaconDeactivatedEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onDeactivated",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onEffectChange(final PlayerChangeBeaconEffectEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onEffectChange",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onEffectApply(final BeaconEffectEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onEffectApply",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onRing(final BellRingEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onRing",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onResonate(final BellResonateEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onResonate",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public boolean preBreak(final BlockBreakContext context) {
-        var opt = GlobalVars.getScriptO(getKey());
-        if (opt.isPresent()) {
-            return Boolean.TRUE.equals(opt.get().executeFunction(
-                    "preBreak",
-                    this, context
-            ).get());
-        }
-        return true;
+        var v = callScript(this, context);
+        if (v == null) return true;
+        return Boolean.TRUE.equals(v);
     }
 
     @Override
     public void onBreak(final List<ItemStack> drops, final BlockBreakContext context) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onBreak",
-                this, drops, context
-        ));
+        callScript(this, drops, context);
     }
 
     @Override
     public void postBreak(final BlockBreakContext context) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "postBreak",
-                this, context
-        ));
+        callScript(this, context);
     }
 
     @Override
     public void onStartCooking(final InventoryBlockStartEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onStartCooking",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onEndCooking(final BlockCookEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onEndCooking",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onLevelChange(final CauldronLevelChangeEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onLevelChange",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onCompostByHopper(final CompostItemEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onCompostByHopper",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onCompostByEntity(final EntityCompostItemEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onCompostByEntity",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onInventoryOpen(final InventoryOpenEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onInventoryOpen",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onItemMoveTo(final InventoryMoveItemEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onItemMoveTo",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onItemMoveFrom(final InventoryMoveItemEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onItemMoveFrom",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onDecayNaturally(final LeavesDecayEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onDecayNaturally",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onJumpedOn(final PlayerJumpEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onJumpedOn",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onGrow(final BlockGrowEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onGrow",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onFertilize(final BlockFertilizeEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onFertilize",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onInsertBook(final PlayerInsertLecternBookEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onInsertBook",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onRemoveBook(final PlayerTakeLecternBookEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onRemoveBook",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onChangePage(final PlayerLecternPageChangeEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onChangePage",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public int getTickInterval() {
-        return settings.get("tick-interval", ConfigAdapter.INT, PylonConfig.getDefaultTickInterval());
+        return getSettings().get("tick-interval", ConfigAdapter.INT, PylonConfig.getDefaultTickInterval());
     }
 
     @Override
     public boolean isAsync() {
-        return settings.get("async", ConfigAdapter.BOOLEAN, false);
+        return getSettings().get("async", ConfigAdapter.BOOLEAN, false);
     }
 
     @Override
     public void tick(final double deltaSeconds) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "tick",
-                this, deltaSeconds
-        ));
+        callScript(this, deltaSeconds);
     }
 
     @Override
     public void onNotePlay(@NotNull final NotePlayEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onNotePlay",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onCurrentChange(@NotNull final BlockRedstoneEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onCurrentChange",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onShear(@NotNull final PlayerShearBlockEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onShear",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onAbsorb(@NotNull final SpongeAbsorbEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onAbsorb",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onIgnite(@NotNull final TNTPrimeEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onIgnite",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onHit(@NotNull final TargetHitEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onHit",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onDisplayItem(@NotNull final VaultDisplayItemEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onDisplayItem",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onUnload(@NotNull final PylonBlockUnloadEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onUnload",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onExtend(@NotNull final BlockPistonExtendEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onExtend",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onRetract(@NotNull final BlockPistonRetractEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onRetract",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onSignChange(@NotNull final SignChangeEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onSignChange",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onOpen(@NotNull final PlayerOpenSignEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onOpen",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onSneakedOn(@NotNull final PlayerToggleSneakEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onSneakedOn",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override
     public void onUnsneakedOn(@NotNull final PlayerToggleSneakEvent event) {
-        GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
-                "onUnsneakedOn",
-                this, event
-        ));
+        callScript(this, event);
     }
 
     @Override

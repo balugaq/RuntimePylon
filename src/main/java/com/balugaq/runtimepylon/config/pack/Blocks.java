@@ -4,18 +4,24 @@ import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
+import com.balugaq.runtimepylon.config.FluidBlockData;
+import com.balugaq.runtimepylon.config.FluidBufferBlockData;
 import com.balugaq.runtimepylon.config.GuiReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.Pack;
-import com.balugaq.runtimepylon.config.PreRegister;
+import com.balugaq.runtimepylon.config.RecipeTypeDesc;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
+import com.balugaq.runtimepylon.config.SingletonFluidBlockData;
+import com.balugaq.runtimepylon.config.SingletonFluidBufferBlockData;
 import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.config.preloads.PreparedBlock;
+import com.balugaq.runtimepylon.config.register.PreRegister;
+import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
-import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.InvalidMultiblockComponentException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
+import com.balugaq.runtimepylon.exceptions.UnknownRecipeTypeException;
 import com.balugaq.runtimepylon.exceptions.UnknownSymbolException;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.util.MaterialUtil;
@@ -72,22 +78,20 @@ import java.util.Map;
  *       "0;-1;0": [Multiblock Component Symbol]
  *     blocks:
  *       [Multiblock Component Symbol]: [Multiblock Component Desc]
+ *     *load-recipe-type: [RecipeType Desc]
  *
  * <p>
- *
  * [SingletonFluidBlockData]:
  *   point: [FluidPointType]
  *   face: [Cartesian BlockFace]
  *   *allow-vertical-faces: boolean # (true by default)
  * <p>
- *
  * [SingletonFluidBufferBlockData]:
  *   fluid: [PylonFluid]
  *   capacity: double
  *   input: boolean # (false by default)
  *   output: boolean # (false by default)
  * <p>
- *
  * [Multiblock Component Desc]:
  * pylonbase:tin_block
  * minecraft:iron_block
@@ -148,12 +152,12 @@ public class Blocks implements FileObject<Blocks> {
                         if (fluidBlock != null) {
                             try (var ignored2 = StackFormatter.setPosition("Reading fluid-block section: " + key)) {
 
-                            List<GlobalVars.SingletonFluidBlockData> singletons = new ArrayList<>();
+                            List<SingletonFluidBlockData> singletons = new ArrayList<>();
                             for (String k : fluidBlock.getKeys(false)) {
-                                var singleton = Pack.read(fluidBlock, GlobalVars.SingletonFluidBlockData.class, k);
+                                var singleton = Pack.read(fluidBlock, SingletonFluidBlockData.class, k);
                                 singletons.add(singleton);
                             }
-                            GlobalVars.putFluidBlockData(id.key(), new GlobalVars.FluidBlockData(singletons));
+                            GlobalVars.putFluidBlockData(id.key(), new FluidBlockData(singletons));
 
                             } catch (Exception ex) {
                                 StackFormatter.handle(ex);
@@ -167,12 +171,12 @@ public class Blocks implements FileObject<Blocks> {
                         if (fluidBuffer != null) {
                             try (var ignored2 = StackFormatter.setPosition("Reading fluid-buffer section: " + key)) {
 
-                            List<GlobalVars.SingletonFluidBufferBlockData> singletons = new ArrayList<>();
+                            List<SingletonFluidBufferBlockData> singletons = new ArrayList<>();
                             for (String k : fluidBuffer.getKeys(false)) {
-                                var singleton = Pack.read(fluidBuffer, GlobalVars.SingletonFluidBufferBlockData.class, k);
+                                var singleton = Pack.read(fluidBuffer, SingletonFluidBufferBlockData.class, k);
                                 singletons.add(singleton);
                             }
-                            GlobalVars.putFluidBufferBlockData(id.key(), new GlobalVars.FluidBufferBlockData(singletons));
+                            GlobalVars.putFluidBufferBlockData(id.key(), new FluidBufferBlockData(singletons));
 
                             } catch (Exception ex) {
                                 StackFormatter.handle(ex);
@@ -192,7 +196,7 @@ public class Blocks implements FileObject<Blocks> {
                             if (blocks != null) {
                                 for (String k : blocks.getKeys(false)) {
                                     var component = Deserializer.MULTIBLOCK_COMPONENT.deserialize(blocks.getString(k));
-                                    if (component == null) throw new InvalidMultiblockComponentException("multiblock.blocks." + k);
+                                    if (component == null) throw new InvalidMultiblockComponentException(k);
                                     symbols.put(k, component);
                                 }
                             }
@@ -201,14 +205,21 @@ public class Blocks implements FileObject<Blocks> {
                             if (positions != null) {
                                 for (String k : positions.getKeys(false)) {
                                     var position = Deserializer.VECTOR3I.deserialize(positions.getString(k));
-                                    if (position == null) throw new InvalidDescException("multiblock.positions." + k);
+                                    if (position == null) throw new IncompatibleKeyFormatException("unknown vector3i: " + k);
                                     var component = symbols.get(k);
-                                    if (component == null) throw new UnknownSymbolException("multiblock.positions." + k + ": component not found");
+                                    if (component == null) throw new UnknownSymbolException("component not found: " + k);
                                     components.put(position, component);
                                 }
                             }
 
                             GlobalVars.putMultiBlockComponents(id.key(), components);
+
+                            RecipeTypeDesc desc = Pack.readOrNull(multiblock, RecipeTypeDesc.class, "load-recipe-type");
+                            if (desc != null) {
+                                var recipeType = desc.findRecipeType();
+                                if (recipeType == null) throw new UnknownRecipeTypeException(desc.getKey().toString());
+                                GlobalVars.putLoadRecipeType(id.key(), recipeType);
+                            }
 
                             } catch (Exception ex) {
                                 StackFormatter.handle(ex);
