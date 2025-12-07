@@ -82,7 +82,7 @@ import java.util.function.Function;
  *           <li>fluids/</li>
  *           <li>recipe_types</li>
  *           <li>recipes/</li>
- *           <li>multiblocks</li> // todo: loadRecipeType:
+ *           <li>multiblocks</li>
  *           <li>machines</li> // todo: loadRecipeType:
  *           <li>settings/</li>
  *           <li>scripts/</li>

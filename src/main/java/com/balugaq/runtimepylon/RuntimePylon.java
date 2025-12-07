@@ -151,8 +151,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     }
 }
 
-//todo research
-//todo machine
-//todo multiblock
+//todo machine, machine template
+//todo multiblock template
 //todo disable message: example is missing a name translation key for item example:example_item (locale: 中文 (中国) | expected translation key: pylon.example.item.example_item.name
 //todo and then code a new translation checker

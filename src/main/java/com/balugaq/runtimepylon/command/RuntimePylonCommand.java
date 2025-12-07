@@ -52,7 +52,7 @@ import java.util.function.Function;
 @UtilityClass
 @NullMarked
 public class RuntimePylonCommand {
-    public static final int THRESHOLD = 1 << 14;
+    public static final int MAX_SAVEDITEMS = 1 << 14;
     //@formatter:off
     public static final LiteralCommandNode<CommandSourceStack> ROOT = Commands.literal("runtime")
         .then(Commands.literal("clearsettings")
@@ -338,7 +338,7 @@ public class RuntimePylonCommand {
         if (!saveditemsFolder.exists()) saveditemsFolder.mkdirs();
 
         if (fileName == null) {
-            for (int i = 0; i < THRESHOLD; i++) {
+            for (int i = 0; i < MAX_SAVEDITEMS; i++) {
                 fileName = "" + i;
                 File file = new File(saveditemsFolder, fileName + ".yml");
                 if (!file.exists()) {

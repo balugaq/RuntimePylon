@@ -49,6 +49,14 @@ public class PackSorter {
                     }
                 }
             }
+            List<PackDesc> plb = pack.getPackLoadBefores();
+            if (plb != null) {
+                for (String loadBefore : plb.stream().map(PackDesc::getId).toList()) {
+                    if (packMap.containsKey(loadBefore)) {
+                        graph.computeIfAbsent(packName, k -> new HashSet<>()).add(loadBefore);
+                    }
+                }
+            }
         }
 
         return graph;
@@ -136,15 +144,6 @@ public class PackSorter {
                     }
                 }
             }
-
-            List<PackDesc> plb = pack.getPackLoadBefores();
-            if (plb != null) {
-                for (String loadBefore : plb.stream().map(PackDesc::getId).toList()) {
-                    if (validPacks.contains(loadBefore)) {
-                        graph.computeIfAbsent(packName, k -> new HashSet<>()).add(loadBefore);
-                    }
-                }
-            }
         }
 
         return graph;
@@ -153,6 +152,23 @@ public class PackSorter {
     private static List<Pack> processSoftDependencies(Map<String, Set<String>> softDependencyGraph,
                                                       Set<String> validPacks,
                                                       Map<String, Pack> packMap) {
+        // Ensure hard dependencies are respected in soft dependency sorting
+        for (Map.Entry<String, Pack> entry : packMap.entrySet()) {
+            String packName = entry.getKey();
+            Pack pack = entry.getValue();
+            
+            // Add hard dependency constraints to soft dependency graph
+            List<PackDesc> hardDeps = pack.getPackDependencies();
+            if (hardDeps != null) {
+                for (String dep : hardDeps.stream().map(PackDesc::getId).toList()) {
+                    if (validPacks.contains(dep) && validPacks.contains(packName)) {
+                        // The dependency (dep) must come before the pack (packName)
+                        softDependencyGraph.computeIfAbsent(dep, k -> new HashSet<>()).add(packName);
+                    }
+                }
+            }
+        }
+        
         List<List<String>> sccs = findSCCs(softDependencyGraph, validPacks);
 
         List<List<String>> sortedSCCs = sccs.stream()

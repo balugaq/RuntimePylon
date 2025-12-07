@@ -27,6 +27,10 @@ public class GuiReader {
         }
 
         List<String> structure = List.of(section.getString("structure").split("\n"));
+        if (structure.isEmpty()) {
+            return Result.EMPTY;
+        }
+
         Pack.guiStructurePrecheck(structure);
         final AtomicReference<ItemStackProvider> guiProvider = new AtomicReference<>();
         if (section.contains("gui")) {

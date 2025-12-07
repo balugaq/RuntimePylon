@@ -1,6 +1,7 @@
 package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.exceptions.ExamineFailedException;
+import org.bukkit.configuration.ConfigurationSection;
 import org.jspecify.annotations.NullMarked;
 
 /**
@@ -18,6 +19,8 @@ public interface Examinable<T> {
      *
      * @throws ExamineFailedException
      *         if the object is invalid
+     *
+     * @see Pack#read(ConfigurationSection, Class, String)
      */
     T examine() throws ExamineFailedException;
 }
