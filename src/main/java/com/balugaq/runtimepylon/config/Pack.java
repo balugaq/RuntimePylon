@@ -137,6 +137,8 @@ public class Pack implements FileObject<Pack> {
     private final PackNamespace packNamespace;
     private final PackVersion packVersion;
     @Nullable
+    private final YamlConfiguration packConfig;
+    @Nullable
     private final MinecraftVersion packMinAPIVersion;
     @Nullable
     private final MinecraftVersion packMaxAPIVersion;
@@ -355,6 +357,7 @@ public class Pack implements FileObject<Pack> {
                         id,
                         namespace,
                         version,
+                        new YamlConfiguration(), //todo
                         minAPIVersion,
                         maxAPIVersion,
                         packLoadBefores,
