@@ -24,10 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <li>pages/
@@ -84,7 +81,7 @@ public class Pages implements FileObject<Pages> {
                     MyArrayList<PageDesc> parents = (MyArrayList<@NotNull PageDesc>) Pack.readOrNull(section, MyArrayList.class, PageDesc.class, "parents", e -> e.setPackNamespace(namespace));
 
                     boolean postLoad = section.getBoolean("postload", false);
-                    pages.put(id, new PreparedPage(id, dm, parents, postLoad));
+                    pages.put(id, new PreparedPage(id, dm, parents, new ArrayList<>(), postLoad));
                 } catch (Exception e) {
                     StackFormatter.handle(e);
                 }}

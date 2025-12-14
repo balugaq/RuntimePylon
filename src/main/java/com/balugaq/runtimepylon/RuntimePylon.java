@@ -7,7 +7,11 @@ import com.balugaq.runtimepylon.manager.ConfigManager;
 import com.balugaq.runtimepylon.manager.IntegrationManager;
 import com.balugaq.runtimepylon.pylon.RuntimeBlocks;
 import com.balugaq.runtimepylon.pylon.RuntimeItems;
+import com.balugaq.runtimepylon.script.callbacks.APICallbacks;
 import com.balugaq.runtimepylon.util.Debug;
+import com.caoccao.javet.exceptions.JavetException;
+import com.caoccao.javet.interop.V8Host;
+import com.caoccao.javet.interop.V8Runtime;
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
@@ -39,6 +43,9 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @UnknownNullability
     private static RuntimePylon instance;
     private final Set<Locale> SUPPORTED_LANGUAGES = new HashSet<>();
+    @Getter
+    @UnknownNullability
+    private V8Runtime scriptRuntime;
     @UnknownNullability
     private ConfigManager configManager;
     @UnknownNullability
@@ -106,6 +113,12 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         configManager = new ConfigManager(this);
         integrationManager = new IntegrationManager();
         packManager = new PackManager();
+        try {
+            scriptRuntime = V8Host.getV8Instance().createV8Runtime();
+            scriptRuntime.getGlobalObject().bind(new APICallbacks());
+        } catch (JavetException e) {
+            throw new RuntimeException(e);
+        }
 
         RuntimeItems.initialize();
         RuntimeBlocks.initialize();

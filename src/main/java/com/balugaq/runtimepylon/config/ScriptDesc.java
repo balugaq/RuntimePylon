@@ -21,7 +21,7 @@ public class ScriptDesc implements Deserializer<ScriptDesc>, Examinable<ScriptDe
     @Override
     public ScriptDesc examine() throws ExamineFailedException {
         if (!scriptPath.matches("[A-Za-z0-9_+\\-/]+")) {
-            throw new ExamineFailedException("Pack Desc must be [A-Za-z0-9_+-]+");
+            throw new ExamineFailedException("Script Desc must be [A-Za-z0-9_+-]+");
         }
         return this;
     }
