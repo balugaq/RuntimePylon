@@ -1,14 +1,56 @@
 package com.balugaq.runtimepylon.config.pack;
 
+import com.balugaq.runtimepylon.config.Deserializer;
+import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.PackManager;
+import com.balugaq.runtimepylon.exceptions.InvalidNamespacedKeyException;
+import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.util.ReflectionUtil;
+import io.github.pylonmc.pylon.core.config.Config;
+import io.github.pylonmc.pylon.core.recipe.ConfigurableRecipeType;
+import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
+import io.github.pylonmc.pylon.core.recipe.RecipeType;
+import io.github.pylonmc.pylon.core.recipe.vanilla.BlastingRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.CampfireRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.FurnaceRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.ShapedRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.ShapelessRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.SmithingTransformRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.SmithingTrimRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.SmokingRecipeWrapper;
+import io.github.pylonmc.pylon.core.recipe.vanilla.TransmuteRecipeWrapper;
+import io.github.pylonmc.pylon.core.registry.PylonRegistry;
+import kotlin.jvm.functions.Function5;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.BlastingRecipe;
+import org.bukkit.inventory.CampfireRecipe;
+import org.bukkit.inventory.CookingRecipe;
+import org.bukkit.inventory.FurnaceRecipe;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.RecipeChoice;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.SmithingTransformRecipe;
+import org.bukkit.inventory.SmithingTrimRecipe;
+import org.bukkit.inventory.SmokingRecipe;
+import org.bukkit.inventory.TransmuteRecipe;
+import org.bukkit.inventory.recipe.CookingBookCategory;
+import org.bukkit.inventory.recipe.CraftingBookCategory;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
 
 /**
  * @author balugaq
@@ -20,40 +62,187 @@ public class Recipes {
     private File recipeFolder;
     private PackNamespace namespace;
 
-    public void mergeTo(File to) {
-        merge(recipeFolder, to);
-    }
+    public void loadRecipes() {
+        for (var dir : recipeFolder.listFiles()) {
+            if (!dir.isDirectory()) continue;
+            var namespace = dir.getName();
+            for (var cfg : dir.listFiles()) {
+                if (cfg.getName().endsWith(".yml")) continue;
+                var key = new NamespacedKey(namespace, cfg.getName().substring(0, cfg.getName().length() - 4));
+                var type = PylonRegistry.RECIPE_TYPES.get(key);
+                if (ADVANCED_RECIPE_TYPES.containsKey(key)) {
+                    File old = new File(new File(Pack.getRecipesFolder(), namespace), cfg.getName());
+                    if (old.exists()) old.delete();
+                }
+                if (!(type instanceof ConfigurableRecipeType<?> ctp)) {
+                    continue;
+                }
 
-    private void merge(File from, File to) {
-        if (!to.exists()) {
-            to.mkdir();
-        }
-
-        for (File file : from.listFiles()) {
-            if (file.isFile() && file.getName().matches("[a-z0-9_\\-\\./]+\\.yml$")) {
-                YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                File targetFile = new File(to, file.getName());
-
-                if (!targetFile.exists()) {
+                Config config = null;
+                YamlConfiguration cg = null;
+                if (ADVANCED_RECIPE_TYPES.containsKey(key)) {
+                    cg = YamlConfiguration.loadConfiguration(new File(new File(Pack.getRecipesFolder(), namespace), cfg.getName()));
+                } else {
+                    config = new Config(cfg.toPath());
+                }
+                for (var ky : config == null ? cg.getKeys(false) : config.getKeys()) {
+                    var k = NamespacedKey.fromString(ky);
+                    if (k == null) {
+                        if (ky.contains(":")) {
+                            // a custom key
+                            throw new InvalidNamespacedKeyException(ky);
+                        }
+                        // default namespace
+                        k = new NamespacedKey(this.namespace.getNamespace(), ky);
+                    }
                     try {
-                        targetFile.createNewFile();
-                    } catch (IOException e) {
-                        Debug.severe(e);
-                        continue;
+                        if (ADVANCED_RECIPE_TYPES.containsKey(key)) {
+                            ReflectionUtil.invokeMethod(ctp, "addRecipe", ADVANCED_RECIPE_TYPES.get(key).apply(k, cg));
+                        } else {
+                            ReflectionUtil.invokeMethod(
+                                    ctp, "addRecipe",
+                                    ReflectionUtil.invokeMethod(ctp, "loadRecipe", k, config.getSectionOrThrow(ky))
+                            );
+                        }
+                        //@formatter:on
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException(
+                                "Failed to load recipe with key " + ky + " from config for recipe type " + ctp.getKey(),
+                                e
+                        );
                     }
                 }
-
-                YamlConfiguration targetConfig = YamlConfiguration.loadConfiguration(targetFile);
-                for (String key : targetConfig.getKeys(false)) {
-                    if (key.startsWith(namespace.getNamespace() + ":")) {
-                        targetConfig.set(key, null); // delete old key
-                    }
-                }
-                PackManager.saveConfig(config, targetConfig, targetFile);
-            } else if (file.isDirectory()) {
-                merge(file, new File(to, file.getName()));
             }
         }
     }
 
+    private static final Map<NamespacedKey, BiFunction<NamespacedKey, ConfigurationSection, ? extends PylonRecipe>> ADVANCED_RECIPE_TYPES = new HashMap<>();
+
+    private static final int DEFAULT_COOKING_TIME = 100;
+
+    static {
+        loadAdvance(RecipeType.VANILLA_BLASTING.getKey(), Recipes::advancedVanillaBlasting);
+        loadAdvance(RecipeType.VANILLA_CAMPFIRE.getKey(), Recipes::advancedVanillaCampfire);
+        loadAdvance(RecipeType.VANILLA_FURNACE.getKey(), Recipes::advancedVanillaFurnace);
+        loadAdvance(RecipeType.VANILLA_SHAPED.getKey(), Recipes::advancedVanillaShaped);
+        loadAdvance(RecipeType.VANILLA_SHAPELESS.getKey(), Recipes::advancedVanillaShapeless);
+        loadAdvance(RecipeType.VANILLA_TRANSMUTE.getKey(), Recipes::advancedVanillaTransmute);
+        loadAdvance(RecipeType.VANILLA_SMITHING_TRANSFORM.getKey(), Recipes::advancedVanillaSmithingTransform);
+        loadAdvance(RecipeType.VANILLA_SMITHING_TRIM.getKey(), Recipes::advancedVanillaSmithingTrim);
+        loadAdvance(RecipeType.VANILLA_SMOKING.getKey(), Recipes::advancedVanillaSmoking);
+    }
+
+    private static SmithingTrimRecipeWrapper advancedVanillaSmithingTrim(NamespacedKey key, ConfigurationSection config) {
+        var pattern = Deserializer.TRIM_PATTERN.deserialize(config.get("pattern"));
+        var template = Deserializer.RECIPE_CHOICE.deserialize(config.get("template"));
+        var base = Deserializer.RECIPE_CHOICE.deserialize(config.get("base"));
+        var addition = Deserializer.RECIPE_CHOICE.deserialize(config.get("addition"));
+        return new SmithingTrimRecipeWrapper(
+                new SmithingTrimRecipe(
+                        key,
+                        template,
+                        base,
+                        addition,
+                        pattern
+                )
+        );
+    }
+
+    private static SmithingTransformRecipeWrapper advancedVanillaSmithingTransform(NamespacedKey key, ConfigurationSection config) {
+        var template = Deserializer.RECIPE_CHOICE.deserialize(config.get("template"));
+        var base = Deserializer.RECIPE_CHOICE.deserialize(config.get("base"));
+        var addition = Deserializer.RECIPE_CHOICE.deserialize(config.get("addition"));
+        var result = Deserializer.ITEMSTACK.deserialize(config.get("result"));
+        return new SmithingTransformRecipeWrapper(
+                new SmithingTransformRecipe(
+                        key,
+                        result,
+                        template,
+                        base,
+                        addition
+                )
+        );
+    }
+
+    private static TransmuteRecipeWrapper advancedVanillaTransmute(NamespacedKey key, ConfigurationSection config) {
+        var result = Deserializer.enumDeserializer(Material.class).deserialize(config.get("result"));
+        var recipe = new TransmuteRecipe(key, result, Deserializer.RECIPE_CHOICE.deserialize(config.get("input")), Deserializer.RECIPE_CHOICE.deserialize(config.get("material")));
+        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).deserializeOrNull("category");
+        var group = config.getString("group");
+        recipe.setCategory(category == null ? CraftingBookCategory.MISC : category);
+        recipe.setGroup(group == null ? "" : group);
+        return new TransmuteRecipeWrapper(recipe);
+    }
+
+    private static ShapelessRecipeWrapper advancedVanillaShapeless(NamespacedKey key, ConfigurationSection config) {
+        List<?> is = config.getList("result");
+        List<RecipeChoice.ExactChoice> ingredients = (is == null || is.isEmpty()) ? new ArrayList<>() : is.stream().map(Deserializer.RECIPE_CHOICE::deserialize).toList();
+        var result = Deserializer.ITEMSTACK.deserialize(config.get("result"));
+
+        var recipe = new ShapelessRecipe(key, result);
+        for (var ingredient : ingredients) {
+            recipe.addIngredient(ingredient);
+        }
+        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).deserializeOrNull("category");
+        if (category != null) recipe.setCategory(category);
+        var group = config.getString("group");
+        if (group != null) recipe.setGroup(group);
+        return new ShapelessRecipeWrapper(recipe);
+    }
+
+    private static ShapedRecipeWrapper advancedVanillaShaped(NamespacedKey key, ConfigurationSection config) {
+        Map<Character, RecipeChoice.ExactChoice> ingredientKey = new HashMap<>();
+        var c = config.getConfigurationSection("key");
+        if (c == null) throw new MissingArgumentException("key");
+        for (var e : c.getKeys(false)) {
+            if (e.isEmpty()) continue;;
+            ingredientKey.put(e.toCharArray()[0], Deserializer.RECIPE_CHOICE.deserialize(c.get(e)));
+        }
+        var pattern = config.getStringList("pattern");
+        var result = Deserializer.ITEMSTACK.deserialize(config.get("result"));
+
+        var recipe = new ShapedRecipe(key, result);
+        recipe.shape(pattern.toArray(new String[0]));
+        for (var e : ingredientKey.entrySet()) {
+            recipe.setIngredient(e.getKey(), e.getValue());
+        }
+        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).deserializeOrNull("category");
+        if (category != null) recipe.setCategory(category);
+        var group = config.getString("group");
+        if (group != null) recipe.setGroup(group);
+        return new ShapedRecipeWrapper(recipe);
+    }
+
+    private static <T extends CookingRecipe<T>> T advancedVanillaCooking(NamespacedKey key, ConfigurationSection config, Function5<NamespacedKey, ItemStack, RecipeChoice, Float, Integer, T> function) {
+        var cookingTime = config.getInt("cookingtime", DEFAULT_COOKING_TIME);
+        var experience = (float) config.getDouble("experience", 0f);
+        var ingredient = Deserializer.RECIPE_CHOICE.deserialize(config.get("ingredient"));
+        var result = Deserializer.ITEMSTACK.deserialize(config.get("result"));
+        var recipe = function.invoke(key, result, ingredient, experience, cookingTime);
+        var category = Deserializer.enumDeserializer(CookingBookCategory.class).deserializeOrNull("category");
+        if (category != null) recipe.setCategory(category);
+        var group = config.getString("group");
+        if (group != null) recipe.setGroup(group);
+        return recipe;
+    }
+
+    private static BlastingRecipeWrapper advancedVanillaBlasting(NamespacedKey key, ConfigurationSection config) {
+        return new BlastingRecipeWrapper(advancedVanillaCooking(key, config, BlastingRecipe::new));
+    }
+
+    private static CampfireRecipeWrapper advancedVanillaCampfire(NamespacedKey key, ConfigurationSection config) {
+        return new CampfireRecipeWrapper(advancedVanillaCooking(key, config, CampfireRecipe::new));
+    }
+
+    private static FurnaceRecipeWrapper advancedVanillaFurnace(NamespacedKey key, ConfigurationSection config) {
+        return new FurnaceRecipeWrapper(advancedVanillaCooking(key, config, FurnaceRecipe::new));
+    }
+
+    private static SmokingRecipeWrapper advancedVanillaSmoking(NamespacedKey key, ConfigurationSection config) {
+        return new SmokingRecipeWrapper(advancedVanillaCooking(key, config, SmokingRecipe::new));
+    }
+
+    private static void loadAdvance(NamespacedKey key, BiFunction<NamespacedKey, ConfigurationSection, ? extends PylonRecipe> function) {
+        ADVANCED_RECIPE_TYPES.put(key, function);
+    }
 }

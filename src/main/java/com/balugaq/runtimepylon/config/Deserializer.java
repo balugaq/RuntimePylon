@@ -1,11 +1,12 @@
 package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.config.pack.PackID;
+import com.balugaq.runtimepylon.data.MyMultiBlockComponent;
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
-import com.balugaq.runtimepylon.exceptions.InvalidNamespacedKeyException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
 import com.balugaq.runtimepylon.exceptions.UnknownItemException;
+import com.balugaq.runtimepylon.exceptions.UnknownKeyedException;
 import com.balugaq.runtimepylon.exceptions.UnknownMultiblockComponentException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
@@ -14,11 +15,19 @@ import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.item.PylonItemSchema;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.RecipeChoice;
+import org.bukkit.inventory.meta.trim.TrimPattern;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.Obsolete;
 import org.jetbrains.annotations.Nullable;
@@ -60,10 +69,15 @@ public interface Deserializer<T> {
     PylonFluidDeserializer PYLON_FLUID = new PylonFluidDeserializer();
     MultiblockComponentDeserializer MULTIBLOCK_COMPONENT = new MultiblockComponentDeserializer();
     Vector3iDeserializer VECTOR3I = new Vector3iDeserializer();
-    NamespacedKeyDeserializer NAMESPACED_KEY = new NamespacedKeyDeserializer();
+    RecipeChoiceDeserializer RECIPE_CHOICE = new RecipeChoiceDeserializer();
+    KeyedDeserializer<TrimPattern> TRIM_PATTERN = KeyedDeserializer.of(RegistryAccess.registryAccess().getRegistry(RegistryKey.TRIM_PATTERN));
 
     static <E extends Enum<E>> EnumDeserializer<E> enumDeserializer(Class<E> clazz) {
         return EnumDeserializer.of(clazz);
+    }
+
+    static < K extends Keyed> KeyedDeserializer<K> keyedDeserializer(Registry<K> registry) {
+        return KeyedDeserializer.of(registry);
     }
 
     /**
@@ -112,8 +126,41 @@ public interface Deserializer<T> {
         throw new DeserializationException(this.getClass());
     }
 
+    @Nullable
+    default T deserializeOrNull(@Nullable Object o) {
+        try {
+            return deserialize(o);
+        } catch (DeserializationException e) {
+            return null;
+        }
+    }
+
     List<ConfigReader<?, T>> readers();
 
+    /**
+     * @author balugaq
+     */
+    @NullMarked
+    record KeyedDeserializer<K extends Keyed>(Registry<K> registry) implements Deserializer<K> {
+        public static <K extends Keyed> KeyedDeserializer<K> of(Registry<K> registry) {
+            return new KeyedDeserializer<>(registry);
+        }
+
+        @Override
+        public List<ConfigReader<?, K>> readers() {
+            return ConfigReader.list(
+                    String.class, s -> {
+                        var key = NamespacedKey.fromString(s);
+                        if (key == null) throw new UnknownKeyedException(registry, s);
+                        return registry.get(key);
+                    }
+            );
+        }
+    }
+
+    /**
+     * @author balugaq
+     */
     @NullMarked
     class ItemStackDeserializer implements Deserializer<ItemStack> {
         public static final Map<String, String> FIELD_RENAME = Map.of(
@@ -401,17 +448,31 @@ public interface Deserializer<T> {
      * @author balugaq
      */
     @NullMarked
-    class NamespacedKeyDeserializer implements Deserializer<NamespacedKey> {
+    class RecipeChoiceDeserializer implements Deserializer<RecipeChoice.ExactChoice> {
+
         @Override
-        public List<ConfigReader<?, NamespacedKey>> readers() {
+        public List<ConfigReader<?, RecipeChoice.ExactChoice>> readers() {
             return ConfigReader.list(
                     String.class, s -> {
-                        var key = NamespacedKey.fromString(s);
-                        if (key == null) throw new InvalidNamespacedKeyException(s);
-                        return key;
-                    }
+                        if (s.contains("|")) {
+                            List<ItemStack> list = new ArrayList<>();
+                            String[] slice = s.split("\\|");
+                            for (var s2 : slice) {
+                                list.add(ITEMSTACK.deserialize(s2));
+                            }
+                            return new RecipeChoice.ExactChoice(list);
+                        } else {
+                            var item = ITEMSTACK.deserializeOrNull(s);
+                            if (item != null) {
+                                return new RecipeChoice.ExactChoice(item);
+                            }
+
+                            // tag
+                            return new RecipeChoice.ExactChoice(ConfigAdapter.ITEM_TAG.convert(s).getValues().stream().map(w -> w.createItemStack()).toList());
+                        }
+                    },
+                    ConfigurationSection.class, s -> new RecipeChoice.ExactChoice(ITEMSTACK.deserialize(s))
             );
         }
     }
-
 }

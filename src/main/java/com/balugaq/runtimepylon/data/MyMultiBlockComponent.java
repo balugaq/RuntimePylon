@@ -1,4 +1,4 @@
-package com.balugaq.runtimepylon.config;
+package com.balugaq.runtimepylon.data;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;

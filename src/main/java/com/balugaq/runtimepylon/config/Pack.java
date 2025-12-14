@@ -137,7 +137,7 @@ public class Pack implements FileObject<Pack> {
     private final PackNamespace packNamespace;
     private final PackVersion packVersion;
     @Nullable
-    private final YamlConfiguration packConfig;
+    private final YamlConfiguration packConfig; // todo
     @Nullable
     private final MinecraftVersion packMinAPIVersion;
     @Nullable
@@ -213,6 +213,16 @@ public class Pack implements FileObject<Pack> {
     public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path, Advancer<T> advancer) {
         if (!config.contains(path)) throw new MissingArgumentException(path);
         return tryExamine(advancer.advance(GenericDeserializer.newDeserializer(clazz).setGenericType(generic))
+                                  .deserialize(config.get(path)));
+    }
+
+    public static <T extends BiGenericDeserializer<T, K, M>, K extends Deserializer<K>, M extends Deserializer<M>> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, Class<M> generic2, String path) {
+        return read(config, clazz, generic, generic2, path, t -> t);
+    }
+
+    public static <T extends BiGenericDeserializer<T, K, M>, K extends Deserializer<K>, M extends Deserializer<M>> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, Class<M> generic2, String path, Advancer<T> advancer) {
+        if (!config.contains(path)) throw new MissingArgumentException(path);
+        return tryExamine(advancer.advance(BiGenericDeserializer.newDeserializer(clazz).setGenericType(generic).setGenericType2(generic2))
                                   .deserialize(config.get(path)));
     }
 
@@ -357,7 +367,7 @@ public class Pack implements FileObject<Pack> {
                         id,
                         namespace,
                         version,
-                        new YamlConfiguration(), //todo
+                        new YamlConfiguration(),
                         minAPIVersion,
                         maxAPIVersion,
                         packLoadBefores,
@@ -399,7 +409,12 @@ public class Pack implements FileObject<Pack> {
 
     @Nullable
     public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path) {
-        return readOrNull(config, clazz, generic, path, t -> t);
+        return readOrNull(config, clazz, generic, path, k -> k);
+    }
+
+    @Nullable
+    public static <T extends BiGenericDeserializer<T, K, M>, K extends Deserializer<K>, M extends Deserializer<M>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, Class<M> generic2, String path) {
+        return readOrNull(config, clazz, generic, generic2, path, k -> k, m -> m);
     }
 
     @Nullable
@@ -435,6 +450,22 @@ public class Pack implements FileObject<Pack> {
             return null;
         }
     }
+
+    @Nullable
+    public static <T extends BiGenericDeserializer<T, K, M>, K extends Deserializer<K>, M extends Deserializer<M>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, Class<M> generic2, String path, Advancer<K> advancer, Advancer<M> advancer2) {
+        try {
+            return tryExamine(BiGenericDeserializer
+                                      .newDeserializer(clazz)
+                                      .setGenericType(generic)
+                                      .setGenericType2(generic2)
+                                      .setAdvancer(advancer)
+                                      .setAdvancer2(advancer2)
+                                      .deserialize(config.get(path)));
+        } catch (PackException e) {
+            return null;
+        }
+    }
+
 
     private void loadLang(@Nullable File from, File to) {
         if (from == null) return;
@@ -587,18 +618,18 @@ public class Pack implements FileObject<Pack> {
 
     private void registerRecipes() {
         if (recipes == null) return;
-        recipes.mergeTo(getRecipesFolder());
+        recipes.loadRecipes();
     }
 
     private void registerResearches() {
         researches.mergeTo(getResearchesFolder());
     }
 
-    public File getResearchesFolder() {
+    public static File getResearchesFolder() {
         return new File(pylonCore, "researches");
     }
 
-    public File getRecipesFolder() {
+    public static File getRecipesFolder() {
         return new File(pylonCore, "recipes");
     }
 
