@@ -121,15 +121,16 @@ public class Recipes {
     private static final int DEFAULT_COOKING_TIME = 100;
 
     static {
-        loadAdvance(RecipeType.VANILLA_BLASTING.getKey(), Recipes::advancedVanillaBlasting);
-        loadAdvance(RecipeType.VANILLA_CAMPFIRE.getKey(), Recipes::advancedVanillaCampfire);
-        loadAdvance(RecipeType.VANILLA_FURNACE.getKey(), Recipes::advancedVanillaFurnace);
-        loadAdvance(RecipeType.VANILLA_SHAPED.getKey(), Recipes::advancedVanillaShaped);
-        loadAdvance(RecipeType.VANILLA_SHAPELESS.getKey(), Recipes::advancedVanillaShapeless);
-        loadAdvance(RecipeType.VANILLA_TRANSMUTE.getKey(), Recipes::advancedVanillaTransmute);
-        loadAdvance(RecipeType.VANILLA_SMITHING_TRANSFORM.getKey(), Recipes::advancedVanillaSmithingTransform);
-        loadAdvance(RecipeType.VANILLA_SMITHING_TRIM.getKey(), Recipes::advancedVanillaSmithingTrim);
-        loadAdvance(RecipeType.VANILLA_SMOKING.getKey(), Recipes::advancedVanillaSmoking);
+        loadAdvance(RecipeType.VANILLA_BLASTING, Recipes::advancedVanillaBlasting);
+        loadAdvance(RecipeType.VANILLA_CAMPFIRE, Recipes::advancedVanillaCampfire);
+        loadAdvance(RecipeType.VANILLA_FURNACE, Recipes::advancedVanillaFurnace);
+        loadAdvance(RecipeType.VANILLA_SHAPED, Recipes::advancedVanillaShaped);
+        loadAdvance(RecipeType.VANILLA_SHAPELESS, Recipes::advancedVanillaShapeless);
+        loadAdvance(RecipeType.VANILLA_TRANSMUTE, Recipes::advancedVanillaTransmute);
+        loadAdvance(RecipeType.VANILLA_SMITHING_TRANSFORM, Recipes::advancedVanillaSmithingTransform);
+        loadAdvance(RecipeType.VANILLA_SMITHING_TRIM, Recipes::advancedVanillaSmithingTrim);
+        loadAdvance(RecipeType.VANILLA_SMOKING, Recipes::advancedVanillaSmoking);
+        // todo: more pylon recipe type
     }
 
     private static SmithingTrimRecipeWrapper advancedVanillaSmithingTrim(NamespacedKey key, ConfigurationSection config) {
@@ -242,7 +243,7 @@ public class Recipes {
         return new SmokingRecipeWrapper(advancedVanillaCooking(key, config, SmokingRecipe::new));
     }
 
-    private static void loadAdvance(NamespacedKey key, BiFunction<NamespacedKey, ConfigurationSection, ? extends PylonRecipe> function) {
-        ADVANCED_RECIPE_TYPES.put(key, function);
+    public static <T extends PylonRecipe> void loadAdvance(ConfigurableRecipeType<T> type, BiFunction<NamespacedKey, ConfigurationSection, T> function) {
+        ADVANCED_RECIPE_TYPES.put(type.getKey(), function);
     }
 }
