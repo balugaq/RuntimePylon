@@ -117,6 +117,12 @@ import java.util.function.Consumer;
  *                 <li>a.js</li>
  *             </ul>
  *           </li>
+ *           <li>researches/
+ *             <ul>
+ *                 <li>researches-part-A.yml</li>
+ *                 <li>researches-part-B.yml</li>
+ *             </ul>
+ *           </li>
  *         </ul>
  *       </li>
  *     </ul>
@@ -128,8 +134,8 @@ import java.util.function.Consumer;
  * | ------------- | -------- | ----------- | ------- | ------- |
  * | String | id | is the identifier of a pack | `A-Za-z0-9_+-`| mypack |
  * | String | version | is the version of a pack | `A-Za-z0-9_+-./()` | 1.0.0 |
- * | String | *minAPIVersion | defines the minimum API version to run this pack | 1.21.3 |
- * | String | *maxAPIVersion | defines the maximum API version to run this pack | 1.21.9 |
+ * | String | *minAPIVersion | defines the minimum API version to run this pack | 26.1 |
+ * | String | *maxAPIVersion | defines the maximum API version to run this pack | 28.1 |
  * | List<String> | *loadBefores | defines what packs should be loaded before this | - | [mypack1, mypack2] |
  * | List<String> | *packDependencies | is the pack dependencies | - | [mypack1, mypack2] |
  * | List<String> | *pluginDependencies | is the plugin dependencies | - | [plugin1, plugin2] |

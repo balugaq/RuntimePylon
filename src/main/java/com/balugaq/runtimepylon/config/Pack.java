@@ -82,7 +82,6 @@ import java.util.function.Function;
  *       <li>pack_id/
  *         <ul>
  *           <li>pack.yml</li>
- *           <li>researches.yml</li>
  *           <li>lang/</li>
  *           <li>pages/</li>
  *           <li>items/</li>
@@ -95,6 +94,7 @@ import java.util.function.Function;
  *           <li>settings/</li>
  *           <li>scripts/</li>
  *           <li>saveditems/</li>
+ *           <li>researches/</li>
  *         </ul>
  *       </li>
  *     </ul>
