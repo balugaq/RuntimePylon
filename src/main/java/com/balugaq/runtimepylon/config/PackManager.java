@@ -12,13 +12,18 @@ import com.balugaq.runtimepylon.exceptions.UnknownPackException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.exceptions.UnsupportedVersionException;
 import com.balugaq.runtimepylon.object.CustomPage;
+import com.balugaq.runtimepylon.object.PackAddon;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
 import io.github.pylonmc.pylon.core.block.BlockStorage;
 import io.github.pylonmc.pylon.core.entity.EntityStorage;
+import io.github.pylonmc.pylon.core.guide.button.FluidButton;
+import io.github.pylonmc.pylon.core.guide.button.ItemButton;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
+import io.github.pylonmc.pylon.core.guide.button.ResearchButton;
+import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.Data;
@@ -271,7 +276,7 @@ public @Data class PackManager {
     }
 
     public static void unload(Pack pack) {
-        PylonAddon plugin = pack.plugin();
+        PackAddon plugin = pack.plugin();
 
         if (pack.getScripts() != null)
             pack.getScripts().closeAll();
@@ -308,7 +313,27 @@ public @Data class PackManager {
         PylonRegistry.ENTITIES.unregisterAllFromAddon(plugin);
         PylonRegistry.RECIPE_TYPES.unregisterAllFromAddon(plugin);
         PylonRegistry.RESEARCHES.unregisterAllFromAddon(plugin);
-        RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> item instanceof PageButton pb && pb.getPage() instanceof CustomPage));
+        RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {
+            return item instanceof PageButton pb && pb.getPage() instanceof CustomPage;
+        }));
+
+        RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {
+            if (!(item instanceof ItemButton ib)) {
+                return false;
+            }
+
+            var pylon = PylonItem.fromStack(ib.getCurrentStack());
+            return pylon != null && pylon.getAddon() == plugin;
+        }));
+
+        RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {
+            return item instanceof FluidButton fb && fb.getCurrentFluid().getKey().getNamespace().equals(plugin.namespace());
+        }));
+
+        RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {
+            return item instanceof ResearchButton rb && rb.getResearch().getKey().getNamespace().equals(plugin.namespace());
+        }));
+
         if (PylonRegistry.ADDONS.contains(plugin.getKey())) {
             PylonRegistry.ADDONS.unregister(plugin);
         }

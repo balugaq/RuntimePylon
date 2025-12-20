@@ -3,11 +3,9 @@ package com.balugaq.runtimepylon.config.pack;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.Pack;
-import com.balugaq.runtimepylon.config.PackManager;
 import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.exceptions.InvalidNamespacedKeyException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
-import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
 import io.github.pylonmc.pylon.core.config.Config;
@@ -128,6 +126,8 @@ public class Recipes {
                     }
                 }
 
+                } catch (Exception e) {
+                    StackFormatter.handle(e);
                 }
             }
         }
@@ -186,9 +186,9 @@ public class Recipes {
     }
 
     private static TransmuteRecipeWrapper advancedVanillaTransmute(NamespacedKey key, ConfigurationSection config) {
-        var result = Deserializer.enumDeserializer(Material.class).deserialize(config.get("result"));
+        var result = Deserializer.enumDeserializer(Material.class).forceUpperCase().deserialize(config.get("result"));
         var recipe = new TransmuteRecipe(key, result, Deserializer.RECIPE_CHOICE.deserialize(config.get("input")), Deserializer.RECIPE_CHOICE.deserialize(config.get("material")));
-        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).deserializeOrNull("category");
+        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).forceUpperCase().deserializeOrNull(config.get("category"));
         var group = config.getString("group");
         recipe.setCategory(category == null ? CraftingBookCategory.MISC : category);
         recipe.setGroup(group == null ? "" : group);
@@ -196,7 +196,7 @@ public class Recipes {
     }
 
     private static ShapelessRecipeWrapper advancedVanillaShapeless(NamespacedKey key, ConfigurationSection config) {
-        List<?> is = config.getList("result");
+        List<?> is = config.getList("ingredients");
         List<RecipeChoice.ExactChoice> ingredients = (is == null || is.isEmpty()) ? new ArrayList<>() : is.stream().map(Deserializer.RECIPE_CHOICE::deserialize).toList();
         var result = Deserializer.ITEMSTACK.deserialize(config.get("result"));
 
@@ -204,7 +204,7 @@ public class Recipes {
         for (var ingredient : ingredients) {
             recipe.addIngredient(ingredient);
         }
-        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).deserializeOrNull("category");
+        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).forceUpperCase().deserializeOrNull(config.get("category"));
         if (category != null) recipe.setCategory(category);
         var group = config.getString("group");
         if (group != null) recipe.setGroup(group);
@@ -227,7 +227,7 @@ public class Recipes {
         for (var e : ingredientKey.entrySet()) {
             recipe.setIngredient(e.getKey(), e.getValue());
         }
-        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).deserializeOrNull("category");
+        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).forceUpperCase().deserializeOrNull(config.get("category"));
         if (category != null) recipe.setCategory(category);
         var group = config.getString("group");
         if (group != null) recipe.setGroup(group);
@@ -240,7 +240,7 @@ public class Recipes {
         var ingredient = Deserializer.RECIPE_CHOICE.deserialize(config.get("ingredient"));
         var result = Deserializer.ITEMSTACK.deserialize(config.get("result"));
         var recipe = function.invoke(key, result, ingredient, experience, cookingTime);
-        var category = Deserializer.enumDeserializer(CookingBookCategory.class).deserializeOrNull("category");
+        var category = Deserializer.enumDeserializer(CookingBookCategory.class).forceUpperCase().deserializeOrNull(config.get("category"));
         if (category != null) recipe.setCategory(category);
         var group = config.getString("group");
         if (group != null) recipe.setGroup(group);

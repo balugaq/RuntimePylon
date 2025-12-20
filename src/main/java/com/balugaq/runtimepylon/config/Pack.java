@@ -20,11 +20,13 @@ import com.balugaq.runtimepylon.config.pack.Scripts;
 import com.balugaq.runtimepylon.config.pack.Settings;
 import com.balugaq.runtimepylon.config.pack.WebsiteLink;
 import com.balugaq.runtimepylon.data.MyArrayList;
+import com.balugaq.runtimepylon.exceptions.InvalidDescException;
 import com.balugaq.runtimepylon.exceptions.InvalidStructureException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.exceptions.PackException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
+import com.balugaq.runtimepylon.exceptions.UnknownItemException;
 import com.balugaq.runtimepylon.object.CustomFluid;
 import com.balugaq.runtimepylon.object.CustomPage;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
@@ -35,11 +37,15 @@ import com.balugaq.runtimepylon.object.blocks.CustomMultiBlock;
 import com.balugaq.runtimepylon.object.items.CustomItem;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
+import io.github.pylonmc.pylon.core.PylonCore;
+import io.github.pylonmc.pylon.core.config.PylonConfig;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
 import io.github.pylonmc.pylon.core.guide.button.FluidButton;
 import io.github.pylonmc.pylon.core.guide.button.ItemButton;
+import io.github.pylonmc.pylon.core.item.PylonItem;
+import io.github.pylonmc.pylon.core.item.research.Research;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
@@ -48,7 +54,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -174,6 +182,7 @@ public class Pack implements FileObject<Pack> {
     private final Recipes recipes;
     @Nullable
     private final Settings settings;
+    @Nullable
     private final Researches researches;
     @Nullable
     private final Scripts scripts;
@@ -296,10 +305,6 @@ public class Pack implements FileObject<Pack> {
                     settings = new Settings(settingsFolder, namespace);
                 StackFormatter.destroy();
 
-                StackFormatter.setPosition("Reading researches");
-                Researches researches = new Researches(dir, namespace);
-                StackFormatter.destroy();
-
                 StackFormatter.setPosition("Reading scripts");
                 Scripts scripts = null;
                 var scriptsFolder = findDir(files, "scripts");
@@ -361,6 +366,17 @@ public class Pack implements FileObject<Pack> {
                             .setPackNamespace(namespace)
                             .deserialize(recipesTypesFolder);
                 StackFormatter.destroy();
+
+                Researches researches = null;
+                if (PylonConfig.getResearchesEnabled()) {
+                    StackFormatter.setPosition("Reading researches");
+                    var researchesFolder = findDir(files, "researches");
+                    if (researchesFolder != null)
+                        researches = new Researches()
+                                .setPackNamespace(namespace)
+                                .deserialize(researchesFolder);
+                    StackFormatter.destroy();
+                }
 
                 return new Pack(
                         dir,
@@ -505,128 +521,143 @@ public class Pack implements FileObject<Pack> {
     private void registerPages() {
         if (pages == null) return;
         for (var entry : pages.getPages().values()) {
-            PackManager.load(
-                    entry, e -> {
-                        RegisteredObjectID id = e.id();
-                        try (var sk = StackFormatter.setPosition("Loading page: " + id)) {
-                            Material icon = e.material();
-                            CustomPage page = new CustomPage(id.key(), icon);
-                            if (e.parents() == null) {
-                                PylonGuide.getRootPage().addPage(page);
-                            } else {
-                                for (var parent : e.parents()) {
-                                    parent.getPage().addPage(page);
-                                }
-                            }
-                            GlobalVars.putCustomPage(page.getKey(), page);
-                            Debug.log("Registered Page: " + id.key());
-                        } catch (Exception ex) {
-                            StackFormatter.handle(ex);
+            PackManager.load(entry, e -> {
+                RegisteredObjectID id = e.id();
+                try (var sk = StackFormatter.setPosition("Loading page: " + id)) {
+                    Material icon = e.material();
+                    CustomPage page = new CustomPage(id.key(), icon);
+                    if (e.parents() == null) {
+                        PylonGuide.getRootPage().addPage(page);
+                    } else {
+                        for (var parent : e.parents()) {
+                            parent.getPage().addPage(page);
                         }
                     }
-            );
+                    GlobalVars.putCustomPage(page.getKey(), page);
+                    Debug.log("Registered Page: " + id.key());
+                } catch (Exception ex) {
+                    StackFormatter.handle(ex);
+                }
+            });
         }
     }
 
     private void registerItems() {
         if (items == null) return;
         for (var entry : items.getItems().values()) {
-            PackManager.load(
-                    entry, e -> {
-                        RegisteredObjectID id = e.id();
-                        try (var sk = StackFormatter.setPosition("Loading item: " + id)) {
-                            ItemStack icon = entry.icon();
+            PackManager.load(entry, e -> {
+                RegisteredObjectID id = e.id();
+                try (var sk = StackFormatter.setPosition("Loading item: " + id)) {
+                    ItemStack icon = entry.icon();
 
-                            if (blocks != null && blocks.getBlocks().containsKey(id)) {
-                                CustomItem.register(CustomItem.class, icon, id.key());
-                                Debug.log("Registered Item: " + id.key());
-                            } else {
-                                CustomItem.register(CustomItem.class, icon);
-                                Debug.log("Registered Item: " + id.key());
-                            }
+                    if (blocks != null && blocks.getBlocks().containsKey(id)) {
+                        CustomItem.register(CustomItem.class, icon, id.key());
+                        Debug.log("Registered Item: " + id.key());
+                    } else {
+                        CustomItem.register(CustomItem.class, icon);
+                        Debug.log("Registered Item: " + id.key());
+                    }
 
-                            List<PageDesc> descs = e.pages();
-                            if (descs != null) descs.forEach(desc -> {
-                                try (var ignored = StackFormatter.setPosition("Adding to page: " + desc.getKey())) {
-                                    desc.getPage().addItem(e.icon());
-                                } catch (Exception ex) {
-                                    StackFormatter.handle(ex);
-                                }
-                            });
+                    List<PageDesc> descs = e.pages();
+                    if (descs != null) descs.forEach(desc -> {
+                        try (var ignored = StackFormatter.setPosition("Adding to page: " + desc.getKey())) {
+                            desc.getPage().addItem(e.icon());
                         } catch (Exception ex) {
                             StackFormatter.handle(ex);
                         }
+                    });
+                } catch (Exception ex) {
+                    StackFormatter.handle(ex);
+                }
+            });
+        }
+    }
+
+    private void registerResearches() {
+        if (researches == null) return;
+        for (var entry : researches.getResearches().values()) {
+            PackManager.load(entry, e -> {
+                RegisteredObjectID id = e.id();
+                try (var sk = StackFormatter.setPosition("Loading research: " + id)) {
+                    String name = e.name() != null ? e.name() : ("pylon." + id.key().getNamespace() +".research." + id.key().getKey());
+                    Set<NamespacedKey> unlocks = new HashSet<>();
+                    for (String s : e.unlocks()) {
+                        var choice = Deserializer.RECIPE_CHOICE.deserializeOrNull(s);
+                        if (choice == null) {
+                            StackFormatter.handle(new InvalidDescException(s));
+                            continue;
+                        }
+
+                        for (var item : choice.getChoices()) {
+                            PylonItem pylon = PylonItem.fromStack(item);
+                            if (pylon == null) {
+                                StackFormatter.handle(new UnknownItemException(item.toString()));
+                                continue;
+                            }
+
+                            unlocks.add(pylon.getKey());
+                        }
                     }
-            );
+                    new Research(id.key(), e.material(), Component.translatable(name), e.cost(), unlocks).register();
+                } catch (Exception ex) {
+                    StackFormatter.handle(ex);
+                }
+            });
         }
     }
 
     private void registerBlocks() {
         if (blocks == null) return;
         for (var entry : blocks.getBlocks().values()) {
-            PackManager.load(
-                    entry, e -> {
-                        RegisteredObjectID id = e.id();
-                        try (var sk = StackFormatter.setPosition("Loading block: " + id)) {
-                            Material material = e.material();
+            PackManager.load(entry, e -> {
+                RegisteredObjectID id = e.id();
+                try (var sk = StackFormatter.setPosition("Loading block: " + id)) {
+                    Material material = e.material();
 
-                            if (GlobalVars.getMultiBlockComponents(id.key()).isEmpty()) {
-                                CustomBlock.register(id.key(), material, CustomBlock.class);
-                            } else {
-                                CustomMultiBlock.register(id.key(), material, CustomMultiBlock.class);
-                            }
-                            Debug.log("Registered Block: " + id.key());
-                        } catch (Exception ex) {
-                            StackFormatter.handle(ex);
-                        }
+                    if (GlobalVars.getMultiBlockComponents(id.key()).isEmpty()) {
+                        CustomBlock.register(id.key(), material, CustomBlock.class);
+                    } else {
+                        CustomMultiBlock.register(id.key(), material, CustomMultiBlock.class);
                     }
-            );
+                    Debug.log("Registered Block: " + id.key());
+                } catch (Exception ex) {
+                    StackFormatter.handle(ex);
+                }
+            });
         }
     }
 
     private void registerFluids() {
         if (fluids == null) return;
         for (var entry : fluids.getFluids().values()) {
-            PackManager.load(
-                    entry, e -> {
-                        RegisteredObjectID id = e.id();
-                        Material material = e.material();
-                        FluidTemperature temperature = e.temperature();
-                        PylonFluid fluid = new CustomFluid(id.key(), material).addTag(temperature);
-                        fluid.register();
+            PackManager.load(entry, e -> {
+                RegisteredObjectID id = e.id();
+                Material material = e.material();
+                FluidTemperature temperature = e.temperature();
+                PylonFluid fluid = new CustomFluid(id.key(), material).addTag(temperature);
+                fluid.register();
 
-                        List<PageDesc> pages = e.pages();
-                        if (pages != null) pages.forEach(desc -> desc.getPage().addFluid(fluid));
-                    }
-            );
+                List<PageDesc> pages = e.pages();
+                if (pages != null) pages.forEach(desc -> desc.getPage().addFluid(fluid));
+            });
         }
     }
 
     private void registerRecipeTypes() {
         if (recipeTypes == null) return;
         for (var entry : recipeTypes.getRecipeTypes().values()) {
-            PackManager.load(
-                    entry, e -> {
-                        RegisteredObjectID id = e.id();
+            PackManager.load(entry, e -> {
+                RegisteredObjectID id = e.id();
 
-                        CustomRecipeType recipeType = new CustomRecipeType(id.key(), e.structure(), e.guiProvider(), e.configReader());
-                        recipeType.register();
-                    }
-            );
+                CustomRecipeType recipeType = new CustomRecipeType(id.key(), e.structure(), e.guiProvider(), e.configReader());
+                recipeType.register();
+            });
         }
     }
 
     private void registerRecipes() {
         if (recipes == null) return;
         recipes.loadRecipes();
-    }
-
-    private void registerResearches() {
-        researches.mergeTo(getResearchesFolder());
-    }
-
-    public static File getResearchesFolder() {
-        return new File(pylonCore, "researches");
     }
 
     public static File getRecipesFolder() {
@@ -647,6 +678,7 @@ public class Pack implements FileObject<Pack> {
         StackFormatter.run("Loading fluids", this::registerFluids);
         StackFormatter.run("Loading recipe types", this::registerRecipeTypes);
         StackFormatter.run("Loading recipes", this::registerRecipes);
+        StackFormatter.run("Loading researches", this::registerResearches);
         PylonRegistry.ADDONS.unregister(plugin());
         plugin().registerWithPylon();
         return this;

@@ -193,10 +193,6 @@ public class GlobalVars {
             return new Result<>(result);
         }
 
-        public boolean isPresent() {
-            return result != null;
-        }
-
         public <K> boolean isPresent(Class<K> clazz) {
             return clazz.isInstance(result);
         }
@@ -232,11 +228,11 @@ public class GlobalVars {
      * @author balugaq
      */
     @NullMarked
-    public static class ResultL2<T> {
+    public static @Getter class ResultL2<T> {
         @Nullable
-        public final T result;
+        protected final T result;
 
-        public ResultL2(@Nullable T result) {
+        protected ResultL2(@Nullable T result) {
             this.result = result;
         }
 
@@ -249,6 +245,14 @@ public class GlobalVars {
         @UnknownNullability
         public T orElse(@Nullable T other) {
             return result != null ? result : other;
+        }
+
+        public boolean isEmpty() {
+            return result == null;
+        }
+
+        public boolean isPresent() {
+            return result != null;
         }
     }
 }

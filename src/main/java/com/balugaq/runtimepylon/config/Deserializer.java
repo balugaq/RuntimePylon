@@ -283,7 +283,32 @@ public interface Deserializer<T> {
         public List<ConfigReader<?, ItemStack>> readers() {
             return ConfigReader.list(
                     String.class, ItemStackDeserializer::fromString,
+                    Map.class, map -> {
+                        if (map.size() == 1) {
+                            var k = map.keySet().stream().findFirst().get();
+                            if (k instanceof String key) {
+                                var a = map.getOrDefault(key, 1);
+                                if (a instanceof Integer i) {
+                                    return fromString(key).asQuantity(i);
+                                } else {
+                                    return fromString(key);
+                                }
+                            } else {
+                                return ITEMSTACK.deserialize(k);
+                            }
+                        }
+
+                        throw new DeserializationException("Invalid item desc(map): " + map);
+                    },
                     ConfigurationSection.class, section -> {
+                        var keys = section.getKeys(false);
+                        if (keys.size() == 1) {
+                            String key = keys.stream().findFirst().get();
+                            if (!key.equals("material")) {
+                                return fromString(key).asQuantity(section.getInt(key, 1));
+                            }
+                        }
+
                         // for section, we have these fields for optional
                         // item:
                         //   material: minecraft:diamond // or heads: hash/base64/url
@@ -334,21 +359,10 @@ public interface Deserializer<T> {
             return this;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public @UnknownNullability E deserialize(@Nullable Object o) {
             try (var ignore = StackFormatter.setPosition("Reading " + clazz.getSimpleName())) {
-                if (o == null) throw new MissingArgumentException();
-                for (ConfigReader<?, E> reader : readers()) {
-                    if (reader.type().isInstance(o)) {
-                        try {
-                            return (E) ReflectionUtil.invokeMethod(reader, "read", o);
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            throw e.getCause();
-                        }
-                    }
-                }
-                return null;
+                return read(o);
             } catch (Throwable e) {
                 if (e instanceof IllegalArgumentException e2) {
                     StackFormatter.handle(new UnknownEnumException(clazz, e2.getMessage()));
@@ -357,6 +371,31 @@ public interface Deserializer<T> {
                 }
                 return null;
             }
+        }
+
+        @Override
+        public @Nullable E deserializeOrNull(@Nullable Object o) {
+            try {
+                return read(o);
+            } catch (Throwable e) {
+                return null;
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        @Nullable
+        private E read(@Nullable Object o) throws Throwable {
+            if (o == null) throw new MissingArgumentException();
+            for (ConfigReader<?, E> reader : readers()) {
+                if (reader.type().isInstance(o)) {
+                    try {
+                        return (E) ReflectionUtil.invokeMethod(reader, "read", o);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        throw e.getCause();
+                    }
+                }
+            }
+            return null;
         }
 
         @Override
@@ -489,7 +528,8 @@ public interface Deserializer<T> {
                             return new RecipeChoice.ExactChoice(ConfigAdapter.ITEM_TAG.convert(s).getValues().stream().map(ItemTypeWrapper::createItemStack).toList());
                         }
                     },
-                    ConfigurationSection.class, s -> new RecipeChoice.ExactChoice(ITEMSTACK.deserialize(s))
+                    ConfigurationSection.class, s -> new RecipeChoice.ExactChoice(ITEMSTACK.deserialize(s)),
+                    Map.class, s -> new RecipeChoice.ExactChoice(ITEMSTACK.deserialize(s))
             );
         }
     }
