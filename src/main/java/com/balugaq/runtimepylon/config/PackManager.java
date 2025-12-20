@@ -131,19 +131,20 @@ import java.util.function.Consumer;
  * In pack.yml:
  * | Property Type | Property | Description | Pattern | Example |
  * | ------------- | -------- | ----------- | ------- | ------- |
- * | String | id | is the identifier of a pack | `A-Za-z0-9_+-`| mypack |
- * | String | version | is the version of a pack | `A-Za-z0-9_+-./()` | 1.0.0 |
- * | String | *minAPIVersion | defines the minimum API version to run this pack | 26.1 |
- * | String | *maxAPIVersion | defines the maximum API version to run this pack | 28.1 |
- * | List<String> | *loadBefores | defines what packs should be loaded before this | - | [mypack1, mypack2] |
- * | List<String> | *packDependencies | is the pack dependencies | - | [mypack1, mypack2] |
- * | List<String> | *pluginDependencies | is the plugin dependencies | - | [plugin1, plugin2] |
- * | String | *author | is the author of a pack | - | balugaq |
- * | List<String> | *authors | is the authors of a pack | - | [balugaq, balugaq2] |https://github.com/balugaq/RuntimePylon/releases
- * | List<String> | *contributors | is the contributors of a pack | - | [balugaq, balugaq2] |
- * | String | *website | is the website of a pack | - | `https://github.com/balugaq/RuntimePylon` |
- * | String | *githubUpdateLink | is the update link of a pack | - | `https://github.com/balugaq/RuntimePylon/releases` |
- * | List<String> | *languages | defines what languages are supported by this pack | - | [en, zh-CN] |
+ * | String | id | is the identifier of a pack | `^[A-Za-z0-9_+-]$`| mypack |
+ * | String | version | is the version of a pack | `^[A-Za-z0-9_+\-./()]$` | 1.0.0 |
+ * | String | *minAPIVersion | defines the minimum API version to run this pack | `[1-9]\d*\.[1-9]\d*(\.[1-9]\d*)?` | 26.1 |
+ * | String | *maxAPIVersion | defines the maximum API version to run this pack | `[1-9]\d*\.[1-9]\d*(\.[1-9]\d*)?` | 28.1 |
+ * | List<String> | *loadBefores | defines what packs should be loaded before this | `^[A-Za-z0-9_+-]$` | [mypack1, mypack2] |
+ * | List<String> | *packDependencies | is the pack dependencies | `^[A-Za-z0-9_+-]$` | [mypack1, mypack2] |
+ * | List<String> | *pluginDependencies | is the plugin dependencies | `^[A-Za-z0-9_+-]$` | [plugin1, plugin2] |
+ * | String | *author | is the author of a pack | `.*` | balugaq |
+ * | List<String> | *authors | is the authors of a pack | `.*` | [balugaq, balugaq2] |https://github.com/balugaq/RuntimePylon/releases
+ * | List<String> | *contributors | is the contributors of a pack | `.*` | [balugaq, balugaq2] |
+ * | String | *website | is the website of a pack | `^(https?|ftp)://[^\s/$.?#].[^\s]*$` | `https://github.com/balugaq/RuntimePylon` |
+ * | String | *githubUpdateLink | is the update link of a pack | `^https?://github\.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+/releases(/.*)?$` | `https://github.com/balugaq/RuntimePylon/releases` |
+ * | List<String> | *languages | defines what languages are supported by this pack | `^[a-z]{2}(-[A-Z]{2})?$` | [en, zh-CN] |
+ * | boolean | *suppressLanguageMissingWarning | whether suppress language missing warning or not | `(true)|(false)` | false |
  * Properties tagged with * are optional
  * <p>
  * IDs:
