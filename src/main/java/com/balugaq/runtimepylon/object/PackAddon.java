@@ -15,6 +15,10 @@ import java.util.Set;
  */
 @NullMarked
 public record PackAddon(String namespace, Set<Locale> languages, Material material) implements PylonAddon {
+    public static PackAddon generate(String id, Set<Locale> languages, Material material) {
+        return new PackAddon(id, languages, material);
+    }
+
     @Override
     public JavaPlugin getJavaPlugin() {
         return RuntimePylon.getInstance();

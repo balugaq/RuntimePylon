@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon.script;
 
+import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.script.callbacks.APICallbacks;
 import com.caoccao.javet.exceptions.JavetException;
@@ -28,7 +29,7 @@ public class JSScriptExecutor extends ScriptExecutor {
 
     private void load() {
         try {
-            try (V8Script script = RuntimePylon.getInstance().getScriptRuntime().getExecutor(getFile()).compileV8Script()) {
+            try (V8Script script = GlobalVars.getScriptRuntime().getExecutor(getFile()).compileV8Script()) {
                 scriptObject = script.execute();
             }
         } catch (JavetException e) {
@@ -38,7 +39,7 @@ public class JSScriptExecutor extends ScriptExecutor {
 
     public boolean isFunctionExists(String functionName) {
         try {
-            V8Value value = RuntimePylon.getInstance().getScriptRuntime().getGlobalObject().get(functionName);
+            V8Value value = GlobalVars.getScriptRuntime().getGlobalObject().get(functionName);
             boolean exists = value instanceof V8ValueFunction;
             if (value != null) {
                 value.close();
@@ -58,7 +59,7 @@ public class JSScriptExecutor extends ScriptExecutor {
             }
 
             try (V8Value result = function.call(scriptObject, parameters)) {
-                return result == null ? null : RuntimePylon.getInstance().getScriptRuntime().toObject(result);
+                return result == null ? null : GlobalVars.getScriptRuntime().toObject(result);
             }
         }
     }

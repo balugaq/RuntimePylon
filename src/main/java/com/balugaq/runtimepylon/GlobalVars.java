@@ -4,6 +4,10 @@ import com.balugaq.runtimepylon.config.FluidBlockData;
 import com.balugaq.runtimepylon.config.FluidBufferBlockData;
 import com.balugaq.runtimepylon.data.KeyedMap;
 import com.balugaq.runtimepylon.script.ScriptExecutor;
+import com.balugaq.runtimepylon.script.callbacks.APICallbacks;
+import com.caoccao.javet.exceptions.JavetException;
+import com.caoccao.javet.interop.V8Host;
+import com.caoccao.javet.interop.V8Runtime;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
@@ -38,6 +42,15 @@ public class GlobalVars {
     private static final @Getter KeyedMap<Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent>> multiBlockComponents = new KeyedMap<>();
     private static final @Getter KeyedMap<RecipeType<?>> loadRecipeTypes = new KeyedMap<>();
     private static final @Getter KeyedMap<Key> equipmentTypes = new KeyedMap<>();
+    private static final @Getter V8Runtime scriptRuntime;
+    static {
+        try {
+            scriptRuntime = V8Host.getV8Instance().createV8Runtime();
+            scriptRuntime.getGlobalObject().bind(new APICallbacks());
+        } catch (JavetException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static final LegacyComponentSerializer COMPONENT_SERIALIZER = LegacyComponentSerializer.legacyAmpersand()
             .toBuilder()

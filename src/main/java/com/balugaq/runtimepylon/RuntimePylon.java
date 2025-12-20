@@ -7,11 +7,8 @@ import com.balugaq.runtimepylon.manager.ConfigManager;
 import com.balugaq.runtimepylon.manager.IntegrationManager;
 import com.balugaq.runtimepylon.pylon.RuntimeBlocks;
 import com.balugaq.runtimepylon.pylon.RuntimeItems;
-import com.balugaq.runtimepylon.script.callbacks.APICallbacks;
 import com.balugaq.runtimepylon.util.Debug;
-import com.caoccao.javet.exceptions.JavetException;
-import com.caoccao.javet.interop.V8Host;
-import com.caoccao.javet.interop.V8Runtime;
+import com.balugaq.runtimepylon.util.OSUtil;
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
@@ -19,6 +16,9 @@ import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
+import net.byteflux.libby.BukkitLibraryManager;
+import net.byteflux.libby.Library;
+import net.byteflux.libby.LibraryManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
@@ -27,8 +27,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -43,9 +45,6 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @UnknownNullability
     private static RuntimePylon instance;
     private final Set<Locale> SUPPORTED_LANGUAGES = new HashSet<>();
-    @Getter
-    @UnknownNullability
-    private V8Runtime scriptRuntime;
     @UnknownNullability
     private ConfigManager configManager;
     @UnknownNullability
@@ -55,16 +54,16 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
     public static Map<NamespacedKey, SimpleStaticGuidePage> getGuidePages() {
         var pages = new HashMap<>(PylonGuide.getRootPage().getButtons()
-                                          .stream()
-                                          .filter(button -> button instanceof PageButton)
-                                          .map(button -> ((PageButton) button).getPage())
-                                          .filter(page -> page instanceof SimpleStaticGuidePage)
-                                          .map(page -> (SimpleStaticGuidePage) page)
-                                          .collect(Collectors.toMap(
-                                                  Keyed::getKey,
-                                                  page -> page,
-                                                  (a, b) -> b
-                                          )));
+          .stream()
+          .filter(button -> button instanceof PageButton)
+          .map(button -> ((PageButton) button).getPage())
+          .filter(page -> page instanceof SimpleStaticGuidePage)
+          .map(page -> (SimpleStaticGuidePage) page)
+          .collect(Collectors.toMap(
+                  Keyed::getKey,
+                  page -> page,
+                  (a, b) -> b
+          )));
         pages.putAll(GlobalVars.getCustomPages());
         pages.put(PylonGuide.getRootPage().getKey(), PylonGuide.getRootPage());
         return pages;
@@ -72,6 +71,10 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
     public static void runTaskLater(Runnable runnable, long delay) {
         Bukkit.getScheduler().runTaskLater(getInstance(), runnable, delay);
+    }
+
+    public static void runTaskAsync(Runnable runnable) {
+        Bukkit.getScheduler().runTaskAsynchronously(getInstance(), runnable);
     }
 
     public static void runTaskAsyncLater(Runnable runnable, long delay) {
@@ -104,6 +107,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         // `/runtime reloadpacks` to reload packs
         instance = this;
         addSupportedLanguages(Locale.ENGLISH);
+        setupLibraries();
 
         // registerWithPylon();
         PylonRegistry.ADDONS.register(this);
@@ -113,12 +117,6 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         configManager = new ConfigManager(this);
         integrationManager = new IntegrationManager();
         packManager = new PackManager();
-        try {
-            scriptRuntime = V8Host.getV8Instance().createV8Runtime();
-            scriptRuntime.getGlobalObject().bind(new APICallbacks());
-        } catch (JavetException e) {
-            throw new RuntimeException(e);
-        }
 
         RuntimeItems.initialize();
         RuntimeBlocks.initialize();
@@ -138,6 +136,68 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
         PylonRegistry.ADDONS.unregister(this);
         registerWithPylon(); // todo: rewrite lang translation check
+    }
+
+    private void setupLibraries() {
+        BukkitLibraryManager libraryManager = new BukkitLibraryManager(this);
+
+        List<String> repos = List.of(
+                "https://repo.papermc.io/repository/maven-public/",
+                "https://central.sonatype.com/repository/maven-snapshots/",
+                "https://jitpack.io"
+        );
+        
+        for (String repo : repos) {
+            libraryManager.addRepository(repo);
+        }
+
+        libraryManager.addMavenCentral();
+        
+        String javetVersion = "5.0.2";
+        List<String> dependencies = new ArrayList<>();
+        dependencies.add("javet");
+        if (OSUtil.isWindows()) {
+            dependencies.add("javet-node-windows-x86_64");
+            dependencies.add("javet-v8-windows-x86_64");
+        } else if (OSUtil.isLinux()) {
+            if (OSUtil.isARM()) {
+                dependencies.add("javet-node-linux-arm64");
+                dependencies.add("javet-v8-linux-arm64");
+            } else if (OSUtil.isX86_64()) {
+                dependencies.add("javet-node-linux-x86_64");
+                dependencies.add("javet-v8-linux-x86_64");
+            }
+        } else if (OSUtil.isMac()) {
+            if (OSUtil.isARM()) {
+                dependencies.add("javet-node-macos-arm64");
+                dependencies.add("javet-v8-macos-arm64");
+            } else if (OSUtil.isX86_64()) {
+                dependencies.add("javet-node-macos-x86_64");
+                dependencies.add("javet-v8-macos-x86_64");
+            }
+        }
+
+        Debug.log("Downloading may take 5 minutes, please wait...");
+        for (String dependency : dependencies) {
+            loadLibrary(libraryManager, "com.caoccao.javet", dependency, javetVersion);
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void loadLibrary(LibraryManager libraryManager, String groupId, String artifactId, String version) {
+        Library library = Library.builder()
+                .groupId(groupId)
+                .artifactId(artifactId)
+                .version(version)
+                .build();
+
+        Debug.log("Downloading library: " + library);
+        try {
+            libraryManager.loadLibrary(library);
+            Debug.log("Downloaded library: " + library);
+        } catch (Exception e) {
+            Debug.trace(e);
+        }
     }
 
     public void addSupportedLanguages(Locale languages) {

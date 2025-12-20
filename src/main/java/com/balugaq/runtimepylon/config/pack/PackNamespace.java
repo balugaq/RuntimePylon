@@ -1,7 +1,6 @@
 package com.balugaq.runtimepylon.config.pack;
 
 import com.balugaq.runtimepylon.GlobalVars;
-import com.balugaq.runtimepylon.PackAddonGenerator;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.object.PackAddon;
@@ -32,7 +31,7 @@ public class PackNamespace {
         this.namespace = namespace;
         this.languages = languages;
         this.material = material;
-        plugin = PackAddonGenerator.generate(namespace, languages, material);
+        plugin = PackAddon.generate(namespace, languages, material);
     }
 
     public static PackNamespace warp(PackID packID, Set<Locale> languages, Material material) {

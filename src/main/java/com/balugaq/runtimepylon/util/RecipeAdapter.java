@@ -38,7 +38,7 @@ import static com.balugaq.runtimepylon.util.Lang.*;
 /**
  * @author balugaq
  */
-@Deprecated(forRemoval = true)
+@Deprecated
 @NullMarked
 public record RecipeAdapter<T extends PylonRecipe>(
         RecipeType<T> recipeType,

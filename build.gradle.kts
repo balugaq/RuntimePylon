@@ -1,18 +1,17 @@
+@file:Suppress("VulnerableLibrariesLocal")
+
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 
 plugins {
     java
     idea
-    id("com.gradleup.shadow") version "8.3.2"
+    id("com.gradleup.shadow") version "9.0.0"
     id("net.minecrell.plugin-yml.bukkit") version "0.6.0"
     id("xyz.jpenilla.run-paper") version "2.3.0"
     id("io.freefair.lombok") version "8.13.1"
-    `maven-publish`
-    signing
-    id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
 }
 
-group = "com.balugaq"
+group = project.properties["group"]!!
 
 repositories {
     mavenCentral()
@@ -25,24 +24,42 @@ repositories {
     maven("https://jitpack.io") {
         name = "JitPack"
     }
-    maven("https://repo.xenondevs.xyz/releases")
+    maven("https://repo.xenondevs.xyz/releases") {
+        name = "invui"
+    }
+    maven("https://repo.codemc.org/repository/maven-public/") {
+        name = "codemc"
+    }
+    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/") {
+        name = "placeholderapi"
+    }
+    maven("https://repo.minebench.de/") {
+        name = "minebench"
+    }
+    maven("https://repo.alessiodp.com/releases/") {
+        name = "alessiodp"
+    }
 }
 
 val coreVersion = project.properties["pylon-core.version"] as String
 val baseVersion = project.properties["pylon-base.version"] as String
 
-
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
     compileOnly("io.github.pylonmc:pylon-core:$coreVersion")
-
-    compileOnly("com.caoccao.javet:javet:4.1.7")
-    compileOnly("com.caoccao.javet:javet-v8-linux-arm64:4.1.7")
-    compileOnly("com.caoccao.javet:javet-v8-linux-x86_64:4.1.7")
-    //compileOnly("com.caoccao.javet:javet-v8-macos-arm64:4.1.7")
-    //compileOnly("com.caoccao.javet:javet-v8-macos-x86_64:4.1.7")
-    compileOnly("com.caoccao.javet:javet-v8-windows-x86_64:4.1.7")
-    //compileOnly("io.github.pylonmc:pylon-base:$baseVersion")
+    compileOnly("io.github.pylonmc:pylon-base:${baseVersion}")
+    implementation("net.byteflux:libby-bukkit:1.3.1")
+    compileOnly("com.caoccao.javet:javet:5.0.2")
+    compileOnly("com.caoccao.javet:javet-node-linux-arm64:5.0.2")
+    compileOnly("com.caoccao.javet:javet-node-linux-x86_64:5.0.2")
+    compileOnly("com.caoccao.javet:javet-node-macos-arm64:5.0.2")
+    compileOnly("com.caoccao.javet:javet-node-macos-x86_64:5.0.2")
+    compileOnly("com.caoccao.javet:javet-node-windows-x86_64:5.0.2")
+    compileOnly("com.caoccao.javet:javet-v8-linux-arm64:5.0.2")
+    compileOnly("com.caoccao.javet:javet-v8-linux-x86_64:5.0.2")
+    compileOnly("com.caoccao.javet:javet-v8-macos-arm64:5.0.2")
+    compileOnly("com.caoccao.javet:javet-v8-macos-x86_64:5.0.2")
+    compileOnly("com.caoccao.javet:javet-v8-windows-x86_64:5.0.2")
 }
 
 idea {
@@ -59,17 +76,19 @@ java {
 tasks.shadowJar {
     mergeServiceFiles()
 
-    fun doRelocate(lib: String) {
-        relocate(lib, "com.balugaq.runtimepylon.shadowlibs.$lib")
-    }
+    exclude("kotlin/**")
+    exclude("org/intellij/lang/annotations/**")
+    exclude("org/jetbrains/annotations/**")
+
+    relocate("net.byteflux.libby", "${project.group}.${project.name}.libraries.net.byteflux.libby")
 
     archiveBaseName = project.name
     archiveClassifier = null
 }
 
 bukkit {
-    name = "RuntimePylon"
-    main = "com.balugaq.runtimepylon.RuntimePylon"
+    name = project.properties["name"] as String
+    main = project.properties["main-class"] as String
     version = project.version.toString()
     apiVersion = "1.21"
     depend = listOf("PylonCore")
@@ -85,20 +104,5 @@ tasks.runServer {
         github("pylonmc", "pylon-base", baseVersion, "pylon-base-$baseVersion.jar")
     }
     maxHeapSize = "4G"
-    minecraftVersion("1.21.4")
-}
-
-// Disable signing for maven local publish
-if (project.gradle.startParameter.taskNames.any { it.contains("publishToMavenLocal") }) {
-    tasks.withType<Sign>().configureEach {
-        enabled = false
-    }
-}
-
-tasks.withType<Jar> {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-}
-
-signing {
-    useInMemoryPgpKeys(System.getenv("SIGNING_KEY"), System.getenv("SIGNING_PASSWORD"))
+    minecraftVersion("1.21.10")
 }
