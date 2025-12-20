@@ -2,15 +2,17 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 /**
  * @author balugaq
  */
 @NullMarked
-public interface BiGenericDeserializer<T extends BiGenericDeserializer<T, K, M>, K extends Deserializer<K>, M extends Deserializer<M>> extends Deserializer<T> {
+public interface BiGenericDeserializer<T extends BiGenericDeserializer<T, K, M>, K, M> extends Deserializer<T> {
     @ApiStatus.Internal
-    static <T extends BiGenericDeserializer<T, K, M>, K extends Deserializer<K>, M extends Deserializer<M>> T newDeserializer(Class<T> clazz) {
+    static <T extends BiGenericDeserializer<T, K, M>, K, M> T newDeserializer(Class<T> clazz) {
         return newDeserializer(clazz, k -> k, m -> m);
     }
 
@@ -24,7 +26,7 @@ public interface BiGenericDeserializer<T extends BiGenericDeserializer<T, K, M>,
      * @see #deserialize(Object)
      */
     @ApiStatus.Internal
-    static <T extends BiGenericDeserializer<T, K, M>, K extends Deserializer<K>, M extends Deserializer<M>> T newDeserializer(Class<T> clazz, Pack.Advancer<K> advancer, Pack.Advancer<M> advancer2) {
+    static <T extends BiGenericDeserializer<T, K, M>, K, M> T newDeserializer(Class<T> clazz, Pack.Advancer<Deserializer<K>> advancer, Pack.Advancer<Deserializer<M>> advancer2) {
         try {
             return clazz.getDeclaredConstructor().newInstance().setAdvancer(advancer).setAdvancer2(advancer2);
         } catch (Exception e) {
@@ -32,15 +34,39 @@ public interface BiGenericDeserializer<T extends BiGenericDeserializer<T, K, M>,
         }
     }
 
-    T setAdvancer(Pack.Advancer<K> advancer);
+    T setAdvancer(Pack.Advancer<Deserializer<K>> advancer);
 
     Class<K> getGenericType();
 
     T setGenericType(Class<K> clazz);
 
-    T setAdvancer2(Pack.Advancer<M> advancer);
+    @MustBeInvokedByOverriders
+    @Nullable
+    default Deserializer<K> getDeserializer() {
+        if (getGenericType().isAssignableFrom(Deserializer.class)) {
+            return Deserializer.newDeserializer((Class<? extends Deserializer>) getGenericType());
+        }
+
+        return null;
+    }
+
+    T setDeserializer(Deserializer<K> deserializer);
+
+    T setAdvancer2(Pack.Advancer<Deserializer<M>> advancer);
 
     Class<M> getGenericType2();
 
     T setGenericType2(Class<M> clazz);
+
+    @MustBeInvokedByOverriders
+    @Nullable
+    default Deserializer<M> getDeserializer2() {
+        if (getGenericType().isAssignableFrom(Deserializer.class)) {
+            return Deserializer.newDeserializer((Class<? extends Deserializer>) getGenericType());
+        }
+
+        return null;
+    }
+
+    T setDeserializer2(Deserializer<M> deserializer);
 }

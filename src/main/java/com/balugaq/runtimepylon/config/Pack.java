@@ -215,6 +215,16 @@ public class Pack implements FileObject<Pack> {
                 .deserialize(config.getString(path));
     }
 
+    public static <T extends GenericDeserializer<T, K>, K> T read(ConfigurationSection config, Class<T> clazz, Deserializer<K> deserializer, String path) {
+        return read(config, clazz, deserializer, path, t -> t);
+    }
+
+    public static <T extends GenericDeserializer<T, K>, K> T read(ConfigurationSection config, Class<T> clazz, Deserializer<K> deserializer, String path, Advancer<T> advancer) {
+        if (!config.contains(path)) throw new MissingArgumentException(path);
+        return tryExamine(advancer.advance(GenericDeserializer.newDeserializer(clazz).setDeserializer(deserializer))
+                                  .deserialize(config.get(path)));
+    }
+
     public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path) {
         return read(config, clazz, generic, path, t -> t);
     }
@@ -225,11 +235,11 @@ public class Pack implements FileObject<Pack> {
                                   .deserialize(config.get(path)));
     }
 
-    public static <T extends BiGenericDeserializer<T, K, M>, K extends Deserializer<K>, M extends Deserializer<M>> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, Class<M> generic2, String path) {
+    public static <T extends BiGenericDeserializer<T, K, M>, K, M> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, Class<M> generic2, String path) {
         return read(config, clazz, generic, generic2, path, t -> t);
     }
 
-    public static <T extends BiGenericDeserializer<T, K, M>, K extends Deserializer<K>, M extends Deserializer<M>> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, Class<M> generic2, String path, Advancer<T> advancer) {
+    public static <T extends BiGenericDeserializer<T, K, M>, K, M> T read(ConfigurationSection config, Class<T> clazz, Class<K> generic, Class<M> generic2, String path, Advancer<T> advancer) {
         if (!config.contains(path)) throw new MissingArgumentException(path);
         return tryExamine(advancer.advance(BiGenericDeserializer.newDeserializer(clazz).setGenericType(generic).setGenericType2(generic2))
                                   .deserialize(config.get(path)));
@@ -455,7 +465,7 @@ public class Pack implements FileObject<Pack> {
     }
 
     @Nullable
-    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path, Advancer<K> advancer) {
+    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path, Advancer<Deserializer<K>> advancer) {
         try {
             return tryExamine(GenericDeserializer
                                       .newDeserializer(clazz)
@@ -468,7 +478,7 @@ public class Pack implements FileObject<Pack> {
     }
 
     @Nullable
-    public static <T extends BiGenericDeserializer<T, K, M>, K extends Deserializer<K>, M extends Deserializer<M>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, Class<M> generic2, String path, Advancer<K> advancer, Advancer<M> advancer2) {
+    public static <T extends BiGenericDeserializer<T, K, M>, K, M> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, Class<M> generic2, String path, Advancer<Deserializer<K>> advancer, Advancer<Deserializer<M>> advancer2) {
         try {
             return tryExamine(BiGenericDeserializer
                                       .newDeserializer(clazz)

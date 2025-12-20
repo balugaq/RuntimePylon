@@ -2,9 +2,11 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.config.pack.PackID;
 import com.balugaq.runtimepylon.data.MyMultiBlockComponent;
+import com.balugaq.runtimepylon.data.MyObject2ObjectOpenHashMap;
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
+import com.balugaq.runtimepylon.exceptions.UnknownFluidOrItemException;
 import com.balugaq.runtimepylon.exceptions.UnknownItemException;
 import com.balugaq.runtimepylon.exceptions.UnknownKeyedException;
 import com.balugaq.runtimepylon.exceptions.UnknownMultiblockComponentException;
@@ -15,11 +17,14 @@ import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.item.ItemTypeWrapper;
 import io.github.pylonmc.pylon.core.item.PylonItemSchema;
+import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
+import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -44,6 +49,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * This interface is used to deserialize a config structure, instead of file structure For the example:
@@ -73,6 +79,11 @@ public interface Deserializer<T> {
     Vector3iDeserializer VECTOR3I = new Vector3iDeserializer();
     RecipeChoiceDeserializer RECIPE_CHOICE = new RecipeChoiceDeserializer();
     KeyedDeserializer<TrimPattern> TRIM_PATTERN = KeyedDeserializer.of(RegistryAccess.registryAccess().getRegistry(RegistryKey.TRIM_PATTERN));
+    BlockDataDeserializer BLOCK_DATA = new BlockDataDeserializer();
+    RecipeInputItemDeserializer RECIPE_INPUT_ITEM = new RecipeInputItemDeserializer();
+    RecipeInputFluidDeserializer RECIPE_INPUT_FLUID = new RecipeInputFluidDeserializer();
+    FluidOrItemDeserializer FLUID_OR_ITEM = new FluidOrItemDeserializer();
+    FluidMapDeserializer FLUID_MAP = new FluidMapDeserializer();
 
     static <E extends Enum<E>> EnumDeserializer<E> enumDeserializer(Class<E> clazz) {
         return EnumDeserializer.of(clazz);
@@ -497,7 +508,6 @@ public interface Deserializer<T> {
      */
     @NullMarked
     class RecipeChoiceDeserializer implements Deserializer<RecipeChoice.ExactChoice> {
-
         @Override
         public List<ConfigReader<?, RecipeChoice.ExactChoice>> readers() {
             return ConfigReader.list(
@@ -531,6 +541,119 @@ public interface Deserializer<T> {
                     ConfigurationSection.class, s -> new RecipeChoice.ExactChoice(ITEMSTACK.deserialize(s)),
                     Map.class, s -> new RecipeChoice.ExactChoice(ITEMSTACK.deserialize(s))
             );
+        }
+    }
+
+    /**
+     * @author balugaq
+     */
+    @NullMarked
+    class BlockDataDeserializer implements Deserializer<BlockData> {
+        @Override
+        public List<ConfigReader<?, BlockData>> readers() {
+            return ConfigReader.list(
+                    String.class, Bukkit::createBlockData
+            );
+        }
+    }
+
+    /**
+     * @author balugaq
+     */
+    @NullMarked
+    class RecipeInputItemDeserializer implements Deserializer<RecipeInput.Item> {
+        @Override
+        public List<ConfigReader<?, RecipeInput.Item>> readers() {
+            return ConfigReader.list(
+                    String.class, this::proxy,
+                    Map.class, this::proxy,
+                    ConfigurationSection.class, this::proxy
+            );
+        }
+
+        private RecipeInput.Item proxy(Object s) {
+            return new RecipeInput.Item(1, RECIPE_CHOICE.deserialize(s).getChoices().toArray(new ItemStack[0]));
+        }
+    }
+
+    /**
+     * @author balugaq
+     */
+    @NullMarked
+    class RecipeInputFluidDeserializer implements Deserializer<RecipeInput.Fluid> {
+        @Override
+        public List<ConfigReader<?, RecipeInput.Fluid>> readers() {
+            return ConfigReader.list(
+                    Map.class, m -> {
+                        if (m.size() == 1) {
+                            var fluid = PYLON_FLUID.deserialize(m.keySet().stream().findFirst().get());
+                            double amount = Double.parseDouble(String.valueOf(m.values().stream().findFirst().get()));
+                            return new RecipeInput.Fluid(amount, fluid);
+                        } else {
+                            var fluid = PYLON_FLUID.deserialize(m.get("fluid"));
+                            double amount = Double.parseDouble(String.valueOf(m.get("amount")));
+                            return new RecipeInput.Fluid(amount, fluid);
+                        }
+                    },
+                    ConfigurationSection.class, s -> RECIPE_INPUT_FLUID.deserialize(s.getKeys(false).stream().map(s::get).collect(Collectors.toMap(a -> a, a -> a, (a, b) -> a)))
+            );
+        }
+    }
+
+    /**
+     * @author balugaq
+     */
+    @NullMarked
+    class FluidOrItemDeserializer implements Deserializer<FluidOrItem> {
+        @Override
+        public List<ConfigReader<?, FluidOrItem>> readers() {
+            return ConfigReader.list(
+                    String.class, s -> {
+                        var r = RECIPE_INPUT_ITEM.deserializeOrNull(s);
+                        if (r != null) return FluidOrItem.of(r.getItems().stream().findFirst().get().createItemStack());
+
+                        var r2 = PYLON_FLUID.deserializeOrNull(s);
+                        if (r2 != null) return FluidOrItem.of(r2, 144);
+
+                        var r3 = ITEMSTACK.deserializeOrNull(s);
+                        if (r3 != null) return FluidOrItem.of(r3);
+
+                        throw new UnknownFluidOrItemException(s);
+                    },
+                    Map.class, m -> {
+                        var r = RECIPE_INPUT_ITEM.deserializeOrNull(m);
+                        if (r != null) return FluidOrItem.of(r.getItems().stream().findFirst().get().createItemStack());
+
+                        var r2 = RECIPE_INPUT_FLUID.deserializeOrNull(m);
+                        if (r2 != null) return FluidOrItem.of(r2.fluids().stream().findFirst().get(), r2.amountMillibuckets());
+
+                        var r3 = ITEMSTACK.deserializeOrNull(m);
+                        if (r3 != null) return FluidOrItem.of(r3);
+
+                        throw new UnknownFluidOrItemException(m.toString());
+                    },
+                    ConfigurationSection.class, c -> {
+                        var r = RECIPE_INPUT_ITEM.deserializeOrNull(c);
+                        if (r != null) return FluidOrItem.of(r.getItems().stream().findFirst().get().createItemStack());
+
+                        var r2 = RECIPE_INPUT_FLUID.deserializeOrNull(c);
+                        if (r2 != null) return FluidOrItem.of(r2.fluids().stream().findFirst().get(), r2.amountMillibuckets());
+
+                        var r3 = ITEMSTACK.deserializeOrNull(c);
+                        if (r3 != null) return FluidOrItem.of(r3);
+
+                        throw new UnknownFluidOrItemException(c.toString());
+                    }
+            );
+        }
+    }
+
+    class FluidMapDeserializer extends MyObject2ObjectOpenHashMap<PylonFluid, Double> {
+        public FluidMapDeserializer() {
+            setGenericType(PylonFluid.class);
+            setGenericType2(Double.class);
+            setDeserializer(PYLON_FLUID);
+            setDeserializer2(() -> ConfigReader.list(String.class, Double::parseDouble, Double.class, s -> s, Integer.class, s -> (double)s));
         }
     }
 }

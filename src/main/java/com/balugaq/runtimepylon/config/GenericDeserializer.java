@@ -2,15 +2,17 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 /**
  * @author balugaq
  */
 @NullMarked
-public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K extends Deserializer<K>> extends Deserializer<T> {
+public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K> extends Deserializer<T> {
     @ApiStatus.Internal
-    static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T newDeserializer(Class<T> clazz) {
+    static <T extends GenericDeserializer<T, K>, K> T newDeserializer(Class<T> clazz) {
         return newDeserializer(clazz, t -> t);
     }
 
@@ -24,7 +26,7 @@ public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K exte
      * @see #deserialize(Object)
      */
     @ApiStatus.Internal
-    static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T newDeserializer(Class<T> clazz, Pack.Advancer<K> advancer) {
+    static <T extends GenericDeserializer<T, K>, K> T newDeserializer(Class<T> clazz, Pack.Advancer<Deserializer<K>> advancer) {
         try {
             return clazz.getDeclaredConstructor().newInstance().setAdvancer(advancer);
         } catch (Exception e) {
@@ -32,9 +34,21 @@ public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K exte
         }
     }
 
-    T setAdvancer(Pack.Advancer<K> advancer);
+    T setAdvancer(Pack.Advancer<Deserializer<K>> advancer);
 
     Class<K> getGenericType();
 
     T setGenericType(Class<K> clazz);
+
+    @MustBeInvokedByOverriders
+    @Nullable
+    default Deserializer<K> getDeserializer() {
+        if (getGenericType().isAssignableFrom(Deserializer.class)) {
+            return Deserializer.newDeserializer((Class<? extends Deserializer>) getGenericType());
+        }
+
+        return null;
+    }
+
+    T setDeserializer(Deserializer<K> deserializer);
 }

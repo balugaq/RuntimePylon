@@ -8,6 +8,20 @@ import com.balugaq.runtimepylon.exceptions.InvalidNamespacedKeyException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
+import io.github.pylonmc.pylon.base.recipes.BloomeryDisplayRecipe;
+import io.github.pylonmc.pylon.base.recipes.DrillingDisplayRecipe;
+import io.github.pylonmc.pylon.base.recipes.ForgingDisplayRecipe;
+import io.github.pylonmc.pylon.base.recipes.GrindstoneRecipe;
+import io.github.pylonmc.pylon.base.recipes.HammerRecipe;
+import io.github.pylonmc.pylon.base.recipes.MagicAltarRecipe;
+import io.github.pylonmc.pylon.base.recipes.MeltingRecipe;
+import io.github.pylonmc.pylon.base.recipes.MixingPotRecipe;
+import io.github.pylonmc.pylon.base.recipes.MoldingRecipe;
+import io.github.pylonmc.pylon.base.recipes.PipeBendingRecipe;
+import io.github.pylonmc.pylon.base.recipes.PitKilnRecipe;
+import io.github.pylonmc.pylon.base.recipes.PressRecipe;
+import io.github.pylonmc.pylon.base.recipes.SmelteryRecipe;
+import io.github.pylonmc.pylon.base.recipes.TableSawRecipe;
 import io.github.pylonmc.pylon.core.config.Config;
 import io.github.pylonmc.pylon.core.recipe.ConfigurableRecipeType;
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
@@ -147,10 +161,6 @@ public class Recipes {
         loadAdvance(RecipeType.VANILLA_SMITHING_TRANSFORM, Recipes::advancedVanillaSmithingTransform);
         loadAdvance(RecipeType.VANILLA_SMITHING_TRIM, Recipes::advancedVanillaSmithingTrim);
         loadAdvance(RecipeType.VANILLA_SMOKING, Recipes::advancedVanillaSmoking);
-        // todo: more pylon recipe type
-        if (RuntimePylon.getIntegrationManager().isEnabled.pylonBase) {
-
-        }
     }
 
     private static SmithingTrimRecipeWrapper advancedVanillaSmithingTrim(NamespacedKey key, ConfigurationSection config) {
@@ -263,7 +273,7 @@ public class Recipes {
         return new SmokingRecipeWrapper(advancedVanillaCooking(key, config, SmokingRecipe::new));
     }
 
-    public static <T extends PylonRecipe> void loadAdvance(ConfigurableRecipeType<T> type, BiFunction<NamespacedKey, ConfigurationSection, T> function) {
-        ADVANCED_RECIPE_TYPES.put(type.getKey(), function);
+    public static <T extends PylonRecipe> void loadAdvance(RecipeType<T> type, BiFunction<NamespacedKey, ConfigurationSection, T> function) {
+        if (type instanceof ConfigurableRecipeType<T>) ADVANCED_RECIPE_TYPES.put(type.getKey(), function);
     }
 }

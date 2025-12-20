@@ -21,19 +21,19 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = true)
 @NullMarked
-public class MyArrayList<T extends Deserializer<T>> extends ArrayList<T> implements GenericDeserializer<MyArrayList<T>, T> {
+public class MyArrayList<T> extends ArrayList<T> implements GenericDeserializer<MyArrayList<T>, T> {
     @Getter
     @UnknownNullability
     private Class<T> genericType;
 
     @Getter
-    private Pack.@UnknownNullability Advancer<T> advancer;
+    private Pack.@UnknownNullability Advancer<Deserializer<T>> advancer;
 
-    @Getter
-    private boolean skipFail;
+    @UnknownNullability
+    private Deserializer<T> deserializer;
 
     @Override
-    public MyArrayList<T> setAdvancer(Pack.Advancer<T> advancer) {
+    public MyArrayList<T> setAdvancer(Pack.Advancer<Deserializer<T>> advancer) {
         this.advancer = advancer;
         return this;
     }
@@ -48,7 +48,7 @@ public class MyArrayList<T extends Deserializer<T>> extends ArrayList<T> impleme
     public List<ConfigReader<?, MyArrayList<T>>> readers() {
         return ConfigReader.list(
                 List.class, lst -> {
-                    var serializer = advancer.advance(Deserializer.newDeserializer(getGenericType()));
+                    Deserializer<T> serializer = advancer.advance(getDeserializer());
                     MyArrayList<T> res = new MyArrayList<>();
                     for (Object object : lst) {
                         try (var ignored = StackFormatter.setPosition("Reading List<" + getGenericType().getSimpleName() + ">")) {
@@ -60,5 +60,20 @@ public class MyArrayList<T extends Deserializer<T>> extends ArrayList<T> impleme
                     return res;
                 }
         );
+    }
+
+    @Override
+    public Deserializer<T> getDeserializer() {
+        if (deserializer != null) return deserializer;
+
+        final Deserializer<T> t = GenericDeserializer.super.getDeserializer();
+        if (t == null) throw new UnsupportedOperationException("Not deserializable and no deserializer provided");
+        return t;
+    }
+
+    @Override
+    public MyArrayList<T> setDeserializer(final Deserializer<T> deserializer) {
+        this.deserializer = deserializer;
+        return this;
     }
 }

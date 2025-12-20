@@ -1,20 +1,32 @@
 package com.balugaq.runtimepylon.manager;
 
 import com.balugaq.runtimepylon.RuntimePylon;
+import com.balugaq.runtimepylon.config.StackFormatter;
+import com.balugaq.runtimepylon.integration.Integration;
+import com.balugaq.runtimepylon.integration.PylonBaseIntegration;
+import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.util.ReflectionUtil;
+import lombok.Data;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * @author balugaq
  */
 @NullMarked
 public class IntegrationManager {
+    private final @Getter List<Integration> integrations = new ArrayList<>();
     public IsEnabled isEnabled;
 
     public IntegrationManager() {
         this.isEnabled = new IsEnabled();
         onServerDone(() -> {
-            this.isEnabled.pylonBase = Bukkit.getPluginManager().getPlugin("PylonBase") != null;
+            ifEnabled("PylonBase", PylonBaseIntegration::new);
         });
     }
 
@@ -26,11 +38,29 @@ public class IntegrationManager {
         return RuntimePylon.getIntegrationManager();
     }
 
+    public void ifEnabled(String name, Supplier<Integration> supplier) {
+        var enabled = Bukkit.getPluginManager().isPluginEnabled(name);
+        try {
+            ReflectionUtil.setValue(instance().isEnabled, name, enabled);
+        } catch (Exception e) {
+            Debug.warn(e);
+        }
+        if (enabled) {
+            var integration = supplier.get();
+            try (var sk = StackFormatter.setPosition("Hooking " + name)) {
+                integration.apply();
+                integrations.add(integration);
+            } catch (Exception e) {
+                StackFormatter.handle(e);
+            }
+        }
+    }
+
     /**
      * @author balugaq
      */
     @NullMarked
     public static class IsEnabled {
-        public boolean pylonBase;
+        public boolean PylonBase;
     }
 }
