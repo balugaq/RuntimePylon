@@ -32,6 +32,7 @@ import org.jspecify.annotations.NullMarked;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -272,7 +273,22 @@ public @Data class PackManager {
     public static void unload(Pack pack) {
         PylonAddon plugin = pack.plugin();
 
-        pack.getScripts().closeAll();
+        if (pack.getScripts() != null)
+            pack.getScripts().closeAll();
+        if (pack.getRecipes() != null) {
+            for (var e : pack.getRecipes().getRegisteredRecipes().entrySet()) {
+                try {
+                    var recipes = ReflectionUtil.getValue(e.getKey(), "registeredRecipes", Map.class);
+                    if (recipes != null) {
+                        for (var key : e.getValue()) {
+                            recipes.remove(key);
+                        }
+                    }
+                } catch (IllegalAccessException ex) {
+                    StackFormatter.handle(ex);
+                }
+            }
+        }
 
         try {
             ReflectionUtil.invokeMethod(BlockStorage.class, "cleanup", plugin);

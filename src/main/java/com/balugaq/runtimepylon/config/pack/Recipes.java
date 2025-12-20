@@ -1,12 +1,15 @@
 package com.balugaq.runtimepylon.config.pack;
 
+import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.PackManager;
+import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.exceptions.InvalidNamespacedKeyException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
+import com.balugaq.runtimepylon.util.StringUtil;
 import io.github.pylonmc.pylon.core.config.Config;
 import io.github.pylonmc.pylon.core.recipe.ConfigurableRecipeType;
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
@@ -24,6 +27,7 @@ import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import kotlin.jvm.functions.Function5;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -48,26 +52,32 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 
 /**
  * @author balugaq
  */
 @Data
-@AllArgsConstructor
+@RequiredArgsConstructor
 @NullMarked
 public class Recipes {
-    private File recipeFolder;
-    private PackNamespace namespace;
+    private int loadedRecipes;
+    private final File recipeFolder;
+    private final PackNamespace namespace;
+    private final Map<RecipeType<?>, Set<NamespacedKey>> registeredRecipes = new HashMap<>();
 
     public void loadRecipes() {
         for (var dir : recipeFolder.listFiles()) {
             if (!dir.isDirectory()) continue;
             var namespace = dir.getName();
             for (var cfg : dir.listFiles()) {
-                if (cfg.getName().endsWith(".yml")) continue;
+                if (!cfg.getName().endsWith(".yml")) continue;
+                try (var sk2 = StackFormatter.setPosition("Loading file: " + StringUtil.simplifyPath(cfg.getAbsolutePath()))) {
+
                 var key = new NamespacedKey(namespace, cfg.getName().substring(0, cfg.getName().length() - 4));
                 var type = PylonRegistry.RECIPE_TYPES.get(key);
                 if (ADVANCED_RECIPE_TYPES.containsKey(key)) {
@@ -81,7 +91,7 @@ public class Recipes {
                 Config config = null;
                 YamlConfiguration cg = null;
                 if (ADVANCED_RECIPE_TYPES.containsKey(key)) {
-                    cg = YamlConfiguration.loadConfiguration(new File(new File(Pack.getRecipesFolder(), namespace), cfg.getName()));
+                    cg = YamlConfiguration.loadConfiguration(new File(new File(recipeFolder, namespace), cfg.getName()));
                 } else {
                     config = new Config(cfg.toPath());
                 }
@@ -95,7 +105,7 @@ public class Recipes {
                         // default namespace
                         k = new NamespacedKey(this.namespace.getNamespace(), ky);
                     }
-                    try {
+                    try (var sk = StackFormatter.setPosition("Reading " + ky)) {
                         if (ADVANCED_RECIPE_TYPES.containsKey(key)) {
                             ReflectionUtil.invokeMethod(ctp, "addRecipe", ADVANCED_RECIPE_TYPES.get(key).apply(k, cg));
                         } else {
@@ -105,12 +115,19 @@ public class Recipes {
                             );
                         }
                         //@formatter:on
+                        loadedRecipes += 1;
+                        if (!registeredRecipes.containsKey(ctp)) {
+                            registeredRecipes.put(ctp, new HashSet<>());
+                        }
+                        registeredRecipes.get(ctp).add(k);
                     } catch (Exception e) {
                         throw new IllegalArgumentException(
                                 "Failed to load recipe with key " + ky + " from config for recipe type " + ctp.getKey(),
                                 e
                         );
                     }
+                }
+
                 }
             }
         }
@@ -131,6 +148,9 @@ public class Recipes {
         loadAdvance(RecipeType.VANILLA_SMITHING_TRIM, Recipes::advancedVanillaSmithingTrim);
         loadAdvance(RecipeType.VANILLA_SMOKING, Recipes::advancedVanillaSmoking);
         // todo: more pylon recipe type
+        if (RuntimePylon.getIntegrationManager().isEnabled.pylonBase) {
+
+        }
     }
 
     private static SmithingTrimRecipeWrapper advancedVanillaSmithingTrim(NamespacedKey key, ConfigurationSection config) {

@@ -641,12 +641,12 @@ public class Pack implements FileObject<Pack> {
         PylonRegistry.ADDONS.register(plugin());
         StackFormatter.run("Loading lang", () -> loadLang(findDir(Arrays.asList(dir.listFiles()), "lang"), getLangFolder()));
         StackFormatter.run("Loading settings", this::registerSettings);
-        StackFormatter.run("Loading recipes", this::registerRecipes);
         StackFormatter.run("Loading pages", this::registerPages);
         StackFormatter.run("Loading items", this::registerItems);
         StackFormatter.run("Loading blocks", this::registerBlocks);
         StackFormatter.run("Loading fluids", this::registerFluids);
         StackFormatter.run("Loading recipe types", this::registerRecipeTypes);
+        StackFormatter.run("Loading recipes", this::registerRecipes);
         PylonRegistry.ADDONS.unregister(plugin());
         plugin().registerWithPylon();
         return this;

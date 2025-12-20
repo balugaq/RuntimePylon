@@ -59,10 +59,6 @@ public class RuntimePylonCommand {
             .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearsettings"))
             .executes(RuntimePylonCommand::clearSettings)
         )
-        .then(Commands.literal("clearrecipes")
-            .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearrecipes"))
-            .executes(RuntimePylonCommand::clearRecipes)
-        )
         .then(Commands.literal("clearlang")
             .requires(source -> source.getSender().hasPermission("runtimepylon.command.clearlang"))
             .executes(RuntimePylonCommand::clearLang)
@@ -174,6 +170,8 @@ public class RuntimePylonCommand {
             registryInfo.add(pack.getFluids().getFluids().size() + " Fluids");
         if (pack.getRecipeTypes() != null)
             registryInfo.add(pack.getRecipeTypes().getRecipeTypes().size() + " Recipe Types");
+        if (pack.getRecipes() != null)
+            registryInfo.add(pack.getRecipes().getLoadedRecipes() + " Recipes");
         if (pack.getScripts() != null)
             registryInfo.add(pack.getScripts().getScripts().size() + " Scripts");
         return registryInfo;
@@ -215,11 +213,6 @@ public class RuntimePylonCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int clearRecipes(CommandContext<CommandSourceStack> ctx) {
-        PackManager.getPacks().forEach(pack -> deleteFolder(pack.getRecipesFolder()));
-        return Command.SINGLE_SUCCESS;
-    }
-
     private int clearLang(CommandContext<CommandSourceStack> ctx) {
         PackManager.getPacks().forEach(pack -> deleteFolder(pack.getLangFolder()));
         return Command.SINGLE_SUCCESS;
@@ -227,7 +220,6 @@ public class RuntimePylonCommand {
 
     private int clearAll(CommandContext<CommandSourceStack> ctx) {
         clearSettings(ctx);
-        clearRecipes(ctx);
         clearLang(ctx);
         StackFormatter.getPositions().clear();
         return Command.SINGLE_SUCCESS;
@@ -246,19 +238,6 @@ public class RuntimePylonCommand {
 
     private int loadPacks(CommandContext<CommandSourceStack> ctx) {
         RuntimePylon.getPackManager().loadPacks();
-        // reload recipes
-        for (RecipeType<?> type : PylonRegistry.RECIPE_TYPES.getValues()) {
-            try {
-                ReflectionUtil.getValue(type, "registeredRecipes", Map.class).clear();
-            } catch (Exception e) {
-                Debug.warn(e);
-            }
-        }
-        try {
-            ReflectionUtil.invokeMethod(PylonCore.INSTANCE, "loadRecipes");
-        } catch (Exception e) {
-            Debug.warn(e);
-        }
         return Command.SINGLE_SUCCESS;
     }
 
