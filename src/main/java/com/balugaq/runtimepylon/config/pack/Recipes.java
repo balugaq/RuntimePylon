@@ -107,7 +107,7 @@ public class Recipes {
                     }
                     try (var sk = StackFormatter.setPosition("Reading " + ky)) {
                         if (ADVANCED_RECIPE_TYPES.containsKey(key)) {
-                            ReflectionUtil.invokeMethod(ctp, "addRecipe", ADVANCED_RECIPE_TYPES.get(key).apply(k, cg));
+                            ReflectionUtil.invokeMethod(ctp, "addRecipe", ADVANCED_RECIPE_TYPES.get(key).apply(k, cg.getConfigurationSection(ky)));
                         } else {
                             ReflectionUtil.invokeMethod(
                                     ctp, "addRecipe",

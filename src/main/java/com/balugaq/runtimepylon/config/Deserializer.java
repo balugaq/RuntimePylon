@@ -13,6 +13,7 @@ import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
+import io.github.pylonmc.pylon.core.item.ItemTypeWrapper;
 import io.github.pylonmc.pylon.core.item.PylonItemSchema;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.registry.RegistryAccess;
@@ -41,6 +42,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -226,6 +228,13 @@ public interface Deserializer<T> {
 
                     if (material != null) {
                         return new ItemStack(material);
+                    }
+
+                    // item: example_item
+                    // pylon item
+                    Optional<PylonItemSchema> sch = PylonRegistry.ITEMS.stream().filter(schema -> schema.getKey().getKey().equals(fixed)).findFirst();
+                    if (sch.isPresent()) {
+                        return sch.get().getItemStack();
                     }
                 } else if (s2.startsWith("saveditem")) {
                     // item: saveditem:mypack:foo
@@ -458,17 +467,26 @@ public interface Deserializer<T> {
                             List<ItemStack> list = new ArrayList<>();
                             String[] slice = s.split("\\|");
                             for (var s2 : slice) {
-                                list.add(ITEMSTACK.deserialize(s2));
+                                list.addAll(RECIPE_CHOICE.deserialize(s2).getChoices());
                             }
                             return new RecipeChoice.ExactChoice(list);
                         } else {
+                            if (!s.contains(":") && !s.contains("#") && Material.getMaterial(s) == null) {
+                                // item: example_item
+                                // pylon item
+                                List<PylonItemSchema> schs = PylonRegistry.ITEMS.stream().filter(schema -> schema.getKey().getKey().equals(s)).toList();
+                                if (!schs.isEmpty()) {
+                                    return new RecipeChoice.ExactChoice(schs.stream().map(PylonItemSchema::getItemStack).toList());
+                                }
+                            }
+
                             var item = ITEMSTACK.deserializeOrNull(s);
                             if (item != null) {
                                 return new RecipeChoice.ExactChoice(item);
                             }
 
                             // tag
-                            return new RecipeChoice.ExactChoice(ConfigAdapter.ITEM_TAG.convert(s).getValues().stream().map(w -> w.createItemStack()).toList());
+                            return new RecipeChoice.ExactChoice(ConfigAdapter.ITEM_TAG.convert(s).getValues().stream().map(ItemTypeWrapper::createItemStack).toList());
                         }
                     },
                     ConfigurationSection.class, s -> new RecipeChoice.ExactChoice(ITEMSTACK.deserialize(s))
