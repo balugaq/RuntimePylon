@@ -142,6 +142,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         BukkitLibraryManager libraryManager = new BukkitLibraryManager(this);
 
         List<String> repos = List.of(
+                "https://maven.aliyun.com/repository/public",
                 "https://repo.papermc.io/repository/maven-public/",
                 "https://central.sonatype.com/repository/maven-snapshots/",
                 "https://jitpack.io"
