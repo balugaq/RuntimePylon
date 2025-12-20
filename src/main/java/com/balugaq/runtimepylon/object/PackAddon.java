@@ -42,4 +42,9 @@ public record PackAddon(String namespace, Set<Locale> languages, Material materi
     public NamespacedKey key(String key) {
         return new NamespacedKey(namespace, key);
     }
+
+    @Override
+    public boolean suppressAddonNameWarning() {
+        return false;
+    }
 }

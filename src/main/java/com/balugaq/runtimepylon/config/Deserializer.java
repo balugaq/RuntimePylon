@@ -512,9 +512,9 @@ public interface Deserializer<T> {
         public List<ConfigReader<?, RecipeChoice.ExactChoice>> readers() {
             return ConfigReader.list(
                     String.class, s -> {
-                        if (s.contains("|")) {
+                        if (s.contains("||")) {
                             List<ItemStack> list = new ArrayList<>();
-                            String[] slice = s.split("\\|");
+                            String[] slice = s.split("\\|\\|");
                             for (var s2 : slice) {
                                 list.addAll(RECIPE_CHOICE.deserialize(s2).getChoices());
                             }
