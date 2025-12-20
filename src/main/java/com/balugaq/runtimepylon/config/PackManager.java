@@ -16,7 +16,6 @@ import com.balugaq.runtimepylon.object.PackAddon;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
-import io.github.pylonmc.pylon.core.addon.PylonAddon;
 import io.github.pylonmc.pylon.core.block.BlockStorage;
 import io.github.pylonmc.pylon.core.entity.EntityStorage;
 import io.github.pylonmc.pylon.core.guide.button.FluidButton;
