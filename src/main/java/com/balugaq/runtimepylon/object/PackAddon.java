@@ -45,6 +45,6 @@ public record PackAddon(String namespace, Set<Locale> languages, Material materi
 
     @Override
     public boolean suppressAddonNameWarning() {
-        return false;
+        return true;
     }
 }

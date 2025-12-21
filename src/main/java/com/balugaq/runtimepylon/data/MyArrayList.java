@@ -1,9 +1,9 @@
 package com.balugaq.runtimepylon.data;
 
+import com.balugaq.runtimepylon.config.Advancer;
 import com.balugaq.runtimepylon.config.ConfigReader;
 import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.GenericDeserializer;
-import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.StackFormatter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -28,13 +28,13 @@ public class MyArrayList<T> extends ArrayList<T> implements GenericDeserializer<
     private Class<T> genericType;
 
     @Getter
-    private Pack.@UnknownNullability Advancer<Deserializer<T>> advancer;
+    private @UnknownNullability Advancer<Deserializer<T>> advancer;
 
     @UnknownNullability
     private Deserializer<T> deserializer;
 
     @Override
-    public MyArrayList<T> setAdvancer(Pack.Advancer<Deserializer<T>> advancer) {
+    public MyArrayList<T> setAdvancer(Advancer<Deserializer<T>> advancer) {
         this.advancer = advancer;
         return this;
     }
@@ -57,6 +57,16 @@ public class MyArrayList<T> extends ArrayList<T> implements GenericDeserializer<
                         } catch (Exception e) {
                             StackFormatter.handle(e);
                         }
+                    }
+                    return res;
+                },
+                Object.class, s -> {
+                    Deserializer<T> serializer = advancer.advance(getDeserializer());
+                    MyArrayList<T> res = new MyArrayList<>();
+                    try (var ignored = StackFormatter.setPosition("Reading List<" + getDeserializer().type() + ">")) {
+                        res.add(serializer.deserialize(s));
+                    } catch (Exception e) {
+                        StackFormatter.handle(e);
                     }
                     return res;
                 }

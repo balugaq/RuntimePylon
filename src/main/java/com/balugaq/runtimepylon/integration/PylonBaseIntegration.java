@@ -157,7 +157,7 @@ public class PylonBaseIntegration implements Integration {
                 key,
                 Pack.read(section, MyArrayList.class, Deserializer.RECIPE_INPUT_ITEM, "input-items"),
                 Deserializer.RECIPE_INPUT_FLUID.deserialize(section.get("input-fluid")),
-                Deserializer.FLUID_OR_ITEM.deserialize(section.get("result")),
+                Deserializer.FLUID_OR_ITEM.deserialize(section.get("output")),
                 section.getBoolean("requires-enriched-fire", false)
         );
     }

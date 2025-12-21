@@ -26,7 +26,7 @@ public interface BiGenericDeserializer<T extends BiGenericDeserializer<T, K, M>,
      * @see #deserialize(Object)
      */
     @ApiStatus.Internal
-    static <T extends BiGenericDeserializer<T, K, M>, K, M> T newDeserializer(Class<T> clazz, Pack.Advancer<Deserializer<K>> advancer, Pack.Advancer<Deserializer<M>> advancer2) {
+    static <T extends BiGenericDeserializer<T, K, M>, K, M> T newDeserializer(Class<T> clazz, Advancer<Deserializer<K>> advancer, Advancer<Deserializer<M>> advancer2) {
         try {
             return clazz.getDeclaredConstructor().newInstance().setAdvancer(advancer).setAdvancer2(advancer2);
         } catch (Exception e) {
@@ -34,7 +34,7 @@ public interface BiGenericDeserializer<T extends BiGenericDeserializer<T, K, M>,
         }
     }
 
-    T setAdvancer(Pack.Advancer<Deserializer<K>> advancer);
+    T setAdvancer(Advancer<Deserializer<K>> advancer);
 
     @Nullable
     Class<K> getGenericType();
@@ -53,7 +53,7 @@ public interface BiGenericDeserializer<T extends BiGenericDeserializer<T, K, M>,
 
     T setDeserializer(Deserializer<K> deserializer);
 
-    T setAdvancer2(Pack.Advancer<Deserializer<M>> advancer);
+    T setAdvancer2(Advancer<Deserializer<M>> advancer);
 
     @Nullable
     Class<M> getGenericType2();

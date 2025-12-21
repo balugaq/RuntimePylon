@@ -1,10 +1,9 @@
 package com.balugaq.runtimepylon.data;
 
+import com.balugaq.runtimepylon.config.Advancer;
 import com.balugaq.runtimepylon.config.BiGenericDeserializer;
 import com.balugaq.runtimepylon.config.ConfigReader;
 import com.balugaq.runtimepylon.config.Deserializer;
-import com.balugaq.runtimepylon.config.GenericDeserializer;
-import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.StackFormatter;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.EqualsAndHashCode;
@@ -38,10 +37,10 @@ public class MyObject2ObjectOpenHashMap<T1, T2> extends Object2ObjectOpenHashMap
     private Class<T2> genericType2;
 
     @Getter
-    private Pack.@UnknownNullability Advancer<Deserializer<T1>> advancer;
+    private @UnknownNullability Advancer<Deserializer<T1>> advancer;
 
     @Getter
-    private Pack.@UnknownNullability Advancer<Deserializer<T2>> advancer2;
+    private @UnknownNullability Advancer<Deserializer<T2>> advancer2;
 
     @UnknownNullability
     private Deserializer<T1> deserializer;
@@ -50,7 +49,7 @@ public class MyObject2ObjectOpenHashMap<T1, T2> extends Object2ObjectOpenHashMap
     private Deserializer<T2> deserializer2;
 
     @Override
-    public MyObject2ObjectOpenHashMap<T1, T2> setAdvancer(final Pack.Advancer<Deserializer<T1>> advancer) {
+    public MyObject2ObjectOpenHashMap<T1, T2> setAdvancer(final Advancer<Deserializer<T1>> advancer) {
         this.advancer = advancer;
         return this;
     }
@@ -68,7 +67,7 @@ public class MyObject2ObjectOpenHashMap<T1, T2> extends Object2ObjectOpenHashMap
     }
 
     @Override
-    public MyObject2ObjectOpenHashMap<T1, T2> setAdvancer2(final Pack.Advancer<Deserializer<T2>> advancer) {
+    public MyObject2ObjectOpenHashMap<T1, T2> setAdvancer2(final Advancer<Deserializer<T2>> advancer) {
         this.advancer2 = advancer;
         return this;
     }

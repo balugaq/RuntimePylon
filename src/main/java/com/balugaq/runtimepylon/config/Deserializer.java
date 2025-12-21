@@ -23,6 +23,7 @@ import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
+import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
@@ -43,10 +44,12 @@ import org.jspecify.annotations.NullMarked;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -188,23 +191,19 @@ public interface Deserializer<T> {
         );
 
         @Override
+        @SneakyThrows
         public @UnknownNullability ItemStack deserialize(@Nullable Object o) {
-            try (var ignore = StackFormatter.setPosition("Reading ItemStack")) {
-                if (o == null) throw new MissingArgumentException();
-                for (ConfigReader<?, ItemStack> reader : readers()) {
-                    if (reader.type().isInstance(o)) {
-                        try {
-                            return (ItemStack) ReflectionUtil.invokeMethod(reader, "read", o);
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            throw e.getCause();
-                        }
+            if (o == null) throw new MissingArgumentException();
+            for (ConfigReader<?, ItemStack> reader : readers()) {
+                if (reader.type().isInstance(o)) {
+                    try {
+                        return (ItemStack) ReflectionUtil.invokeMethod(reader, "read", o);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        throw e.getCause();
                     }
                 }
-                return null;
-            } catch (Throwable e) {
-                StackFormatter.handle(e);
-                return null;
             }
+            return null;
         }
 
         @Internal
@@ -605,7 +604,7 @@ public interface Deserializer<T> {
                             return new RecipeInput.Fluid(amount, fluid);
                         }
                     },
-                    ConfigurationSection.class, s -> RECIPE_INPUT_FLUID.deserialize(s.getKeys(false).stream().map(k -> Map.of(k, s.get(k))).collect(Collectors.toMap(a -> a, a -> a, (a, b) -> a)))
+                    ConfigurationSection.class, s -> RECIPE_INPUT_FLUID.deserialize(s.getKeys(false).stream().map(k -> Map.of(k, s.get(k))).flatMap(a -> a.entrySet().stream()).collect(Collectors.toMap(a -> a.getKey(), b -> b.getValue(), (a, b) -> a)))
             );
         }
     }
@@ -619,38 +618,70 @@ public interface Deserializer<T> {
         public List<ConfigReader<?, FluidOrItem>> readers() {
             return ConfigReader.list(
                     String.class, s -> {
-                        var r = RECIPE_INPUT_ITEM.deserializeOrNull(s);
-                        if (r != null) return FluidOrItem.of(r.getItems().stream().findFirst().get().createItemStack());
+                        try {
+                            var r = RECIPE_INPUT_ITEM.deserialize(s);
+                            if (r != null)
+                                return FluidOrItem.of(r.getItems().stream().findFirst().get().createItemStack());
+                        } catch (Exception ignored) {
+                        }
 
-                        var r2 = PYLON_FLUID.deserializeOrNull(s);
-                        if (r2 != null) return FluidOrItem.of(r2, 144);
+                        try {
+                            var r2 = PYLON_FLUID.deserialize(s);
+                            if (r2 != null) return FluidOrItem.of(r2, 144);
+                        } catch (Exception ignored) {
+                        }
 
-                        var r3 = ITEMSTACK.deserializeOrNull(s);
-                        if (r3 != null) return FluidOrItem.of(r3);
+                        try {
+                            var r3 = ITEMSTACK.deserialize(s);
+                            if (r3 != null) return FluidOrItem.of(r3);
+                        } catch (Exception ignored) {
+                        }
 
                         throw new UnknownFluidOrItemException(s);
                     },
                     Map.class, m -> {
-                        var r = RECIPE_INPUT_ITEM.deserializeOrNull(m);
-                        if (r != null) return FluidOrItem.of(r.getItems().stream().findFirst().get().createItemStack());
+                        try {
+                            var r = RECIPE_INPUT_ITEM.deserialize(m);
+                            if (r != null)
+                                return FluidOrItem.of(r.getItems().stream().findFirst().get().createItemStack());
+                        } catch (Exception ignored) {
+                        }
 
-                        var r2 = RECIPE_INPUT_FLUID.deserializeOrNull(m);
-                        if (r2 != null) return FluidOrItem.of(r2.fluids().stream().findFirst().get(), r2.amountMillibuckets());
+                        try {
+                            var r2 = RECIPE_INPUT_FLUID.deserialize(m);
+                            if (r2 != null)
+                                return FluidOrItem.of(r2.fluids().stream().findFirst().get(), r2.amountMillibuckets());
+                        } catch (Exception ignored) {
+                        }
 
-                        var r3 = ITEMSTACK.deserializeOrNull(m);
-                        if (r3 != null) return FluidOrItem.of(r3);
+                        try {
+                            var r3 = ITEMSTACK.deserialize(m);
+                            if (r3 != null) return FluidOrItem.of(r3);
+                        } catch (Exception ignored) {
+                        }
 
                         throw new UnknownFluidOrItemException(m.toString());
                     },
                     ConfigurationSection.class, c -> {
-                        var r = RECIPE_INPUT_ITEM.deserializeOrNull(c);
-                        if (r != null) return FluidOrItem.of(r.getItems().stream().findFirst().get().createItemStack());
+                        try {
+                            var r = RECIPE_INPUT_ITEM.deserialize(c);
+                            if (r != null)
+                                return FluidOrItem.of(r.getItems().stream().findFirst().get().createItemStack());
+                        } catch (Exception ignored) {
+                        }
 
-                        var r2 = RECIPE_INPUT_FLUID.deserializeOrNull(c);
-                        if (r2 != null) return FluidOrItem.of(r2.fluids().stream().findFirst().get(), r2.amountMillibuckets());
+                        try {
+                            var r2 = RECIPE_INPUT_FLUID.deserialize(c);
+                            if (r2 != null)
+                                return FluidOrItem.of(r2.fluids().stream().findFirst().get(), r2.amountMillibuckets());
+                        } catch (Exception ignored) {
+                        }
 
-                        var r3 = ITEMSTACK.deserializeOrNull(c);
-                        if (r3 != null) return FluidOrItem.of(r3);
+                        try {
+                            var r3 = ITEMSTACK.deserializeOrNull(c);
+                            if (r3 != null) return FluidOrItem.of(r3);
+                        } catch (Exception ignored) {
+                        }
 
                         throw new UnknownFluidOrItemException(c.toString());
                     }

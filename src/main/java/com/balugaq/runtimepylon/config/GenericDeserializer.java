@@ -26,7 +26,7 @@ public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K> ext
      * @see #deserialize(Object)
      */
     @ApiStatus.Internal
-    static <T extends GenericDeserializer<T, K>, K> T newDeserializer(Class<T> clazz, Pack.Advancer<Deserializer<K>> advancer) {
+    static <T extends GenericDeserializer<T, K>, K> T newDeserializer(Class<T> clazz, Advancer<Deserializer<K>> advancer) {
         try {
             return clazz.getDeclaredConstructor().newInstance().setAdvancer(advancer);
         } catch (Exception e) {
@@ -34,7 +34,7 @@ public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K> ext
         }
     }
 
-    T setAdvancer(Pack.Advancer<Deserializer<K>> advancer);
+    T setAdvancer(Advancer<Deserializer<K>> advancer);
 
     @Nullable
     Class<K> getGenericType();

@@ -37,7 +37,6 @@ import com.balugaq.runtimepylon.object.blocks.CustomMultiBlock;
 import com.balugaq.runtimepylon.object.items.CustomItem;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
-import io.github.pylonmc.pylon.core.PylonCore;
 import io.github.pylonmc.pylon.core.config.PylonConfig;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
@@ -48,7 +47,6 @@ import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.item.research.Research;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
-import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.github.pylonmc.pylon.core.util.gui.GuiItems;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -72,7 +70,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * In the disk, we have the following tree structure to define a pack:
@@ -188,6 +185,7 @@ public class Pack implements FileObject<Pack> {
     private final Scripts scripts;
     @Nullable
     private final Saveditems saveditems;
+    private final boolean suppressLanguageMissingWarning;
 
     public static <T extends Enum<T>> T readEnum(ConfigurationSection config, Class<T> clazz, String path) {
         return readEnum(config, clazz, path, t -> t);
@@ -388,6 +386,8 @@ public class Pack implements FileObject<Pack> {
                     StackFormatter.destroy();
                 }
 
+                boolean suppressLanguageMissingWarning = config.getBoolean("suppressLanguageMissingWarning", false);
+
                 return new Pack(
                         dir,
                         id,
@@ -414,7 +414,8 @@ public class Pack implements FileObject<Pack> {
                         settings,
                         researches,
                         scripts,
-                        saveditems
+                        saveditems,
+                        suppressLanguageMissingWarning
                 );
             } catch (Exception e) {
                 StackFormatter.handle(e);
@@ -678,8 +679,13 @@ public class Pack implements FileObject<Pack> {
         return new File(new File(pylonCore, "lang"), plugin().namespace());
     }
 
+    public Pack unregister() {
+        PackManager.unload(this);
+        return this;
+    }
+
     public Pack register() {
-        PylonRegistry.ADDONS.register(plugin());
+        plugin().registerWithPylon();
         StackFormatter.run("Loading lang", () -> loadLang(findDir(Arrays.asList(dir.listFiles()), "lang"), getLangFolder()));
         StackFormatter.run("Loading settings", this::registerSettings);
         StackFormatter.run("Loading pages", this::registerPages);
@@ -689,24 +695,53 @@ public class Pack implements FileObject<Pack> {
         StackFormatter.run("Loading recipe types", this::registerRecipeTypes);
         StackFormatter.run("Loading recipes", this::registerRecipes);
         StackFormatter.run("Loading researches", this::registerResearches);
-        PylonRegistry.ADDONS.unregister(plugin());
-        plugin().registerWithPylon();
+        if (!suppressLanguageMissingWarning) {
+            printMissingLanguage();
+        }
         return this;
+    }
+
+    public void printMissingLanguage() {
+        if (getLanguages() == null || getLanguages().isEmpty()) return;
+
+        File folder = getLangFolder();
+        for (Language language : getLanguages()) {
+            File lFile = new File(folder, language.localeCode() + ".yml");
+            YamlConfiguration config = lFile.exists() ? YamlConfiguration.loadConfiguration(lFile) : new YamlConfiguration();
+            checkLanguage(config, language, plugin(), "addon");
+
+            if (items != null) {
+                items.getItems().values().forEach(entry -> {
+                    checkLanguage(config, language, plugin(), "item." + entry.id().key().getKey() + ".name");
+                });
+            }
+            if (fluids != null) {
+                fluids.getFluids().values().forEach(entry -> {
+                    checkLanguage(config, language, plugin(), "fluid." + entry.id().key().getKey());
+                });
+            }
+            if (pages != null) {
+                pages.getPages().values().forEach(entry -> {
+                    checkLanguage(config, language, plugin(), "guide.page." + entry.id().key().getKey());
+                });
+            }
+            if (researches != null) {
+                researches.getResearches().values().forEach(entry -> {
+                    if (entry.name() == null) {
+                        checkLanguage(config, language, plugin(), "research." + entry.id().key().getKey());
+                    }
+                });
+            }
+        }
+    }
+
+    private void checkLanguage(YamlConfiguration config, Language language, PackAddon addon, String path) {
+        if (!config.contains(path)) {
+            Debug.warn("Missing language [" + addon.namespace() + "] [" + language.localeCode() + "]: " + path);
+        }
     }
 
     public PackAddon plugin() {
         return getPackNamespace().plugin();
-    }
-
-    /**
-     * @author balugaq
-     */
-    @FunctionalInterface
-    public interface Advancer<T> extends Function<T, T> {
-        default T apply(T object) {
-            return advance(object);
-        }
-
-        T advance(T object);
     }
 }

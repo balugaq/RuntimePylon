@@ -15,7 +15,7 @@ public record Language(String localeCode) implements Deserializer<Language> {
     }
 
     public Locale locale() {
-        String[] codes = this.localeCode.split("-");
+        String[] codes = this.localeCode.split("_");
         if (codes.length == 1) {
             return Locale.of(codes[0]);
         }
