@@ -1,7 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.RuntimePylon;
-import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import com.balugaq.runtimepylon.util.Debug;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;

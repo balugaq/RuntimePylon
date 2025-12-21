@@ -6,7 +6,6 @@ import com.balugaq.runtimepylon.integration.Integration;
 import com.balugaq.runtimepylon.integration.PylonBaseIntegration;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
-import lombok.Data;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.jspecify.annotations.NullMarked;

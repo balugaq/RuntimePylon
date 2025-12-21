@@ -2,7 +2,6 @@ package com.balugaq.runtimepylon.config;
 
 import com.balugaq.runtimepylon.config.pack.PackNamespace;
 import com.balugaq.runtimepylon.object.ItemStackProvider;
-import io.github.pylonmc.pylon.core.guide.button.ItemButton;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import lombok.experimental.UtilityClass;
 import org.bukkit.configuration.ConfigurationSection;
@@ -11,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.item.Item;
+import xyz.xenondevs.invui.item.impl.SimpleItem;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,7 +26,7 @@ public class GuiReader {
             return Result.EMPTY;
         }
 
-        List<String> structure = List.of(section.getString("structure").split("\n"));
+        List<String> structure = section.getStringList("structure");
         if (structure.isEmpty()) {
             return Result.EMPTY;
         }
@@ -39,7 +39,7 @@ public class GuiReader {
                 for (String key : sec.getKeys(false)) {
                     ItemStack itemStack = Deserializer.ITEMSTACK.deserialize(sec.get(key));
                     if (itemStack != null) {
-                        map.put(key.charAt(0), ItemButton.from(itemStack));
+                        map.put(key.charAt(0), new SimpleItem(itemStack));
                     }
                 }
                 guiProvider.set((c, r) -> {
