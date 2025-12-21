@@ -500,7 +500,7 @@ public class Pack implements FileObject<Pack> {
         if (!to.exists()) to.mkdir();
 
         for (File file : from.listFiles()) {
-            if (file.isFile() && file.getName().matches("[a-z0-9_\\-\\./]+\\.yml$")) {
+            if (file.isFile() && file.getName().matches("[a-zA-Z0-9_\\-\\./]+\\.yml$")) {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
                 File targetFile = new File(to, file.getName());
 
