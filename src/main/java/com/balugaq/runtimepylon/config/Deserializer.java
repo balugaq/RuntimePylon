@@ -6,6 +6,7 @@ import com.balugaq.runtimepylon.data.MyObject2ObjectOpenHashMap;
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
+import com.balugaq.runtimepylon.exceptions.UnknownFluidException;
 import com.balugaq.runtimepylon.exceptions.UnknownFluidOrItemException;
 import com.balugaq.runtimepylon.exceptions.UnknownItemException;
 import com.balugaq.runtimepylon.exceptions.UnknownKeyedException;
@@ -430,10 +431,18 @@ public interface Deserializer<T> {
         public List<ConfigReader<?, PylonFluid>> readers() {
             return ConfigReader.list(
                     String.class, s -> {
-                        NamespacedKey key = NamespacedKey.fromString(s);
-                        if (key == null) return null;
+                        if (s.contains(":")) {
+                            NamespacedKey key = NamespacedKey.fromString(s);
+                            if (key != null) {
+                                var v = PylonRegistry.FLUIDS.get(key);
+                                if (v == null) throw new UnknownFluidException(s);
+                                return v;
+                            }
+                        }
 
-                        return PylonRegistry.FLUIDS.get(key);
+                        var r = PylonRegistry.FLUIDS.getValues().stream().filter(v -> v.getKey().getKey().equals(s)).toList();
+                        if (r.isEmpty()) throw new UnknownFluidException(s);
+                        return r.getFirst();
                     }
             );
         }
@@ -457,12 +466,12 @@ public interface Deserializer<T> {
                             if (s.startsWith("minecraft:")) {
                                 if (s.contains("[")) {
                                     var mat = s.substring(10, s.indexOf("["));
-                                    Material material = Deserializer.enumDeserializer(Material.class).deserialize(mat);
-                                    var data = s.substring(s.indexOf("[") + 1);
+                                    Material material = Deserializer.enumDeserializer(Material.class).forceUpperCase().deserialize(mat);
+                                    var data = s.substring(s.indexOf("["));
                                     list.add(new PylonSimpleMultiblock.VanillaBlockdataMultiblockComponent(material.createBlockData(data)));
                                 } else {
                                     var mat = s.substring(10);
-                                    list.add(new PylonSimpleMultiblock.VanillaMultiblockComponent(Deserializer.enumDeserializer(Material.class).deserialize(mat)));
+                                    list.add(new PylonSimpleMultiblock.VanillaMultiblockComponent(Deserializer.enumDeserializer(Material.class).forceUpperCase().deserialize(mat)));
                                 }
                             } else {
                                 var key = NamespacedKey.fromString(s);
@@ -500,7 +509,7 @@ public interface Deserializer<T> {
             return ConfigReader.list(
                    String.class, s -> {
                        String[] split = s.split(";");
-                       if (split.length != 3) throw new IllegalArgumentException("Invalid vector3i format");
+                       if (split.length != 3) throw new IllegalArgumentException("Invalid vector3i format: " + s);
                        return new Vector3i(Integer.parseInt(split[0]), Integer.parseInt(split[1]), Integer.parseInt(split[2]));
                    }
            );

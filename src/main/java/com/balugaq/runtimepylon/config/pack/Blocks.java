@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <li>blocks/
@@ -82,7 +83,7 @@ import java.util.Map;
  *
  * <p>
  * [SingletonFluidBlockData]:
- *   point: [FluidPointType]
+ *   type: [FluidPointType]
  *   face: [Cartesian BlockFace]
  *   *allow-vertical-faces: boolean # (true by default)
  * <p>
@@ -102,6 +103,7 @@ import java.util.Map;
 @Data
 @NullMarked
 public class Blocks implements FileObject<Blocks> {
+    private AtomicInteger loadedBlocks = new AtomicInteger(0);
     private PackNamespace namespace;
     private Map<RegisteredObjectID, PreparedBlock> blocks = new HashMap<>();
 
@@ -205,9 +207,9 @@ public class Blocks implements FileObject<Blocks> {
                             var positions = multiblock.getConfigurationSection("positions");
                             if (positions != null) {
                                 for (String k : positions.getKeys(false)) {
-                                    var position = Deserializer.VECTOR3I.deserialize(positions.getString(k));
+                                    var position = Deserializer.VECTOR3I.deserialize(k);
                                     if (position == null) throw new IncompatibleKeyFormatException("unknown vector3i: " + k);
-                                    var component = symbols.get(k);
+                                    var component = symbols.get(positions.get(k));
                                     if (component == null) throw new UnknownSymbolException("component not found: " + k);
                                     components.put(position, component);
                                 }

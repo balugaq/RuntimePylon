@@ -1,11 +1,8 @@
 package com.balugaq.runtimepylon.script;
 
 import com.balugaq.runtimepylon.GlobalVars;
-import com.balugaq.runtimepylon.RuntimePylon;
-import com.balugaq.runtimepylon.script.callbacks.APICallbacks;
+import com.balugaq.runtimepylon.util.Debug;
 import com.caoccao.javet.exceptions.JavetException;
-import com.caoccao.javet.interop.V8Host;
-import com.caoccao.javet.interop.V8Runtime;
 import com.caoccao.javet.values.V8Value;
 import com.caoccao.javet.values.reference.V8Script;
 import com.caoccao.javet.values.reference.V8ValueFunction;
@@ -20,7 +17,7 @@ import java.io.File;
  */
 @NullMarked
 public class JSScriptExecutor extends ScriptExecutor {
-    private V8ValueObject scriptObject;
+    @Nullable private V8ValueObject scriptObject;
 
     public JSScriptExecutor(File file) {
         super(file);
@@ -30,7 +27,12 @@ public class JSScriptExecutor extends ScriptExecutor {
     private void load() {
         try {
             try (V8Script script = GlobalVars.getScriptRuntime().getExecutor(getFile()).compileV8Script()) {
-                scriptObject = script.execute();
+                var v = script.execute();
+                if (v instanceof V8ValueObject vo) {
+                    scriptObject = vo;
+                } else {
+                    Debug.severe("Failed to create JSScriptExecutor: script.execute()=" + v);
+                }
             }
         } catch (JavetException e) {
             throw new RuntimeException(e);
@@ -53,6 +55,7 @@ public class JSScriptExecutor extends ScriptExecutor {
     @Override
     @Nullable
     protected Object executeFunction0(String functionName, Object... parameters) throws Exception {
+        if (scriptObject == null) return null;
         try (V8Value value = scriptObject.get(functionName)) {
             if (!(value instanceof V8ValueFunction function)) {
                 throw new NoSuchMethodException("Function " + functionName + " not found in script");
@@ -66,7 +69,7 @@ public class JSScriptExecutor extends ScriptExecutor {
 
     public void close() {
         try {
-            scriptObject.close();
+            if (scriptObject != null) scriptObject.close();
         } catch (Exception ignored) {
         }
     }

@@ -24,7 +24,7 @@ public class StackFormatter implements AutoCloseable {
     public static void handle(Throwable e) {
         Throwable t = e;
         int k = 0;
-        while (t instanceof DeserializationException || t instanceof RuntimeException && k++ < 10) {
+        while (t instanceof RuntimeException && k++ < 10) {
             if (t.getCause() != null) {
                 t = t.getCause();
             }
@@ -39,8 +39,8 @@ public class StackFormatter implements AutoCloseable {
             e.printStackTrace();
 
         Debug.warn("-".repeat(40));
-        Debug.warn("Stack trace: ");
-        Thread.dumpStack();
+        if (RuntimePylon.getConfigManager().isDebug())
+            Thread.dumpStack();
     }
 
     public static void run(String position, Runnable runnable) {

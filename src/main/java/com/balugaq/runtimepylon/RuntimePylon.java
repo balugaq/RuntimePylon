@@ -2,6 +2,7 @@ package com.balugaq.runtimepylon;
 
 import com.balugaq.runtimepylon.command.RuntimePylonCommand;
 import com.balugaq.runtimepylon.config.PackManager;
+import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.listener.ChatInputListener;
 import com.balugaq.runtimepylon.manager.ConfigManager;
 import com.balugaq.runtimepylon.manager.IntegrationManager;
@@ -24,6 +25,7 @@ import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NullMarked;
 
@@ -34,6 +36,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -85,6 +88,10 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         Bukkit.getScheduler().runTaskTimer(getInstance(), runnable, delay, period);
     }
 
+    public static void runTaskTimer(Consumer<BukkitTask> consumer, long delay, long period) {
+        Bukkit.getScheduler().runTaskTimer(getInstance(), consumer, delay, period);
+    }
+
     public static ConfigManager getConfigManager() {
         return instance.configManager;
     }
@@ -120,11 +127,13 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
         RuntimeItems.initialize();
         RuntimeBlocks.initialize();
-        try {
-            packManager.loadPacks();
-        } catch (Exception e) {
-            Debug.trace(e);
-        }
+        runTaskLater(() -> {
+            try (var ignored = StackFormatter.setPosition("Loading packs")) {
+                packManager.loadPacks();
+            } catch (Exception e) {
+                StackFormatter.handle(e);
+            }
+        }, 2L); // wait plugin dependencies load
 
         getLifecycleManager().registerEventHandler(
                 LifecycleEvents.COMMANDS, commands -> {
@@ -135,7 +144,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         Bukkit.getServer().getPluginManager().registerEvents(new ChatInputListener(), this);
 
         PylonRegistry.ADDONS.unregister(this);
-        registerWithPylon(); // todo: rewrite lang translation check
+        registerWithPylon();
     }
 
     private void setupLibraries() {

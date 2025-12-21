@@ -22,12 +22,12 @@ public record SingletonFluidBlockData(FluidPointType fluidPointType, BlockFace f
     public List<ConfigReader<?, SingletonFluidBlockData>> readers() {
         return ConfigReader.list(
                 ConfigurationSection.class, section -> {
-                    FluidPointType type = Optional.ofNullable(Pack.readEnumOrNull(section, FluidPointType.class, "type"))
+                    FluidPointType type = Optional.ofNullable(Pack.readEnumOrNull(section, FluidPointType.class, "type", EnumDeserializer::forceUpperCase))
                             .orElse(FluidPointType.INTERSECTION);
-                    BlockFace face = Optional.ofNullable(Pack.readEnumOrNull(section, BlockFace.class, "face"))
+                    BlockFace face = Optional.ofNullable(Pack.readEnumOrNull(section, BlockFace.class, "face", EnumDeserializer::forceUpperCase))
                             .orElse(BlockFace.NORTH);
                     if (!face.isCartesian()) {
-                        throw new IllegalArgumentException("Expected cartesian blockfaces, but invalid face: " + face);
+                        throw new IllegalArgumentException("Expected cartesian blockfaces, but: " + face);
                     }
                     return new SingletonFluidBlockData(type, face, section.getBoolean("allowVerticalFaces", true));
                 }

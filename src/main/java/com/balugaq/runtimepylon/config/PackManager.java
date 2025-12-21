@@ -144,7 +144,7 @@ import java.util.function.Consumer;
  * | String | *website | is the website of a pack | `^(https?|ftp)://[^\s/$.?#].[^\s]*$` | `https://github.com/balugaq/RuntimePylon` |
  * | String | *githubUpdateLink | is the update link of a pack | `^https?://github\.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+/releases(/.*)?$` | `https://github.com/balugaq/RuntimePylon/releases` |
  * | List<String> | *languages | defines what languages are supported by this pack | `^[a-z]{2}(-[A-Z]{2})?$` | [en, zh-CN] |
- * | boolean | *suppressLanguageMissingWarning | whether suppress language missing warning or not | `(true)|(false)` | false |
+ * | boolean | *suppressLanguageMissingWarning | whether suppress language missing warning or not | `boolean` | false |
  * Properties tagged with * are optional
  * <p>
  * IDs:
@@ -258,21 +258,19 @@ public @Data class PackManager {
 
                     if (!missing.isEmpty()) throw new PackDependencyMissingException(pack, missing);
                 }
-                Debug.log("Registering pack: " + pack.getPackID());
+                Debug.log("Registering pack: " + pack.getPackID().getId());
                 pack.register();
-                Debug.log("Registered pack: " + pack.getPackID());
+                Debug.log("Registered pack: " + pack.getPackID().getId());
             } catch (Exception e) {
                 StackFormatter.handle(e);
             }
         }
 
-        RuntimePylon.runTaskLater(
-                () -> {
-                    for (var postLoad : postLoads) {
-                        postLoad.run();
-                    }
-                }, 1L
-        );
+        RuntimePylon.runTaskLater(() -> {
+            for (var postLoad : postLoads) {
+                postLoad.run();
+            }
+        }, 1L);
     }
 
     public void destroy() {

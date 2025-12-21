@@ -210,7 +210,7 @@ public class Pack implements FileObject<Pack> {
     public static <T extends Enum<T>> T readEnumOrNull(ConfigurationSection config, Class<T> clazz, String path, Advancer<Deserializer.EnumDeserializer<T>> advancer) {
         if (!config.contains(path)) throw new MissingArgumentException(path);
         return advancer.advance(Deserializer.enumDeserializer(clazz))
-                .deserialize(config.getString(path));
+                .deserialize(config.get(path));
     }
 
     public static <T extends GenericDeserializer<T, K>, K> T read(ConfigurationSection config, Class<T> clazz, Deserializer<K> deserializer, String path) {
@@ -452,14 +452,14 @@ public class Pack implements FileObject<Pack> {
     public static <T extends Deserializer<T>> T read(ConfigurationSection config, Class<T> clazz, String path, Advancer<T> advancer) {
         if (!config.contains(path)) throw new MissingArgumentException(path);
         return tryExamine(advancer.advance(Deserializer.newDeserializer(clazz))
-                                  .deserialize(config.getString(path)));
+                                  .deserialize(config.get(path)));
     }
 
     @Nullable
     public static <T extends Deserializer<T>> T readOrNull(ConfigurationSection config, Class<T> clazz, String path, Advancer<T> advancer) {
         try {
             return tryExamine(advancer.advance(Deserializer.newDeserializer(clazz))
-                                      .deserialize(config.getString(path)));
+                                      .deserialize(config.get(path)));
         } catch (PackException e) {
             return null;
         }
@@ -545,7 +545,8 @@ public class Pack implements FileObject<Pack> {
                         }
                     }
                     GlobalVars.putCustomPage(page.getKey(), page);
-                    Debug.log("Registered Page: " + id.key());
+                    Debug.debug("Registered Page: " + id.key());
+                    pages.getLoadedPages().incrementAndGet();
                 } catch (Exception ex) {
                     StackFormatter.handle(ex);
                 }
@@ -563,11 +564,11 @@ public class Pack implements FileObject<Pack> {
 
                     if (blocks != null && blocks.getBlocks().containsKey(id)) {
                         CustomItem.register(CustomItem.class, icon, id.key());
-                        Debug.log("Registered Item: " + id.key());
                     } else {
                         CustomItem.register(CustomItem.class, icon);
-                        Debug.log("Registered Item: " + id.key());
                     }
+                    Debug.debug("Registered Item: " + id.key());
+                    items.getLoadedItems().incrementAndGet();
 
                     List<PageDesc> descs = e.pages();
                     if (descs != null) descs.forEach(desc -> {
@@ -610,6 +611,8 @@ public class Pack implements FileObject<Pack> {
                         }
                     }
                     new Research(id.key(), e.material(), Component.translatable(name), e.cost(), unlocks).register();
+                    Debug.debug("Registered Research: " + id.key());
+                    researches.getLoadedResearches().incrementAndGet();
                 } catch (Exception ex) {
                     StackFormatter.handle(ex);
                 }
@@ -630,7 +633,8 @@ public class Pack implements FileObject<Pack> {
                     } else {
                         CustomMultiBlock.register(id.key(), material, CustomMultiBlock.class);
                     }
-                    Debug.log("Registered Block: " + id.key());
+                    Debug.debug("Registered Block: " + id.key());
+                    blocks.getLoadedBlocks().incrementAndGet();
                 } catch (Exception ex) {
                     StackFormatter.handle(ex);
                 }
@@ -647,6 +651,8 @@ public class Pack implements FileObject<Pack> {
                 FluidTemperature temperature = e.temperature();
                 PylonFluid fluid = new CustomFluid(id.key(), material).addTag(temperature);
                 fluid.register();
+                Debug.debug("Registered Fluid: " + id.key());
+                fluids.getLoadedFluids().incrementAndGet();
 
                 List<PageDesc> pages = e.pages();
                 if (pages != null) pages.forEach(desc -> desc.getPage().addFluid(fluid));
@@ -662,6 +668,8 @@ public class Pack implements FileObject<Pack> {
 
                 CustomRecipeType recipeType = new CustomRecipeType(id.key(), e.structure(), e.guiProvider(), e.configReader());
                 recipeType.register();
+                Debug.debug("Registered RecipeType: " + id.key());
+                recipeTypes.getLoadedRecipeTypes().incrementAndGet();
             });
         }
     }
@@ -698,6 +706,18 @@ public class Pack implements FileObject<Pack> {
         if (!suppressLanguageMissingWarning) {
             printMissingLanguage();
         }
+        Debug.log("-".repeat(40));
+        Debug.log("Registered pack " + getPackID().getId() + ": "
+                          + (items == null ? 0 : items.getLoadedItems().get()) + " items, "
+                          + (blocks == null ? 0 : blocks.getLoadedBlocks().get()) + " blocks, "
+                          + (fluids == null ? 0 : fluids.getLoadedFluids().get()) + " fluids, "
+                          + (recipeTypes == null ? 0 : recipeTypes.getLoadedRecipeTypes().get()) + " recipeTypes, "
+                          + (recipes == null ? 0 : recipes.getLoadedRecipes().get()) + " recipes, "
+                          + (researches == null ? 0 : researches.getLoadedResearches().get()) + " researches, "
+                          + (pages == null ? 0 : pages.getLoadedPages().get()) + " pages, "
+                          + (saveditems == null ? 0 : saveditems.getItems().size()) + " saveditems."
+        );
+        Debug.log("-".repeat(40));
         return this;
     }
 

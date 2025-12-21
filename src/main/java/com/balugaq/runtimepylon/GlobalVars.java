@@ -33,6 +33,7 @@ import java.util.function.Supplier;
  */
 @NullMarked
 public class GlobalVars {
+    public static final @Getter Gui PLACEHOLDER_GUI = Gui.normal().setStructure("B B B B B B B B B").addIngredient('B', ItemProvider.EMPTY).build();
     public static final @Getter Key PLACEHOLDER_KEY = com.balugaq.runtimepylon.util.Key.create("placeholder").key();
     private static final @Getter KeyedMap<ScriptExecutor> scripts = new KeyedMap<>();
     private static final @Getter KeyedMap<Gui> guis = new KeyedMap<>();
@@ -58,7 +59,7 @@ public class GlobalVars {
             .build();
 
     static {
-        guis.defaultReturnValue(Gui.normal().setStructure("B B B B B B B B B").addIngredient('B', ItemProvider.EMPTY).build());
+        guis.defaultReturnValue(PLACEHOLDER_GUI);
         fluidBlockDatas.defaultReturnValue(FluidBlockData.EMPTY);
         fluidBufferBlockDatas.defaultReturnValue(FluidBufferBlockData.EMPTY);
         multiBlockComponents.defaultReturnValue(Map.of());
@@ -75,6 +76,7 @@ public class GlobalVars {
         return gui;
     }
 
+    @Nullable
     public static Gui getGui(NamespacedKey key) {
         return guis.get(key);
     }

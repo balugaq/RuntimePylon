@@ -1,6 +1,5 @@
 package com.balugaq.runtimepylon.config.pack;
 
-import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.StackFormatter;
@@ -8,20 +7,6 @@ import com.balugaq.runtimepylon.exceptions.InvalidNamespacedKeyException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
-import io.github.pylonmc.pylon.base.recipes.BloomeryDisplayRecipe;
-import io.github.pylonmc.pylon.base.recipes.DrillingDisplayRecipe;
-import io.github.pylonmc.pylon.base.recipes.ForgingDisplayRecipe;
-import io.github.pylonmc.pylon.base.recipes.GrindstoneRecipe;
-import io.github.pylonmc.pylon.base.recipes.HammerRecipe;
-import io.github.pylonmc.pylon.base.recipes.MagicAltarRecipe;
-import io.github.pylonmc.pylon.base.recipes.MeltingRecipe;
-import io.github.pylonmc.pylon.base.recipes.MixingPotRecipe;
-import io.github.pylonmc.pylon.base.recipes.MoldingRecipe;
-import io.github.pylonmc.pylon.base.recipes.PipeBendingRecipe;
-import io.github.pylonmc.pylon.base.recipes.PitKilnRecipe;
-import io.github.pylonmc.pylon.base.recipes.PressRecipe;
-import io.github.pylonmc.pylon.base.recipes.SmelteryRecipe;
-import io.github.pylonmc.pylon.base.recipes.TableSawRecipe;
 import io.github.pylonmc.pylon.core.config.Config;
 import io.github.pylonmc.pylon.core.recipe.ConfigurableRecipeType;
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
@@ -37,7 +22,6 @@ import io.github.pylonmc.pylon.core.recipe.vanilla.SmokingRecipeWrapper;
 import io.github.pylonmc.pylon.core.recipe.vanilla.TransmuteRecipeWrapper;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import kotlin.jvm.functions.Function5;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
@@ -61,13 +45,13 @@ import org.bukkit.inventory.recipe.CraftingBookCategory;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 
 /**
@@ -77,7 +61,7 @@ import java.util.function.BiFunction;
 @RequiredArgsConstructor
 @NullMarked
 public class Recipes {
-    private int loadedRecipes;
+    private AtomicInteger loadedRecipes = new AtomicInteger(0);
     private final File recipeFolder;
     private final PackNamespace namespace;
     private final Map<RecipeType<?>, Set<NamespacedKey>> registeredRecipes = new HashMap<>();
@@ -127,7 +111,7 @@ public class Recipes {
                             );
                         }
                         //@formatter:on
-                        loadedRecipes += 1;
+                        loadedRecipes.incrementAndGet();
                         if (!registeredRecipes.containsKey(ctp)) {
                             registeredRecipes.put(ctp, new HashSet<>());
                         }

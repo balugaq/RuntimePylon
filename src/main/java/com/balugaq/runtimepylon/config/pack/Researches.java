@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <li>researches/
@@ -48,6 +49,7 @@ import java.util.Map;
 @Data
 @NullMarked
 public class Researches implements FileObject<Researches> {
+    private AtomicInteger loadedResearches = new AtomicInteger(0);
     private PackNamespace namespace;
     private Map<RegisteredObjectID, PreparedResearch> researches = new HashMap<>();
 

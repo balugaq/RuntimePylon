@@ -30,7 +30,6 @@ public class GuiReader {
         if (structure.isEmpty()) {
             return Result.EMPTY;
         }
-
         Pack.guiStructurePrecheck(structure);
         final AtomicReference<ItemStackProvider> guiProvider = new AtomicReference<>();
         if (section.contains("gui")) {

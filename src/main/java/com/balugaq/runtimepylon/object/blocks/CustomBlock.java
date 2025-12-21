@@ -2,6 +2,8 @@ package com.balugaq.runtimepylon.object.blocks;
 
 import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.object.Scriptable;
+import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.util.ReflectionUtil;
 import com.destroystokyo.paper.event.block.BeaconEffectEvent;
 import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
@@ -35,9 +37,11 @@ import io.github.pylonmc.pylon.core.block.base.PylonTrialVault;
 import io.github.pylonmc.pylon.core.block.base.PylonUnloadBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockBreakContext;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
+import io.github.pylonmc.pylon.core.config.Config;
 import io.github.pylonmc.pylon.core.config.PylonConfig;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.event.PylonBlockUnloadEvent;
+import io.github.pylonmc.pylon.core.util.PylonUtils;
 import io.papermc.paper.event.block.BeaconActivatedEvent;
 import io.papermc.paper.event.block.BeaconDeactivatedEvent;
 import io.papermc.paper.event.block.CompostItemEvent;
@@ -75,12 +79,13 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.window.Window;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 /**
@@ -126,12 +131,14 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         event.setUseInteractedBlock(Event.Result.DENY);
         event.setUseItemInHand(Event.Result.DENY);
 
-        Window.single()
-                .setGui(getGui())
-                .setTitle(new AdventureComponentWrapper(getGuiTitle()))
-                .setViewer(event.getPlayer())
-                .build()
-                .open();
+        if (GlobalVars.getGui(getKey()) != GlobalVars.PLACEHOLDER_GUI) {
+            Window.single()
+                    .setGui(getGui())
+                    .setTitle(new AdventureComponentWrapper(getGuiTitle()))
+                    .setViewer(event.getPlayer())
+                    .build()
+                    .open();
+        }
 
         callScriptA("onPostInteract", this, event);
     }
@@ -265,12 +272,26 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
 
     @Override
     public int getTickInterval() {
-        return getSettings().get("tick-interval", ConfigAdapter.INT, PylonConfig.getDefaultTickInterval());
+        var settings = getSettingsOrNull();
+        if (settings == null) return PylonConfig.getDefaultTickInterval();
+        return settings.get("tick-interval", ConfigAdapter.INT, PylonConfig.getDefaultTickInterval());
     }
 
     @Override
     public boolean isAsync() {
-        return getSettings().get("async", ConfigAdapter.BOOLEAN, false);
+        var settings = getSettingsOrNull();
+        if (settings == null) return false;
+        return settings.get("async", ConfigAdapter.BOOLEAN, false);
+    }
+
+    @Nullable
+    public Config getSettingsOrNull() {
+        try {
+            return (Config) ReflectionUtil.invokeMethod(PylonUtils.class, "mergeGlobalConfig", PylonUtils.getAddon(getKey()), "settings/" + getKey().getKey() + ".yml", "settings/" + getKey().getNamespace() + "/" + getKey().getKey() + ".yml", false);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            Debug.warn(e);
+            return null;
+        }
     }
 
     @Override
@@ -279,77 +300,77 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     }
 
     @Override
-    public void onNotePlay(@NotNull final NotePlayEvent event) {
+    public void onNotePlay(final NotePlayEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onCurrentChange(@NotNull final BlockRedstoneEvent event) {
+    public void onCurrentChange(final BlockRedstoneEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onShear(@NotNull final PlayerShearBlockEvent event) {
+    public void onShear(final PlayerShearBlockEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onAbsorb(@NotNull final SpongeAbsorbEvent event) {
+    public void onAbsorb(final SpongeAbsorbEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onIgnite(@NotNull final TNTPrimeEvent event) {
+    public void onIgnite(final TNTPrimeEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onHit(@NotNull final TargetHitEvent event) {
+    public void onHit(final TargetHitEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onDisplayItem(@NotNull final VaultDisplayItemEvent event) {
+    public void onDisplayItem(final VaultDisplayItemEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onUnload(@NotNull final PylonBlockUnloadEvent event) {
+    public void onUnload(final PylonBlockUnloadEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onExtend(@NotNull final BlockPistonExtendEvent event) {
+    public void onExtend(final BlockPistonExtendEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onRetract(@NotNull final BlockPistonRetractEvent event) {
+    public void onRetract(final BlockPistonRetractEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onSignChange(@NotNull final SignChangeEvent event) {
+    public void onSignChange(final SignChangeEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onOpen(@NotNull final PlayerOpenSignEvent event) {
+    public void onOpen(final PlayerOpenSignEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onSneakedOn(@NotNull final PlayerToggleSneakEvent event) {
+    public void onSneakedOn(final PlayerToggleSneakEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public void onUnsneakedOn(@NotNull final PlayerToggleSneakEvent event) {
+    public void onUnsneakedOn(final PlayerToggleSneakEvent event) {
         callScript(this, event);
     }
 
     @Override
-    public @NotNull Gui createGui() {
+    public Gui createGui() {
         return GlobalVars.getGui(getKey());
     }
 }

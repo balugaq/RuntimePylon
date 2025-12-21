@@ -25,6 +25,7 @@ import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <li>pages/
@@ -46,6 +47,7 @@ import java.util.*;
 @Data
 @NullMarked
 public class Pages implements FileObject<Pages> {
+    private AtomicInteger loadedPages = new AtomicInteger(0);
     private PackNamespace namespace;
     private Map<RegisteredObjectID, PreparedPage> pages = new HashMap<>();
 

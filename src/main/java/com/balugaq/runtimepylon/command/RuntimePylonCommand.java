@@ -22,6 +22,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.github.pylonmc.pylon.core.PylonCore;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
+import io.github.pylonmc.pylon.core.util.PylonUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.datacomponent.DataComponentTypes;
@@ -233,6 +234,10 @@ public class RuntimePylonCommand {
 
     private int unloadPacks(CommandContext<CommandSourceStack> ctx) {
         RuntimePylon.getPackManager().destroy();
+        try {
+            ReflectionUtil.getValue(PylonUtils.class, "globalConfigCache", Map.class).clear();
+        } catch (IllegalAccessException ignored) {
+        }
         return Command.SINGLE_SUCCESS;
     }
 

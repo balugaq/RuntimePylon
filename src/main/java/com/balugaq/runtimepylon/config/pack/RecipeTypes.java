@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * [Internal Object ID]: structure: |- B B B B B B B B B I a b I B O 1 2 O I c d I B O 3 4 O I e f I B O 5 6 O B B B B B
@@ -36,6 +37,7 @@ import java.util.Map;
 @Data
 @NullMarked
 public class RecipeTypes implements FileObject<RecipeTypes> {
+    private AtomicInteger loadedRecipeTypes = new AtomicInteger(0);
     private PackNamespace namespace;
     private Map<RegisteredObjectID, PreparedRecipeType> recipeTypes = new HashMap<>();
 

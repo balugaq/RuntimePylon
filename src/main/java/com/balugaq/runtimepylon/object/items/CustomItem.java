@@ -2,7 +2,10 @@ package com.balugaq.runtimepylon.object.items;
 
 import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.object.Scriptable;
+import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.util.ReflectionUtil;
 import com.destroystokyo.paper.event.player.PlayerReadyArrowEvent;
+import io.github.pylonmc.pylon.core.config.Config;
 import io.github.pylonmc.pylon.core.config.PylonConfig;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.item.PylonItem;
@@ -25,6 +28,7 @@ import io.github.pylonmc.pylon.core.item.base.PylonTool;
 import io.github.pylonmc.pylon.core.item.base.PylonUnmergeable;
 import io.github.pylonmc.pylon.core.item.base.PylonWeapon;
 import io.github.pylonmc.pylon.core.item.base.VanillaCookingFuel;
+import io.github.pylonmc.pylon.core.util.PylonUtils;
 import net.kyori.adventure.key.Key;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -48,7 +52,10 @@ import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.player.PlayerItemMendEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
+
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * @author balugaq
@@ -94,7 +101,9 @@ public class CustomItem extends PylonItem implements PylonArmor, PylonArrow, Pyl
 
     @Override
     public long getTickInterval() {
-        return getSettings().get("tick-interval", ConfigAdapter.LONG, (long) PylonConfig.getDefaultTickInterval());
+        var settings = getSettingsOrNull();
+        if (settings == null) return PylonConfig.getDefaultTickInterval();
+        return settings.get("tick-interval", ConfigAdapter.LONG, (long) PylonConfig.getDefaultTickInterval());
     }
 
     @Override
@@ -154,7 +163,9 @@ public class CustomItem extends PylonItem implements PylonArmor, PylonArrow, Pyl
 
     @Override
     public boolean respectCooldown() {
-        return getSettings().get("respect-cooldown", ConfigAdapter.BOOLEAN, true);
+        var settings = getSettingsOrNull();
+        if (settings == null) return true;
+        return settings.get("respect-cooldown", ConfigAdapter.BOOLEAN, true);
     }
 
     @Override
@@ -218,5 +229,15 @@ public class CustomItem extends PylonItem implements PylonArmor, PylonArrow, Pyl
     @Override
     public Key getEquipmentType() {
         return GlobalVars.getEquipmentType(getKey());
+    }
+
+    @Nullable
+    public Config getSettingsOrNull() {
+        try {
+            return (Config) ReflectionUtil.invokeMethod(PylonUtils.class, "mergeGlobalConfig", PylonUtils.getAddon(getKey()), "settings/" + getKey().getKey() + ".yml", "settings/" + getKey().getNamespace() + "/" + getKey().getKey() + ".yml", false);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            Debug.warn(e);
+            return null;
+        }
     }
 }

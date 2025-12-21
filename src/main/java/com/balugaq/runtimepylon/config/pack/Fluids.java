@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <li>fluids/
@@ -49,6 +50,7 @@ import java.util.Map;
 @Data
 @NullMarked
 public class Fluids implements FileObject<Fluids> {
+    private AtomicInteger loadedFluids = new AtomicInteger(0);
     private PackNamespace namespace;
     private Map<RegisteredObjectID, PreparedFluid> fluids = new HashMap<>();
 
@@ -85,7 +87,8 @@ public class Fluids implements FileObject<Fluids> {
                     }
 
                     FluidTemperature temperature = Deserializer.enumDeserializer(FluidTemperature.class)
-                            .deserialize(ts.toUpperCase());
+                            .forceUpperCase()
+                            .deserialize(ts);
                     if (temperature == null) continue;
 
                     PageDesc page = Pack.readOrNull(section, PageDesc.class, "page", t -> t.setPackNamespace(getNamespace()));

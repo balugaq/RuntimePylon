@@ -38,14 +38,14 @@ record MyMultiBlockComponent(List<? extends PylonSimpleMultiblock.MultiblockComp
 
         if (blockDataList.size() > 1) {
             AtomicInteger i = new AtomicInteger(0);
-            RuntimePylon.runTaskTimer(
-                    () -> {
-                        while (display.isValid()) {
-                            display.setBlock(blockDataList.get(i.getAndIncrement()));
-                            i.set(i.get() % blockDataList.size());
-                        }
-                    }, 20, 20
-            );
+            RuntimePylon.runTaskTimer(tsk -> {
+                if (display.isValid()) {
+                    display.setBlock(blockDataList.get(i.getAndIncrement()));
+                    i.set(i.get() % blockDataList.size());
+                } else {
+                    tsk.cancel();
+                }
+            }, 20, 20);
         }
 
         return display.getUniqueId();
