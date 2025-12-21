@@ -9,6 +9,7 @@ import com.balugaq.runtimepylon.exceptions.UnknownFlagException;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.bukkit.plugin.Plugin;
 import org.jspecify.annotations.NullMarked;
@@ -19,10 +20,10 @@ import java.util.List;
  * @author balugaq
  */
 @NullMarked
-public interface RegisterCondition extends Deserializer<RegisterCondition> {
-    boolean pass();
-
-    default List<ConfigReader<?, RegisterCondition>> readers() {
+@NoArgsConstructor
+public class RegisterCondition implements Deserializer<RegisterCondition> {
+    @Override
+    public List<ConfigReader<?, RegisterCondition>> readers() {
         return List.of(
                 ConfigReader.of(Boolean.class, BooleanRegisterCondition::new),
                 ConfigReader.of(Number.class, NumberRegisterCondition::new),
@@ -30,14 +31,19 @@ public interface RegisterCondition extends Deserializer<RegisterCondition> {
         );
     }
 
+    public boolean pass() {
+        return false;
+    }
+
     /**
      * @author balugaq
      */
+    @EqualsAndHashCode(callSuper = true)
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
     @NullMarked
-    class BooleanRegisterCondition implements RegisterCondition {
+    public static class BooleanRegisterCondition extends RegisterCondition {
         private boolean value;
 
         @Override
@@ -49,11 +55,12 @@ public interface RegisterCondition extends Deserializer<RegisterCondition> {
     /**
      * @author balugaq
      */
+    @EqualsAndHashCode(callSuper = true)
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
     @NullMarked
-    class NumberRegisterCondition implements RegisterCondition {
+    public static class NumberRegisterCondition extends RegisterCondition {
         private Number value;
 
         @Override
@@ -65,11 +72,12 @@ public interface RegisterCondition extends Deserializer<RegisterCondition> {
     /**
      * @author balugaq
      */
+    @EqualsAndHashCode(callSuper = true)
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
     @NullMarked
-    class StringRegisterCondition implements RegisterCondition {
+    public static class StringRegisterCondition extends RegisterCondition {
         private String value;
 
         @Override
