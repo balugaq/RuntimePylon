@@ -128,10 +128,9 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
             return;
         }
 
-        event.setUseInteractedBlock(Event.Result.DENY);
-        event.setUseItemInHand(Event.Result.DENY);
-
         if (GlobalVars.getGui(getKey()) != GlobalVars.PLACEHOLDER_GUI) {
+            event.setUseInteractedBlock(Event.Result.DENY);
+            event.setUseItemInHand(Event.Result.DENY);
             Window.single()
                     .setGui(getGui())
                     .setTitle(new AdventureComponentWrapper(getGuiTitle()))
@@ -272,6 +271,8 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
 
     @Override
     public int getTickInterval() {
+        if (!isFunctionExists("tick"))
+            return Integer.MAX_VALUE;
         var settings = getSettingsOrNull();
         if (settings == null) return PylonConfig.getDefaultTickInterval();
         return settings.get("tick-interval", ConfigAdapter.INT, PylonConfig.getDefaultTickInterval());

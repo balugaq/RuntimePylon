@@ -5,7 +5,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
-import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
@@ -29,7 +29,7 @@ public interface Scriptable {
 
     NamespacedKey getKey();
 
-    @ApiStatus.Internal
+    @Internal
     private static String getCallerMethodName() {
         return StackWalker.getInstance()
                 .walk(s -> s.skip(3).findFirst())
@@ -53,5 +53,11 @@ public interface Scriptable {
                 methodName,
                 objects
         )).orElse(null);
+    }
+
+    default boolean isFunctionExists(String functionName) {
+        var o = GlobalVars.getScriptO(getKey());
+        if (o.isEmpty()) return false;
+        return o.get().isFunctionExists(functionName);
     }
 }

@@ -101,6 +101,8 @@ public class CustomItem extends PylonItem implements PylonArmor, PylonArrow, Pyl
 
     @Override
     public long getTickInterval() {
+        if (!isFunctionExists("tick"))
+            return Integer.MAX_VALUE;
         var settings = getSettingsOrNull();
         if (settings == null) return PylonConfig.getDefaultTickInterval();
         return settings.get("tick-interval", ConfigAdapter.LONG, (long) PylonConfig.getDefaultTickInterval());

@@ -232,8 +232,9 @@ public class RuntimePylonCommand {
     private int unloadPacks(CommandContext<CommandSourceStack> ctx) {
         RuntimePylon.getPackManager().destroy();
         try {
-            ReflectionUtil.getValue(PylonUtils.class, "globalConfigCache", Map.class).clear();
-        } catch (IllegalAccessException ignored) {
+            ReflectionUtil.getStaticValue(PylonUtils.class, "globalConfigCache", Map.class).clear();
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            Debug.warn(e);
         }
         return Command.SINGLE_SUCCESS;
     }

@@ -26,7 +26,7 @@ public class GuiReader {
             return Result.EMPTY;
         }
 
-        List<String> structure = section.getStringList("structure");
+        List<String> structure = List.of(section.getString("structure").split("\n"));
         if (structure.isEmpty()) {
             return Result.EMPTY;
         }
