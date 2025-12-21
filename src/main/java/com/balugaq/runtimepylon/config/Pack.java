@@ -110,7 +110,12 @@ public class Pack implements FileObject<Pack> {
     public static final File pylonCore = new File(RuntimePylon.getInstance().getDataFolder().getParent(), "PylonCore");
     public static final Item EMPTY = new SimpleItem(ItemStack.empty());
     /**
-     * a~z: input item 1-9:: output item B: background item I: input border O: output border
+     * deprecated, use virtual inventory instead.
+     * a~z: input item  // "i"
+     * 1-9: output item  // "o"
+     * B: background item
+     * I: input border
+     * O: output border
      */
     public static final ItemStackProvider DEFAULT_GUI_PROVIDER = (c, r) -> {
         if (r != null) {

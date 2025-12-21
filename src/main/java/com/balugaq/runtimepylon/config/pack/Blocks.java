@@ -8,12 +8,14 @@ import com.balugaq.runtimepylon.config.FluidBlockData;
 import com.balugaq.runtimepylon.config.FluidBufferBlockData;
 import com.balugaq.runtimepylon.config.GuiReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
+import com.balugaq.runtimepylon.config.LogisticBlockData;
 import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.RecipeTypeDesc;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.config.SingletonFluidBlockData;
 import com.balugaq.runtimepylon.config.SingletonFluidBufferBlockData;
+import com.balugaq.runtimepylon.config.SingletonLogisticBlockData;
 import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.config.preloads.PreparedBlock;
 import com.balugaq.runtimepylon.config.register.PreRegister;
@@ -80,6 +82,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  *     blocks:
  *       [Multiblock Component Symbol]: [Multiblock Component Desc]
  *     *load-recipe-type: [RecipeType Desc]
+ *   *logistic:
+ *     *input: [SingleLogisticBlockData]
+ *     *output: [SingleLogisticBlockData]
+ *   *load-recipe-type: [RecipeType Desc]
  *
  * <p>
  * [SingletonFluidBlockData]:
@@ -93,10 +99,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   input: boolean # (false by default)
  *   output: boolean # (false by default)
  * <p>
+ * [FluidPointType]: input | output | intersection
+ * [Cartesian BlockFace]: up | down | north | south | east | west
+ * <p>
  * [Multiblock Component Desc]:
  * pylonbase:tin_block
  * minecraft:iron_block
  * minecraft:fire[lit=true] | minecraft:soul_fire[lit=true]
+ * <p>
+ * [SingleLogisticBlockData]:
+ *   name: [String]
+ *   inv-slot-char: [char]
  *
  * @author balugaq
  */
@@ -150,79 +163,87 @@ public class Blocks implements FileObject<Blocks> {
                         GlobalVars.putGui(id.key(), CustomRecipeType.makeGui(gui.structure(), gui.provider(), Gui.normal(), null));
 
                     // fluid-block
-                    if (section.contains("fluid-block")) {
-                        var fluidBlock = section.getConfigurationSection("fluid-block");
-                        if (fluidBlock != null) {
-                            try (var ignored2 = StackFormatter.setPosition("Reading fluid-block section: " + key)) {
+                    var fluidBlock = section.getConfigurationSection("fluid-block");
+                    if (fluidBlock != null) {
+                        try (var ignored2 = StackFormatter.setPosition("Reading fluid-block section: " + key)) {
 
-                            List<SingletonFluidBlockData> singletons = new ArrayList<>();
-                            for (String k : fluidBlock.getKeys(false)) {
-                                var singleton = Pack.read(fluidBlock, SingletonFluidBlockData.class, k);
-                                singletons.add(singleton);
-                            }
-                            GlobalVars.putFluidBlockData(id.key(), new FluidBlockData(singletons));
+                        List<SingletonFluidBlockData> singletons = new ArrayList<>();
+                        for (String k : fluidBlock.getKeys(false)) {
+                            var singleton = Pack.read(fluidBlock, SingletonFluidBlockData.class, k);
+                            singletons.add(singleton);
+                        }
+                        GlobalVars.putFluidBlockData(id.key(), new FluidBlockData(singletons));
 
-                            } catch (Exception ex) {
-                                StackFormatter.handle(ex);
-                            }
+                        } catch (Exception ex) {
+                            StackFormatter.handle(ex);
                         }
                     }
 
                     // fluid-buffer
-                    if (section.contains("fluid-buffer")) {
-                        var fluidBuffer = section.getConfigurationSection("fluid-buffer");
-                        if (fluidBuffer != null) {
-                            try (var ignored2 = StackFormatter.setPosition("Reading fluid-buffer section: " + key)) {
+                    var fluidBuffer = section.getConfigurationSection("fluid-buffer");
+                    if (fluidBuffer != null) {
+                        try (var ignored2 = StackFormatter.setPosition("Reading fluid-buffer section: " + key)) {
 
-                            List<SingletonFluidBufferBlockData> singletons = new ArrayList<>();
-                            for (String k : fluidBuffer.getKeys(false)) {
-                                var singleton = Pack.read(fluidBuffer, SingletonFluidBufferBlockData.class, k);
-                                singletons.add(singleton);
-                            }
-                            GlobalVars.putFluidBufferBlockData(id.key(), new FluidBufferBlockData(singletons));
+                        List<SingletonFluidBufferBlockData> singletons = new ArrayList<>();
+                        for (String k : fluidBuffer.getKeys(false)) {
+                            var singleton = Pack.read(fluidBuffer, SingletonFluidBufferBlockData.class, k);
+                            singletons.add(singleton);
+                        }
+                        GlobalVars.putFluidBufferBlockData(id.key(), new FluidBufferBlockData(singletons));
 
-                            } catch (Exception ex) {
-                                StackFormatter.handle(ex);
-                            }
+                        } catch (Exception ex) {
+                            StackFormatter.handle(ex);
                         }
                     }
 
                     // multiblock
-                    if (section.contains("multiblock")) {
-                        var multiblock = section.getConfigurationSection("multiblock");
-                        if (multiblock != null) {
-                            try (var ignored2 = StackFormatter.setPosition("Reading multiblock section: " + key)) {
+                    var multiblock = section.getConfigurationSection("multiblock");
+                    if (multiblock != null) {
+                        try (var ignored2 = StackFormatter.setPosition("Reading multiblock section: " + key)) {
 
-                            Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent> components = new HashMap<>();
-                            Map<String, PylonSimpleMultiblock.MultiblockComponent> symbols = new HashMap<>();
-                            var blocks = multiblock.getConfigurationSection("blocks");
-                            if (blocks != null) {
-                                for (String k : blocks.getKeys(false)) {
-                                    var component = Deserializer.MULTIBLOCK_COMPONENT.deserialize(blocks.getString(k));
-                                    if (component == null) throw new InvalidMultiblockComponentException(k);
-                                    symbols.put(k, component);
-                                }
+                        Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent> components = new HashMap<>();
+                        Map<String, PylonSimpleMultiblock.MultiblockComponent> symbols = new HashMap<>();
+                        var blocks = multiblock.getConfigurationSection("blocks");
+                        if (blocks != null) {
+                            for (String k : blocks.getKeys(false)) {
+                                var component = Deserializer.MULTIBLOCK_COMPONENT.deserialize(blocks.getString(k));
+                                if (component == null) throw new InvalidMultiblockComponentException(k);
+                                symbols.put(k, component);
                             }
+                        }
 
-                            var positions = multiblock.getConfigurationSection("positions");
-                            if (positions != null) {
-                                for (String k : positions.getKeys(false)) {
-                                    var position = Deserializer.VECTOR3I.deserialize(k);
-                                    if (position == null) throw new IncompatibleKeyFormatException("unknown vector3i: " + k);
-                                    var component = symbols.get(positions.get(k));
-                                    if (component == null) throw new UnknownSymbolException("component not found: " + k);
-                                    components.put(position, component);
-                                }
+                        var positions = multiblock.getConfigurationSection("positions");
+                        if (positions != null) {
+                            for (String k : positions.getKeys(false)) {
+                                var position = Deserializer.VECTOR3I.deserialize(k);
+                                if (position == null) throw new IncompatibleKeyFormatException("unknown vector3i: " + k);
+                                var component = symbols.get(positions.get(k));
+                                if (component == null) throw new UnknownSymbolException("component not found: " + k);
+                                components.put(position, component);
                             }
+                        }
 
-                            GlobalVars.putMultiBlockComponents(id.key(), components);
+                        GlobalVars.putMultiBlockComponents(id.key(), components);
 
-                            RecipeTypeDesc desc = Pack.readOrNull(multiblock, RecipeTypeDesc.class, "load-recipe-type");
-                            if (desc != null) {
-                                var recipeType = desc.findRecipeType();
-                                if (recipeType == null) throw new UnknownRecipeTypeException(desc.getKey().toString());
-                                GlobalVars.putLoadRecipeType(id.key(), recipeType);
-                            }
+                        RecipeTypeDesc desc = Pack.readOrNull(multiblock, RecipeTypeDesc.class, "load-recipe-type", t -> t.setPackNamespace(namespace));
+                        if (desc != null) {
+                            var recipeType = desc.findRecipeType();
+                            if (recipeType == null) throw new UnknownRecipeTypeException(desc.getKey().toString());
+                            GlobalVars.putLoadRecipeType(id.key(), recipeType);
+                        }
+
+                        } catch (Exception ex) {
+                            StackFormatter.handle(ex);
+                        }
+
+                        // logistic
+                        var logistic = section.getConfigurationSection("logistic");
+                        if (logistic != null) {
+                            try (var ignored2 = StackFormatter.setPosition("Reading logistic section: " + key)) {
+
+                            SingletonLogisticBlockData input = Pack.readOrNull(logistic, SingletonLogisticBlockData.class, "input");
+                            SingletonLogisticBlockData output = Pack.readOrNull(logistic, SingletonLogisticBlockData.class, "output");
+                            GlobalVars.putLogisticBlockData(id.key(), new LogisticBlockData(input, output));
 
                             } catch (Exception ex) {
                                 StackFormatter.handle(ex);

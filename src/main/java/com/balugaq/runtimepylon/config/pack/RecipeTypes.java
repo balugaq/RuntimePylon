@@ -28,9 +28,24 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * [Internal Object ID]: structure: |- B B B B B B B B B I a b I B O 1 2 O I c d I B O 3 4 O I e f I B O 5 6 O B B B B B
- * B B B B *script: [ScriptDesc] *postload: boolean *gui: [char]: [Material Format] *loader: [key]: [Adapter Desc]
- * [Adapter Desc]: int;3 list.int map.map.int
+ * [Internal Object ID]:
+ *   structure: |-
+ *     B B B B B B B B B
+ *     I i i I B O o o O
+ *     I i i I P O o o O
+ *     I i i I B O o o O
+ *     B B B B B B B B B
+ *   *script: [ScriptDesc]
+ *   *postload: boolean
+ *   *gui:
+ *     [char]: [Material Format]
+ *   *loader:
+ *     [key]: [Adapter Desc]
+ * <p>
+ * [Adapter Desc]:
+ * int;3
+ * list.int
+ * map.map.int
  *
  * @author balugaq
  */

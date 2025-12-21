@@ -2,6 +2,7 @@ package com.balugaq.runtimepylon;
 
 import com.balugaq.runtimepylon.config.FluidBlockData;
 import com.balugaq.runtimepylon.config.FluidBufferBlockData;
+import com.balugaq.runtimepylon.config.LogisticBlockData;
 import com.balugaq.runtimepylon.data.KeyedMap;
 import com.balugaq.runtimepylon.script.ScriptExecutor;
 import com.balugaq.runtimepylon.script.callbacks.APICallbacks;
@@ -41,6 +42,7 @@ public class GlobalVars {
     private static final @Getter KeyedMap<FluidBlockData> fluidBlockDatas = new KeyedMap<>();
     private static final @Getter KeyedMap<FluidBufferBlockData> fluidBufferBlockDatas = new KeyedMap<>();
     private static final @Getter KeyedMap<Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent>> multiBlockComponents = new KeyedMap<>();
+    private static final @Getter KeyedMap<LogisticBlockData> logisticBlockDatas = new KeyedMap<>();
     private static final @Getter KeyedMap<RecipeType<?>> loadRecipeTypes = new KeyedMap<>();
     private static final @Getter KeyedMap<Key> equipmentTypes = new KeyedMap<>();
     private static final @Getter V8Runtime scriptRuntime;
@@ -63,6 +65,7 @@ public class GlobalVars {
         fluidBlockDatas.defaultReturnValue(FluidBlockData.EMPTY);
         fluidBufferBlockDatas.defaultReturnValue(FluidBufferBlockData.EMPTY);
         multiBlockComponents.defaultReturnValue(Map.of());
+        logisticBlockDatas.defaultReturnValue(LogisticBlockData.EMPTY);
         equipmentTypes.defaultReturnValue(PLACEHOLDER_KEY);
     }
 
@@ -152,11 +155,26 @@ public class GlobalVars {
     }
 
     @CanIgnoreReturnValue
+    public static LogisticBlockData putLogisticBlockData(NamespacedKey key, LogisticBlockData data) {
+        logisticBlockDatas.put(key, data);
+        return data;
+    }
+
+    public static LogisticBlockData getLogisticBlockData(NamespacedKey key) {
+        return logisticBlockDatas.get(key);
+    }
+
+    public static Result<LogisticBlockData> getLogisticBlockDataO(NamespacedKey key) {
+        return Result.of(logisticBlockDatas.get(key));
+    }
+
+    @CanIgnoreReturnValue
     public static RecipeType<?> putLoadRecipeType(NamespacedKey key, RecipeType<?> recipeType) {
         loadRecipeTypes.put(key, recipeType);
         return recipeType;
     }
 
+    @Nullable
     public static RecipeType<?> getLoadRecipeType(NamespacedKey key) {
         return loadRecipeTypes.get(key);
     }

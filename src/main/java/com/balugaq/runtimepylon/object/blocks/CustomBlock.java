@@ -1,6 +1,7 @@
 package com.balugaq.runtimepylon.object.blocks;
 
 import com.balugaq.runtimepylon.GlobalVars;
+import com.balugaq.runtimepylon.config.LogisticBlockData;
 import com.balugaq.runtimepylon.object.Scriptable;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
@@ -41,6 +42,7 @@ import io.github.pylonmc.pylon.core.config.Config;
 import io.github.pylonmc.pylon.core.config.PylonConfig;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.event.PylonBlockUnloadEvent;
+import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.util.PylonUtils;
 import io.papermc.paper.event.block.BeaconActivatedEvent;
 import io.papermc.paper.event.block.BeaconDeactivatedEvent;
@@ -114,6 +116,16 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         }
         for (var e : GlobalVars.getFluidBufferBlockData(getKey())) {
             createFluidBuffer(e.fluid(), e.capacity(), e.input(), e.output());
+        }
+        // todo createLogistic // virtual inventory // gui.addIngredient('i', inputInventory) // Disel machine
+        LogisticBlockData data = GlobalVars.getLogisticBlockData(getKey());
+        var input = data.input();
+        if (input != null) {
+
+        }
+        var output = data.output();
+        if (output != null) {
+
         }
     }
 
@@ -297,6 +309,10 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
 
     @Override
     public void tick(final double deltaSeconds) {
+        RecipeType<?> loadRecipeType = GlobalVars.getLoadRecipeType(getKey());
+        if (loadRecipeType != null) {
+            // todo, tick
+        }
         callScript(this, deltaSeconds);
     }
 
