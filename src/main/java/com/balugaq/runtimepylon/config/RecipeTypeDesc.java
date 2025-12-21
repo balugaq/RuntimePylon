@@ -42,7 +42,7 @@ public class RecipeTypeDesc implements Deserializer<RecipeTypeDesc> {
                         if (key != null && PylonRegistry.RECIPE_TYPES.get(key) != null) {
                             return new RecipeTypeDesc(key);
                         }
-                        namespace = Deserializer.newDeserializer(PackDesc.class).deserialize(s.substring(0, s.indexOf(":"))).findPack().getPackNamespace();
+                        namespace = Deserializer.PACK_DESC.deserialize(s.substring(0, s.indexOf(":"))).findPack().getPackNamespace();
                         k = s.substring(s.indexOf(":") + 1);
                     } else {
                         namespace = this.packNamespace;

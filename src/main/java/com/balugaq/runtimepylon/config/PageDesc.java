@@ -42,7 +42,7 @@ public class PageDesc implements Deserializer<PageDesc> {
                         if (key != null && RuntimePylon.getGuidePages().get(key) != null) {
                             return new PageDesc(key);
                         }
-                        namespace = Deserializer.newDeserializer(PackDesc.class).deserialize(s.substring(0, s.indexOf(":"))).findPack().getPackNamespace();
+                        namespace = Deserializer.PACK_DESC.deserialize(s.substring(0, s.indexOf(":"))).findPack().getPackNamespace();
                         k = s.substring(s.indexOf(":") + 1);
                     } else {
                         namespace = this.packNamespace;

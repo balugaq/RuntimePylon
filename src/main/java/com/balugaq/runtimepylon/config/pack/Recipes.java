@@ -24,7 +24,6 @@ import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import kotlin.jvm.functions.Function5;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -40,7 +39,6 @@ import org.bukkit.inventory.SmithingTransformRecipe;
 import org.bukkit.inventory.SmithingTrimRecipe;
 import org.bukkit.inventory.SmokingRecipe;
 import org.bukkit.inventory.TransmuteRecipe;
-import org.bukkit.inventory.recipe.CookingBookCategory;
 import org.bukkit.inventory.recipe.CraftingBookCategory;
 import org.jspecify.annotations.NullMarked;
 
@@ -180,9 +178,9 @@ public class Recipes {
     }
 
     private static TransmuteRecipeWrapper advancedVanillaTransmute(NamespacedKey key, ConfigurationSection config) {
-        var result = Deserializer.enumDeserializer(Material.class).forceUpperCase().deserialize(config.get("result"));
+        var result = Deserializer.MATERIAL.deserialize(config.get("result"));
         var recipe = new TransmuteRecipe(key, result, Deserializer.RECIPE_CHOICE.deserialize(config.get("input")), Deserializer.RECIPE_CHOICE.deserialize(config.get("material")));
-        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).forceUpperCase().deserializeOrNull(config.get("category"));
+        var category = Deserializer.CRAFTING_BOOK_CATEGORY.deserializeOrNull(config.get("category"));
         var group = config.getString("group");
         recipe.setCategory(category == null ? CraftingBookCategory.MISC : category);
         recipe.setGroup(group == null ? "" : group);
@@ -198,7 +196,7 @@ public class Recipes {
         for (var ingredient : ingredients) {
             recipe.addIngredient(ingredient);
         }
-        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).forceUpperCase().deserializeOrNull(config.get("category"));
+        var category = Deserializer.CRAFTING_BOOK_CATEGORY.deserializeOrNull(config.get("category"));
         if (category != null) recipe.setCategory(category);
         var group = config.getString("group");
         if (group != null) recipe.setGroup(group);
@@ -221,7 +219,7 @@ public class Recipes {
         for (var e : ingredientKey.entrySet()) {
             recipe.setIngredient(e.getKey(), e.getValue());
         }
-        var category = Deserializer.enumDeserializer(CraftingBookCategory.class).forceUpperCase().deserializeOrNull(config.get("category"));
+        var category = Deserializer.CRAFTING_BOOK_CATEGORY.deserializeOrNull(config.get("category"));
         if (category != null) recipe.setCategory(category);
         var group = config.getString("group");
         if (group != null) recipe.setGroup(group);
@@ -234,7 +232,7 @@ public class Recipes {
         var ingredient = Deserializer.RECIPE_CHOICE.deserialize(config.get("ingredient"));
         var result = Deserializer.ITEMSTACK.deserialize(config.get("result"));
         var recipe = function.invoke(key, result, ingredient, experience, cookingTime);
-        var category = Deserializer.enumDeserializer(CookingBookCategory.class).forceUpperCase().deserializeOrNull(config.get("category"));
+        var category = Deserializer.COOKING_BOOK_CATEGORY.deserializeOrNull(config.get("category"));
         if (category != null) recipe.setCategory(category);
         var group = config.getString("group");
         if (group != null) recipe.setGroup(group);

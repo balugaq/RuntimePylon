@@ -86,9 +86,7 @@ public class Fluids implements FileObject<Fluids> {
                         ts = FluidTemperature.NORMAL.name();
                     }
 
-                    FluidTemperature temperature = Deserializer.enumDeserializer(FluidTemperature.class)
-                            .forceUpperCase()
-                            .deserialize(ts);
+                    FluidTemperature temperature = Deserializer.FLUID_TEMPERATURE.deserialize(ts);
                     if (temperature == null) continue;
 
                     PageDesc page = Pack.readOrNull(section, PageDesc.class, "page", t -> t.setPackNamespace(getNamespace()));

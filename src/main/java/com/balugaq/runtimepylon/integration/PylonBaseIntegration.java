@@ -42,6 +42,7 @@ import java.util.Objects;
  */
 @NullMarked
 public class PylonBaseIntegration implements Integration {
+    public static final Deserializer<MiningLevel> MINING_LEVEL = Deserializer.enumDeserializer(MiningLevel.class).forceUpperCase();
     private final Plugin plugin;
     public PylonBaseIntegration() {
         this.plugin = Objects.requireNonNull(Bukkit.getPluginManager().getPlugin("PylonBase"));
@@ -99,7 +100,7 @@ public class PylonBaseIntegration implements Integration {
                 key,
                 Deserializer.RECIPE_INPUT_ITEM.deserialize(section.get("input")),
                 Deserializer.ITEMSTACK.deserialize(section.get("result")),
-                Deserializer.enumDeserializer(MiningLevel.class).forceUpperCase().deserialize(section.get("mining-level")),
+                MINING_LEVEL.deserialize(section.get("mining-level")),
                 (float) section.getDouble("chance")
         );
     }

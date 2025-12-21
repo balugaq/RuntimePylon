@@ -99,28 +99,28 @@ public interface RegisterCondition extends Deserializer<RegisterCondition> {
 
             if (value.startsWith("hasPack ")) {
                 String packName = value.substring(8);
-                PackDesc desc = Deserializer.newDeserializer(PackDesc.class).deserialize(packName);
+                PackDesc desc = Deserializer.PACK_DESC.deserialize(packName);
                 Pack pack = desc.findPack();
                 return pack != null;
             }
 
             if (value.startsWith("!hasPack ")) {
                 String packName = value.substring(9);
-                PackDesc desc = Deserializer.newDeserializer(PackDesc.class).deserialize(packName);
+                PackDesc desc = Deserializer.PACK_DESC.deserialize(packName);
                 Pack pack = desc.findPack();
                 return pack == null;
             }
 
             if (value.startsWith("hasPlugin ")) {
                 String pluginName = value.substring(10);
-                PluginDesc desc = Deserializer.newDeserializer(PluginDesc.class).deserialize(pluginName);
+                PluginDesc desc = Deserializer.PLUGIN_DESC.deserialize(pluginName);
                 Plugin plugin = desc.findPlugin();
                 return plugin != null;
             }
 
             if (value.startsWith("!hasPlugin ")) {
                 String pluginName = value.substring(11);
-                PluginDesc desc = Deserializer.newDeserializer(PluginDesc.class).deserialize(pluginName);
+                PluginDesc desc = Deserializer.PLUGIN_DESC.deserialize(pluginName);
                 Plugin plugin = desc.findPlugin();
                 return plugin == null;
             }

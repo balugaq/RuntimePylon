@@ -1,11 +1,15 @@
 package com.balugaq.runtimepylon.object;
 
+import com.balugaq.runtimepylon.config.BiGenericDeserializer;
 import com.balugaq.runtimepylon.config.ConfigReader;
 import com.balugaq.runtimepylon.config.Deserializer;
+import com.balugaq.runtimepylon.config.GenericDeserializer;
 import com.balugaq.runtimepylon.config.Pack;
+import com.balugaq.runtimepylon.data.MyArrayList;
+import com.balugaq.runtimepylon.data.MyObject2ObjectOpenHashMap;
+import com.balugaq.runtimepylon.data.MyObjectOpenHashSet;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.config.ConfigSection;
-import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.item.ItemTypeWrapper;
 import io.github.pylonmc.pylon.core.recipe.ConfigurableRecipeType;
@@ -32,8 +36,8 @@ import java.util.Set;
 public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
 
     public static final Map<String, Handler> DEFAULT_CONFIG_READER = Map.of(
-            "inputs", new Handler(ConfigAdapter.LIST.from(ConfigAdapter.RECIPE_INPUT), new ArrayList<>()),
-            "results", new Handler(ConfigAdapter.LIST.from(ConfigAdapter.FLUID_OR_ITEM), new ArrayList<>())
+            "inputs", new Handler(GenericDeserializer.newDeserializer(MyArrayList.class).setDeserializer(Deserializer.RECIPE_INPUT_ITEM), new ArrayList<>()),
+            "results", new Handler(GenericDeserializer.newDeserializer(MyArrayList.class).setDeserializer(Deserializer.FLUID_OR_ITEM), new ArrayList<>())
     );
 
     private final List<String> structure;
@@ -70,7 +74,7 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
         Map<String, Object> other = new HashMap<>();
         for (Map.Entry<String, Handler> e : configReader.entrySet()) {
             try {
-                other.put(e.getKey(), ReflectionUtil.invokeMethod(section, "get", e.getKey(), e.getValue().adapter(), e.getValue().defaultValue()));
+                other.put(e.getKey(), ReflectionUtil.invokeMethod(section, "get", e.getKey(), e.getValue().deserializer().toAdapter(), e.getValue().defaultValue()));
             } catch (InvocationTargetException | IllegalAccessException ex) {
                 throw new RuntimeException(ex);
             }
@@ -140,78 +144,49 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
     }
 
     @NullMarked
-    public record Handler(ConfigAdapter<?> adapter, @Nullable Object defaultValue) implements Deserializer<Handler> {
-        public static final Map<String, ConfigAdapter<?>> adapters = new HashMap<>();
-
-        static {
-            adapters.put("BYTE", ConfigAdapter.BYTE);
-            adapters.put("SHORT", ConfigAdapter.SHORT);
-            adapters.put("INT", ConfigAdapter.INT);
-            adapters.put("LONG", ConfigAdapter.LONG);
-            adapters.put("FLOAT", ConfigAdapter.FLOAT);
-            adapters.put("DOUBLE", ConfigAdapter.DOUBLE);
-            adapters.put("CHAR", ConfigAdapter.CHAR);
-            adapters.put("BOOLEAN", ConfigAdapter.BOOLEAN);
-            adapters.put("STRING", ConfigAdapter.STRING);
-            adapters.put("ANY", ConfigAdapter.ANY);
-            adapters.put("NAMESPACED_KEY", ConfigAdapter.NAMESPACED_KEY);
-            adapters.put("ITEM_STACK", ConfigAdapter.ITEM_STACK);
-            adapters.put("MATERIAL", ConfigAdapter.MATERIAL);
-            adapters.put("BLOCK_DATA", ConfigAdapter.BLOCK_DATA);
-            adapters.put("SOUND", ConfigAdapter.SOUND);
-            adapters.put("RANDOMIZED_SOUND", ConfigAdapter.RANDOMIZED_SOUND);
-            adapters.put("PYLON_FLUID", ConfigAdapter.PYLON_FLUID);
-            adapters.put("FLUID_TEMPERATURE", ConfigAdapter.FLUID_TEMPERATURE);
-            adapters.put("FLUID_OR_ITEM", ConfigAdapter.FLUID_OR_ITEM);
-            adapters.put("RECIPE_INPUT", ConfigAdapter.RECIPE_INPUT);
-            adapters.put("RECIPE_INPUT_ITEM", ConfigAdapter.RECIPE_INPUT_ITEM);
-            adapters.put("RECIPE_INPUT_FLUID", ConfigAdapter.RECIPE_INPUT_FLUID);
-            adapters.put("ITEM_TAG", ConfigAdapter.ITEM_TAG);
-            adapters.put("CULLING_PRESET", ConfigAdapter.CULLING_PRESET);
-            adapters.put("WAILA_DISPLAY", ConfigAdapter.WAILA_DISPLAY);
+    public record Handler(Deserializer<?> deserializer, @Nullable Object defaultValue) implements Deserializer<Handler> {
+        public Handler() {
+            this(null, null);
         }
 
-        public Handler {
-        }
-
-        private static ConfigAdapter<?> readConfigAdapter(List<String> parts) {
+        private static Deserializer<?> readDeserializer(List<String> parts) {
             if (parts.isEmpty()) {
-                return ConfigAdapter.ANY; // fallback
+                return Deserializer.ANY; // fallback
             }
 
             String p = parts.getFirst();
-            for (var e : adapters.entrySet()) {
-                String k = e.getKey();
-                if (k.equalsIgnoreCase(p)) {
-                    return e.getValue();
-                }
+            try {
+                return ReflectionUtil.getStaticValue(Deserializer.class, p.toUpperCase(), Deserializer.class);
+            } catch (IllegalAccessException | NoSuchFieldException ignored) {
             }
 
             if (p.equalsIgnoreCase("list")) {
-                return ConfigAdapter.LIST.from(readConfigAdapter(parts.subList(1, parts.size())));
+                return GenericDeserializer.newDeserializer(MyArrayList.class).setDeserializer(readDeserializer(parts.subList(1, parts.size())));
             }
 
             if (p.equalsIgnoreCase("set")) {
-                return ConfigAdapter.SET.from(readConfigAdapter(parts.subList(1, parts.size())));
+                return GenericDeserializer.newDeserializer(MyObjectOpenHashSet.class).setDeserializer(readDeserializer(parts.subList(1, parts.size())));
             }
 
             if (p.equalsIgnoreCase("map")) {
-                return ConfigAdapter.MAP.from(readConfigAdapter(parts.subList(1, parts.size())), readConfigAdapter(parts.subList(1, parts.size())));
+                return BiGenericDeserializer.newDeserializer(MyObject2ObjectOpenHashMap.class)
+                        .setDeserializer(readDeserializer(List.of(parts.get(0))))
+                        .setDeserializer2(readDeserializer(List.of(parts.get(1))));
             }
 
             if (p.equalsIgnoreCase("enum")) {
                 if (parts.size() < 2) {
-                    return ConfigAdapter.ANY; // fallback
+                    return Deserializer.ANY; // fallback
                 }
                 Class<?> clazz = findClass(parts.get(1));
                 if (clazz == null || !clazz.isEnum()) {
-                    return ConfigAdapter.ANY;
+                    return Deserializer.ANY; // fallback
                 }
 
-                return ConfigAdapter.ENUM.from((Class<? extends Enum>) clazz);
+                return Deserializer.enumDeserializer((Class<? extends Enum>) clazz);
             }
 
-            return ConfigAdapter.ANY; // fallback
+            return Deserializer.ANY; // fallback
         }
 
         @Nullable
@@ -233,11 +208,11 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
                         }
 
                         String[] parts = a[0].split("-");
-                        var adt = readConfigAdapter(List.of(parts));
+                        var adt = readDeserializer(List.of(parts));
 
                         if (a.length > 1) {
                             String def = a[1];
-                            return new Handler(adt, adt.convert(def));
+                            return new Handler(adt, adt.deserialize(def));
                         }
                         return this;
                     }

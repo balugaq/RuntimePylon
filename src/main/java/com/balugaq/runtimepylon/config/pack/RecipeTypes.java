@@ -69,7 +69,7 @@ public class RecipeTypes implements FileObject<RecipeTypes> {
                                         var s2 = sec.getString(k);
                                         if (s2 != null) {
                                             if (loader == null) loader = new HashMap<>();
-                                            loader.put(k, Deserializer.newDeserializer(CustomRecipeType.Handler.class).deserialize(s2));
+                                            loader.put(k, Deserializer.HANDLER.deserialize(s2));
                                         }
                                     }
                             /*

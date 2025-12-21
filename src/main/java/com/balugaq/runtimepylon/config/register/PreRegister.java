@@ -29,7 +29,7 @@ public class PreRegister {
     private static boolean blocks(ConfigurationSection section) {
         Object o = section.get("register-conditions");
         if (o != null) {
-            RegisterConditions conditions = Deserializer.newDeserializer(RegisterConditions.class).deserialize(o);
+            RegisterConditions conditions = Deserializer.REGISTER_CONDITIONS.deserialize(o);
             return !conditions.pass();
         }
         return false;

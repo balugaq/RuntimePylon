@@ -48,7 +48,7 @@ public class Saveditems implements FileObject<Saveditems> {
             if (file.isDirectory()) {
                 loadFiles(file, path + file.getName() + "/");
             } else {
-                var serializer = Deserializer.newDeserializer(SaveditemDesc.class);
+                var serializer = Deserializer.SAVEDITEM_DESC;
                 try {
                     var desc = serializer.deserialize(file);
                     ItemStack item = desc.getItemStack();

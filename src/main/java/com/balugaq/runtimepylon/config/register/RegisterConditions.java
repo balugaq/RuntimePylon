@@ -23,13 +23,13 @@ public class RegisterConditions implements Deserializer<RegisterConditions> {
     @Override
     public List<ConfigReader<?, RegisterConditions>> readers() {
         return List.of(
-                ConfigReader.of(String.class, s -> new RegisterConditions(List.of(Deserializer.newDeserializer(RegisterCondition.class).deserialize(s)))),
+                ConfigReader.of(String.class, s -> new RegisterConditions(List.of(Deserializer.REGISTER_CONDITION.deserialize(s)))),
                 ConfigReader.of(
                         List.class, lst -> {
                             List<RegisterCondition> conditions = new ArrayList<>();
                             for (Object o : lst) {
                                 if (o instanceof String) {
-                                    conditions.add(Deserializer.newDeserializer(RegisterCondition.class).deserialize(o));
+                                    conditions.add(Deserializer.REGISTER_CONDITION.deserialize(o));
                                 }
                             }
                             return new RegisterConditions(conditions);

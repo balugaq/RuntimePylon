@@ -1,6 +1,13 @@
 package com.balugaq.runtimepylon.config;
 
+import com.balugaq.runtimepylon.config.pack.Author;
+import com.balugaq.runtimepylon.config.pack.Contributor;
+import com.balugaq.runtimepylon.config.pack.GitHubUpdateLink;
 import com.balugaq.runtimepylon.config.pack.PackID;
+import com.balugaq.runtimepylon.config.pack.PackVersion;
+import com.balugaq.runtimepylon.config.pack.WebsiteLink;
+import com.balugaq.runtimepylon.config.register.RegisterCondition;
+import com.balugaq.runtimepylon.config.register.RegisterConditions;
 import com.balugaq.runtimepylon.data.MyMultiBlockComponent;
 import com.balugaq.runtimepylon.data.MyObject2ObjectOpenHashMap;
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
@@ -12,16 +19,19 @@ import com.balugaq.runtimepylon.exceptions.UnknownItemException;
 import com.balugaq.runtimepylon.exceptions.UnknownKeyedException;
 import com.balugaq.runtimepylon.exceptions.UnknownMultiblockComponentException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
+import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.util.ClassUtil;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
+import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
 import io.github.pylonmc.pylon.core.item.ItemTypeWrapper;
 import io.github.pylonmc.pylon.core.item.PylonItemSchema;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
+import io.github.pylonmc.pylon.core.util.RandomizedSound;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
 import lombok.SneakyThrows;
@@ -30,11 +40,14 @@ import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
+import org.bukkit.Sound;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.meta.trim.TrimPattern;
+import org.bukkit.inventory.recipe.CookingBookCategory;
+import org.bukkit.inventory.recipe.CraftingBookCategory;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.ApiStatus.Obsolete;
 import org.jetbrains.annotations.Nullable;
@@ -43,6 +56,7 @@ import org.joml.Vector3i;
 import org.jspecify.annotations.NullMarked;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -91,6 +105,35 @@ public interface Deserializer<T> {
     RecipeInputFluidDeserializer RECIPE_INPUT_FLUID = new RecipeInputFluidDeserializer();
     FluidOrItemDeserializer FLUID_OR_ITEM = new FluidOrItemDeserializer();
     FluidMapDeserializer FLUID_MAP = new FluidMapDeserializer();
+    Deserializer<Byte> BYTE = warp(ConfigAdapter.BYTE);
+    Deserializer<Short> SHORT = warp(ConfigAdapter.SHORT);
+    Deserializer<Integer> INT = warp(ConfigAdapter.INT);
+    Deserializer<Long> LONG = warp(ConfigAdapter.LONG);
+    Deserializer<Float> FLOAT = warp(ConfigAdapter.FLOAT);
+    Deserializer<Double> DOUBLE = warp(ConfigAdapter.DOUBLE);
+    Deserializer<Character> CHAR = warp(ConfigAdapter.CHAR);
+    Deserializer<Boolean> BOOLEAN = warp(ConfigAdapter.BOOLEAN);
+    Deserializer<Object> ANY = warp(ConfigAdapter.ANY);
+    Deserializer<String> STRING = warp(ConfigAdapter.STRING);
+    Deserializer<NamespacedKey> NAMESPACED_KEY = warp(ConfigAdapter.NAMESPACED_KEY);
+    Deserializer<Material> MATERIAL = enumDeserializer(Material.class).forceUpperCase();
+    Deserializer<Sound> SOUND = keyedDeserializer(Registry.SOUNDS);
+    Deserializer<RandomizedSound> RANDOMIZED_SOUND = warp(ConfigAdapter.RANDOMIZED_SOUND);
+    Deserializer<FluidTemperature> FLUID_TEMPERATURE = enumDeserializer(FluidTemperature.class).forceUpperCase();
+    Deserializer<CraftingBookCategory> CRAFTING_BOOK_CATEGORY = Deserializer.enumDeserializer(CraftingBookCategory.class).forceUpperCase();
+    Deserializer<CookingBookCategory> COOKING_BOOK_CATEGORY = Deserializer.enumDeserializer(CookingBookCategory.class).forceUpperCase();
+    Deserializer<PackDesc> PACK_DESC = Deserializer.newDeserializer(PackDesc.class);
+    Deserializer<PackID> PACK_ID = Deserializer.newDeserializer(PackID.class);
+    Deserializer<Author> AUTHOR = Deserializer.newDeserializer(Author.class);
+    Deserializer<Contributor> CONTRIBUTOR = Deserializer.newDeserializer(Contributor.class);
+    Deserializer<GitHubUpdateLink> GITHUB_UPDATE_LINK = Deserializer.newDeserializer(GitHubUpdateLink.class);
+    Deserializer<PackVersion> PACK_VERSION = Deserializer.newDeserializer(PackVersion.class);
+    Deserializer<WebsiteLink> WEBSITE_LINK = Deserializer.newDeserializer(WebsiteLink.class);
+    Deserializer<CustomRecipeType.Handler> HANDLER = Deserializer.newDeserializer(CustomRecipeType.Handler.class);
+    Deserializer<PluginDesc> PLUGIN_DESC = Deserializer.newDeserializer(PluginDesc.class);
+    Deserializer<RegisterCondition> REGISTER_CONDITION = Deserializer.newDeserializer(RegisterCondition.class);
+    Deserializer<SaveditemDesc> SAVEDITEM_DESC = Deserializer.newDeserializer(SaveditemDesc.class);
+    Deserializer<RegisterConditions> REGISTER_CONDITIONS = Deserializer.newDeserializer(RegisterConditions.class);
 
     static <E extends Enum<E>> EnumDeserializer<E> enumDeserializer(Class<E> clazz) {
         return EnumDeserializer.of(clazz);
@@ -98,6 +141,10 @@ public interface Deserializer<T> {
 
     static < K extends Keyed> KeyedDeserializer<K> keyedDeserializer(Registry<K> registry) {
         return KeyedDeserializer.of(registry);
+    }
+
+    static <T> Deserializer<T> warp(ConfigAdapter<T> adapter) {
+        return () -> ConfigReader.list(Object.class, adapter::convert);
     }
 
     /**
@@ -116,6 +163,20 @@ public interface Deserializer<T> {
         } catch (Exception e) {
             throw new DeserializationException(clazz, e);
         }
+    }
+
+    default ConfigAdapter<T> toAdapter() {
+        return new ConfigAdapter<T>() {
+            @Override
+            public Type getType() {
+                return type();
+            }
+
+            @Override
+            public T convert(final Object value) {
+                return deserialize(value);
+            }
+        };
     }
 
     /**
@@ -464,12 +525,12 @@ public interface Deserializer<T> {
                             if (s.startsWith("minecraft:")) {
                                 if (s.contains("[")) {
                                     var mat = s.substring(10, s.indexOf("["));
-                                    Material material = Deserializer.enumDeserializer(Material.class).forceUpperCase().deserialize(mat);
+                                    Material material = MATERIAL.deserialize(mat);
                                     var data = s.substring(s.indexOf("["));
                                     list.add(new PylonSimpleMultiblock.VanillaBlockdataMultiblockComponent(material.createBlockData(data)));
                                 } else {
                                     var mat = s.substring(10);
-                                    list.add(new PylonSimpleMultiblock.VanillaMultiblockComponent(Deserializer.enumDeserializer(Material.class).forceUpperCase().deserialize(mat)));
+                                    list.add(new PylonSimpleMultiblock.VanillaMultiblockComponent(MATERIAL.deserialize(mat)));
                                 }
                             } else {
                                 var key = NamespacedKey.fromString(s);
