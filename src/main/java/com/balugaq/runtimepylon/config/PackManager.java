@@ -309,14 +309,6 @@ public @Data class PackManager {
         } catch (Exception e) {
             StackFormatter.handle(e);
         }
-        PylonRegistry.GAMETESTS.unregisterAllFromAddon(plugin);
-        PylonRegistry.ITEMS.unregisterAllFromAddon(plugin);
-        PylonRegistry.ITEM_TAGS.unregisterAllFromAddon(plugin);
-        PylonRegistry.FLUIDS.unregisterAllFromAddon(plugin);
-        PylonRegistry.BLOCKS.unregisterAllFromAddon(plugin);
-        PylonRegistry.ENTITIES.unregisterAllFromAddon(plugin);
-        PylonRegistry.RECIPE_TYPES.unregisterAllFromAddon(plugin);
-        PylonRegistry.RESEARCHES.unregisterAllFromAddon(plugin);
         RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {
             return item instanceof PageButton pb && pb.getPage() instanceof CustomPage;
         }));
@@ -337,6 +329,15 @@ public @Data class PackManager {
         RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {
             return item instanceof ResearchButton rb && rb.getResearch().getKey().getNamespace().equals(plugin.namespace());
         }));
+
+        PylonRegistry.GAMETESTS.unregisterAllFromAddon(plugin);
+        PylonRegistry.ITEMS.unregisterAllFromAddon(plugin);
+        PylonRegistry.ITEM_TAGS.unregisterAllFromAddon(plugin);
+        PylonRegistry.FLUIDS.unregisterAllFromAddon(plugin);
+        PylonRegistry.BLOCKS.unregisterAllFromAddon(plugin);
+        PylonRegistry.ENTITIES.unregisterAllFromAddon(plugin);
+        PylonRegistry.RECIPE_TYPES.unregisterAllFromAddon(plugin);
+        PylonRegistry.RESEARCHES.unregisterAllFromAddon(plugin);
 
         if (PylonRegistry.ADDONS.contains(plugin.getKey())) {
             PylonRegistry.ADDONS.unregister(plugin);
