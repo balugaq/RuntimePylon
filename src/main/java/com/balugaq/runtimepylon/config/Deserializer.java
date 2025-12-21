@@ -21,6 +21,7 @@ import com.balugaq.runtimepylon.exceptions.UnknownMultiblockComponentException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.util.ClassUtil;
+import com.balugaq.runtimepylon.util.MinecraftVersion;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
@@ -134,6 +135,7 @@ public interface Deserializer<T> {
     Deserializer<RegisterCondition> REGISTER_CONDITION = Deserializer.newDeserializer(RegisterCondition.class);
     Deserializer<SaveditemDesc> SAVEDITEM_DESC = Deserializer.newDeserializer(SaveditemDesc.class);
     Deserializer<RegisterConditions> REGISTER_CONDITIONS = Deserializer.newDeserializer(RegisterConditions.class);
+    Deserializer<MinecraftVersion> MINECRAFT_VERSION = Deserializer.newDeserializer(MinecraftVersion.class);
 
     static <E extends Enum<E>> EnumDeserializer<E> enumDeserializer(Class<E> clazz) {
         return EnumDeserializer.of(clazz);
