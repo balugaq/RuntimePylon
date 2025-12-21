@@ -11,6 +11,7 @@ import com.balugaq.runtimepylon.exceptions.UnknownItemException;
 import com.balugaq.runtimepylon.exceptions.UnknownKeyedException;
 import com.balugaq.runtimepylon.exceptions.UnknownMultiblockComponentException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
+import com.balugaq.runtimepylon.util.ClassUtil;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
@@ -22,8 +23,6 @@ import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
@@ -73,6 +72,12 @@ import java.util.stream.Collectors;
 @FunctionalInterface
 @NullMarked
 public interface Deserializer<T> {
+    default Class<?> type() {
+        var t = ClassUtil.getFirstGenericSuperclassType(this.getClass());
+        if (t == null) return Object.class;
+        return t;
+    }
+
     ItemStackDeserializer ITEMSTACK = new ItemStackDeserializer();
     PylonFluidDeserializer PYLON_FLUID = new PylonFluidDeserializer();
     MultiblockComponentDeserializer MULTIBLOCK_COMPONENT = new MultiblockComponentDeserializer();
@@ -136,7 +141,7 @@ public interface Deserializer<T> {
             }
         }
 
-        throw new DeserializationException(this.getClass());
+        throw new DeserializationException(this.getClass() + " doesn't support [" + o.getClass() + "] " + o);
     }
 
     @Nullable
@@ -584,6 +589,11 @@ public interface Deserializer<T> {
         @Override
         public List<ConfigReader<?, RecipeInput.Fluid>> readers() {
             return ConfigReader.list(
+                    Map.Entry.class, e -> {
+                        var fluid = PYLON_FLUID.deserialize(e.getKey());
+                        double amount = Double.parseDouble(String.valueOf(e.getValue()));
+                        return new RecipeInput.Fluid(amount, fluid);
+                    },
                     Map.class, m -> {
                         if (m.size() == 1) {
                             var fluid = PYLON_FLUID.deserialize(m.keySet().stream().findFirst().get());
@@ -595,7 +605,7 @@ public interface Deserializer<T> {
                             return new RecipeInput.Fluid(amount, fluid);
                         }
                     },
-                    ConfigurationSection.class, s -> RECIPE_INPUT_FLUID.deserialize(s.getKeys(false).stream().map(s::get).collect(Collectors.toMap(a -> a, a -> a, (a, b) -> a)))
+                    ConfigurationSection.class, s -> RECIPE_INPUT_FLUID.deserialize(s.getKeys(false).stream().map(k -> Map.of(k, s.get(k))).collect(Collectors.toMap(a -> a, a -> a, (a, b) -> a)))
             );
         }
     }
@@ -654,6 +664,8 @@ public interface Deserializer<T> {
             setGenericType2(Double.class);
             setDeserializer(PYLON_FLUID);
             setDeserializer2(() -> ConfigReader.list(String.class, Double::parseDouble, Double.class, s -> s, Integer.class, s -> (double)s));
+            setAdvancer(t -> t);
+            setAdvancer2(t -> t);
         }
     }
 }

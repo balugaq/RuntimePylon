@@ -3,11 +3,14 @@ package com.balugaq.runtimepylon.data;
 import com.balugaq.runtimepylon.config.BiGenericDeserializer;
 import com.balugaq.runtimepylon.config.ConfigReader;
 import com.balugaq.runtimepylon.config.Deserializer;
+import com.balugaq.runtimepylon.config.GenericDeserializer;
 import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.StackFormatter;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NullMarked;
 
@@ -27,11 +30,11 @@ import java.util.Set;
 @NullMarked
 public class MyObject2ObjectOpenHashMap<T1, T2> extends Object2ObjectOpenHashMap<T1, T2> implements BiGenericDeserializer<MyObject2ObjectOpenHashMap<T1, T2>, T1, T2> {
     @Getter
-    @UnknownNullability
+    @Nullable
     private Class<T1> genericType;
 
     @Getter
-    @UnknownNullability
+    @Nullable
     private Class<T2> genericType2;
 
     @Getter
@@ -90,8 +93,21 @@ public class MyObject2ObjectOpenHashMap<T1, T2> extends Object2ObjectOpenHashMap
                     var serializer2 = advancer2.advance(getDeserializer2());
                     MyObject2ObjectOpenHashMap<T1, T2> res = new MyObject2ObjectOpenHashMap<>();
                     for (Map.Entry<Object, Object> e : (Set<Map.Entry<Object, Object>>) map.entrySet()) {
-                        try (var ignored = StackFormatter.setPosition("Reading Map<" + getGenericType().getSimpleName() + ", " + getGenericType2().getSimpleName() + ">")) {
+                        try (var ignored = StackFormatter.setPosition("Reading Map<" + getDeserializer().type() + ", " + getDeserializer2().type() + ">")) {
                             res.put(serializer.deserialize(e.getKey()), serializer2.deserialize(e.getValue()));
+                        } catch (Exception ex) {
+                            StackFormatter.handle(ex);
+                        }
+                    }
+                    return res;
+                },
+                ConfigurationSection.class, section -> {
+                    var serializer = advancer.advance(getDeserializer());
+                    var serializer2 = advancer2.advance(getDeserializer2());
+                    MyObject2ObjectOpenHashMap<T1, T2> res = new MyObject2ObjectOpenHashMap<>();
+                    for (String key : section.getKeys(false)) {
+                        try (var ignored = StackFormatter.setPosition("Reading Map<" + getDeserializer().type() + ", " + getDeserializer2().type() + ">")) {
+                            res.put(serializer.deserialize(key), serializer2.deserialize(section.get(key)));
                         } catch (Exception ex) {
                             StackFormatter.handle(ex);
                         }
@@ -99,5 +115,23 @@ public class MyObject2ObjectOpenHashMap<T1, T2> extends Object2ObjectOpenHashMap
                     return res;
                 }
         );
+    }
+
+    @Override
+    public Deserializer<T1> getDeserializer() {
+        if (deserializer != null) return deserializer;
+
+        final Deserializer<T1> t = BiGenericDeserializer.super.getDeserializer();
+        if (t == null) throw new UnsupportedOperationException("Not deserializable and no deserializer provided");
+        return t;
+    }
+
+    @Override
+    public Deserializer<T2> getDeserializer2() {
+        if (deserializer2 != null) return deserializer2;
+
+        final Deserializer<T2> t = BiGenericDeserializer.super.getDeserializer2();
+        if (t == null) throw new UnsupportedOperationException("Not deserializable and no deserializer provided");
+        return t;
     }
 }

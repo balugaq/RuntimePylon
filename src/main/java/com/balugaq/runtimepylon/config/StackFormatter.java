@@ -23,9 +23,13 @@ public class StackFormatter implements AutoCloseable {
     @SuppressWarnings("UnnecessaryUnicodeEscape")
     public static void handle(Throwable e) {
         Throwable t = e;
-        if (e instanceof DeserializationException && e.getCause() != null) {
-            t = e.getCause();
+        int k = 0;
+        while (t instanceof DeserializationException && k++ < 10) {
+            if (t.getCause() != null) {
+                t = t.getCause();
+            }
         }
+
         Debug.warn(t.getClass().getSimpleName() + ": " + t.getMessage());
 
         for (int i = 1; i <= backup.size(); i++)

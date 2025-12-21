@@ -36,6 +36,7 @@ public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K> ext
 
     T setAdvancer(Pack.Advancer<Deserializer<K>> advancer);
 
+    @Nullable
     Class<K> getGenericType();
 
     T setGenericType(Class<K> clazz);
@@ -43,7 +44,7 @@ public interface GenericDeserializer<T extends GenericDeserializer<T, K>, K> ext
     @MustBeInvokedByOverriders
     @Nullable
     default Deserializer<K> getDeserializer() {
-        if (getGenericType().isAssignableFrom(Deserializer.class)) {
+        if (Deserializer.class.isAssignableFrom(getGenericType())) {
             return Deserializer.newDeserializer((Class<? extends Deserializer>) getGenericType());
         }
 

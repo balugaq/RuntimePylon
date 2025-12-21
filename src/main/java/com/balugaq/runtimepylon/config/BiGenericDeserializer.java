@@ -36,6 +36,7 @@ public interface BiGenericDeserializer<T extends BiGenericDeserializer<T, K, M>,
 
     T setAdvancer(Pack.Advancer<Deserializer<K>> advancer);
 
+    @Nullable
     Class<K> getGenericType();
 
     T setGenericType(Class<K> clazz);
@@ -54,6 +55,7 @@ public interface BiGenericDeserializer<T extends BiGenericDeserializer<T, K, M>,
 
     T setAdvancer2(Pack.Advancer<Deserializer<M>> advancer);
 
+    @Nullable
     Class<M> getGenericType2();
 
     T setGenericType2(Class<M> clazz);

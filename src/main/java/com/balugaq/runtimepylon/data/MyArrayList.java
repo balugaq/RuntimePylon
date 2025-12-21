@@ -7,6 +7,7 @@ import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.StackFormatter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NullMarked;
 
@@ -23,7 +24,7 @@ import java.util.List;
 @NullMarked
 public class MyArrayList<T> extends ArrayList<T> implements GenericDeserializer<MyArrayList<T>, T> {
     @Getter
-    @UnknownNullability
+    @Nullable
     private Class<T> genericType;
 
     @Getter
@@ -51,7 +52,7 @@ public class MyArrayList<T> extends ArrayList<T> implements GenericDeserializer<
                     Deserializer<T> serializer = advancer.advance(getDeserializer());
                     MyArrayList<T> res = new MyArrayList<>();
                     for (Object object : lst) {
-                        try (var ignored = StackFormatter.setPosition("Reading List<" + getGenericType().getSimpleName() + ">")) {
+                        try (var ignored = StackFormatter.setPosition("Reading List<" + getDeserializer().type() + ">")) {
                             res.add(serializer.deserialize(object));
                         } catch (Exception e) {
                             StackFormatter.handle(e);

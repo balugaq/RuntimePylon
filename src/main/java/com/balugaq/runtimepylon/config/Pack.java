@@ -465,12 +465,12 @@ public class Pack implements FileObject<Pack> {
     }
 
     @Nullable
-    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path, Advancer<Deserializer<K>> advancer) {
+    public static <T extends GenericDeserializer<T, K>, K extends Deserializer<K>> T readOrNull(ConfigurationSection config, Class<T> clazz, Class<K> generic, String path, Advancer<K> advancer) {
         try {
             return tryExamine(GenericDeserializer
                                       .newDeserializer(clazz)
                                       .setGenericType(generic)
-                                      .setAdvancer(advancer)
+                                      .setAdvancer((Advancer<Deserializer<K>>) advancer)
                                       .deserialize(config.get(path)));
         } catch (PackException e) {
             return null;

@@ -1,12 +1,10 @@
 package com.balugaq.runtimepylon.integration;
 
-import com.balugaq.runtimepylon.RuntimePylon;
-import com.balugaq.runtimepylon.config.ConfigReader;
 import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.pack.Recipes;
 import com.balugaq.runtimepylon.data.MyArrayList;
-import com.balugaq.runtimepylon.data.WeightedList;
+import com.balugaq.runtimepylon.data.WeightedElement;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import io.github.pylonmc.pylon.base.recipes.BloomeryDisplayRecipe;
 import io.github.pylonmc.pylon.base.recipes.DrillingDisplayRecipe;
@@ -22,12 +20,13 @@ import io.github.pylonmc.pylon.base.recipes.PitKilnRecipe;
 import io.github.pylonmc.pylon.base.recipes.PressRecipe;
 import io.github.pylonmc.pylon.base.recipes.SmelteryRecipe;
 import io.github.pylonmc.pylon.base.recipes.TableSawRecipe;
-import io.github.pylonmc.pylon.core.config.Config;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import io.github.pylonmc.pylon.core.util.MiningLevel;
+import io.github.pylonmc.pylon.core.util.WeightedSet;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
@@ -81,10 +80,18 @@ public class PylonBaseIntegration implements Integration {
         return new GrindstoneRecipe(
                 key,
                 Deserializer.RECIPE_INPUT_ITEM.deserialize(section.get("input")),
-                Pack.read(section, WeightedList.class, Deserializer.ITEMSTACK, "results").toWeightedSet(),
+                toWeightedSet(Pack.read(section, MyArrayList.class, WeightedElement.class, "results")),
                 section.getInt("cycles"),
-                Deserializer.BLOCK_DATA.deserialize(section.get("particle-block-data"))
+                Deserializer.BLOCK_DATA.deserialize(section.get("particle-data"))
         );
+    }
+
+    public static WeightedSet<ItemStack> toWeightedSet(List<WeightedElement> list) {
+        WeightedSet<ItemStack> set = new WeightedSet<>();
+        for (WeightedElement element : list) {
+            set.add(new WeightedSet.Element<>(element.getElement(), element.getWeight()));
+        }
+        return set;
     }
 
     public static HammerRecipe advancedHammer(NamespacedKey key, ConfigurationSection section) {
@@ -92,7 +99,7 @@ public class PylonBaseIntegration implements Integration {
                 key,
                 Deserializer.RECIPE_INPUT_ITEM.deserialize(section.get("input")),
                 Deserializer.ITEMSTACK.deserialize(section.get("result")),
-                Deserializer.enumDeserializer(MiningLevel.class).deserialize(section.get("mining-level")),
+                Deserializer.enumDeserializer(MiningLevel.class).forceUpperCase().deserialize(section.get("mining-level")),
                 (float) section.getDouble("chance")
         );
     }
@@ -169,7 +176,7 @@ public class PylonBaseIntegration implements Integration {
                 key,
                 Deserializer.RECIPE_INPUT_ITEM.deserialize(section.get("input")),
                 Deserializer.ITEMSTACK.deserialize(section.get("result")),
-                Deserializer.BLOCK_DATA.deserialize(section.get("particle-block-data")),
+                Deserializer.BLOCK_DATA.deserialize(section.get("particle-data")),
                 section.getInt("time-ticks")
         );
     }
@@ -177,8 +184,8 @@ public class PylonBaseIntegration implements Integration {
     public static PitKilnRecipe advancedPitKiln(NamespacedKey key, ConfigurationSection section) {
         return new PitKilnRecipe(
                 key,
-                Pack.read(section, MyArrayList.class, Deserializer.RECIPE_INPUT_ITEM, "input-items"),
-                Pack.read(section, MyArrayList.class, Deserializer.ITEMSTACK, "output-items")
+                Pack.read(section, MyArrayList.class, Deserializer.RECIPE_INPUT_ITEM, "inputs"),
+                Pack.read(section, MyArrayList.class, Deserializer.ITEMSTACK, "outputs")
         );
     }
 
@@ -204,7 +211,7 @@ public class PylonBaseIntegration implements Integration {
                 key,
                 Deserializer.ITEMSTACK.deserialize(section.get("input")),
                 Deserializer.ITEMSTACK.deserialize(section.get("result")),
-                Deserializer.BLOCK_DATA.deserialize(section.get("particle-block-data")),
+                Deserializer.BLOCK_DATA.deserialize(section.get("particle-data")),
                 section.getInt("time-ticks")
         );
     }
