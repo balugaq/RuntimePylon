@@ -16,7 +16,7 @@ import org.jspecify.annotations.NullMarked;
 public interface Scriptable {
     @CanIgnoreReturnValue
     @Nullable
-    default Object callScript(Object... objects) {
+    default Object callScript(@Nullable Object... objects) {
         var script = GlobalVars.getScriptO(getKey());
         if (script.isPresent()) {
             return script.get().executeFunction(

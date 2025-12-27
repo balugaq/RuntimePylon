@@ -11,7 +11,6 @@ import com.balugaq.runtimepylon.config.GuiReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.LogisticBlockData;
 import com.balugaq.runtimepylon.config.Pack;
-import com.balugaq.runtimepylon.config.RecipeTypeDesc;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.config.SingletonFluidBlockData;
@@ -24,7 +23,6 @@ import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidMultiblockComponentException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
-import com.balugaq.runtimepylon.exceptions.UnknownRecipeTypeException;
 import com.balugaq.runtimepylon.exceptions.UnknownSymbolException;
 import com.balugaq.runtimepylon.util.MaterialUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
@@ -63,9 +61,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   *gui:
  *     structure: |-
  *       B B B B B B B B B
- *       I a b I B O 1 2 O
- *       I c d I B O 3 4 O
- *       I e f I B O 5 6 O
+ *       I i i I B O o o O
+ *       I i i I B O o o O
+ *       I i i I B O o o O
  *       B B B B B B B B B
  *     [char]: [Material Format]
  *   *fluid-block:
@@ -83,8 +81,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  *     blocks:
  *       [Multiblock Component Symbol]: [Multiblock Component Desc]
  *   *logistic:
- *     *input: [SingleLogisticBlockData]
- *     *output: [SingleLogisticBlockData]
+ *     1: [SingleLogisticBlockData]
+ *     2: [SingleLogisticBlockData]
  *
  * <p>
  * [SingletonFluidBlockData]:
@@ -108,8 +106,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>
  * [SingleLogisticBlockData]:
  *   name: [String]
+ *   type: [LogisticSlotType]
  *   inv-slot-char: [char]
- *
+ * <p>
+ * [LogisticSlotType]: input | output | both
  * @author balugaq
  */
 @Data
@@ -222,34 +222,34 @@ public class Blocks implements FileObject<Blocks> {
                         } catch (Exception ex) {
                             StackFormatter.handle(ex);
                         }
+                    }
 
-                        // logistic
-                        var logistic = section.getConfigurationSection("logistic");
-                        CharArrayList invSlotChars = new CharArrayList();
-                        if (logistic != null) {
-                            try (var ignored2 = StackFormatter.setPosition("Reading logistic section: " + key)) {
+                    // logistic
+                    var logistic = section.getConfigurationSection("logistic");
+                    CharArrayList invSlotChars = new CharArrayList();
+                    if (logistic != null) {
+                        try (var ignored2 = StackFormatter.setPosition("Reading logistic section: " + key)) {
 
-                            List<SingletonLogisticBlockData> singletons = new ArrayList<>();
-                            for (String k : logistic.getKeys(false)) {
-                                var singleton = Pack.read(logistic, SingletonLogisticBlockData.class, k);
-                                singletons.add(singleton);
-                            }
-                            GlobalVars.putLogisticBlockData(id.key(), new LogisticBlockData(id.key(), singletons));
+                        List<SingletonLogisticBlockData> singletons = new ArrayList<>();
+                        for (String k : logistic.getKeys(false)) {
+                            var singleton = Pack.read(logistic, SingletonLogisticBlockData.class, k);
+                            singletons.add(singleton);
+                        }
+                        GlobalVars.putLogisticBlockData(id.key(), new LogisticBlockData(id.key(), singletons));
 
-                            for (var singleton : singletons) {
-                                invSlotChars.add(singleton.invSlotChar());
-                            }
-
-                            } catch (Exception ex) {
-                                StackFormatter.handle(ex);
-                            }
+                        for (var singleton : singletons) {
+                            invSlotChars.add(singleton.invSlotChar());
                         }
 
-                        // gui
-                        var gui = GuiReader.read(section, namespace, scriptdesc);
-                        if (gui != GuiReader.Result.EMPTY)
-                            GlobalVars.putGui(id.key(), new GuiData(id.key(), gui.structure(), gui.provider(), Gui.normal(), null, invSlotChars));
+                        } catch (Exception ex) {
+                            StackFormatter.handle(ex);
+                        }
                     }
+
+                    // gui
+                    var gui = GuiReader.read(section, namespace, scriptdesc);
+                    if (gui != GuiReader.Result.EMPTY)
+                        GlobalVars.putGuiData(id.key(), new GuiData(id.key(), gui.structure(), gui.provider(), Gui.normal(), null, invSlotChars));
                 } catch (Exception e) {
                     StackFormatter.handle(e);
                 }}

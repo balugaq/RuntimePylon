@@ -45,7 +45,6 @@ import io.github.pylonmc.pylon.core.block.base.PylonUnloadBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockBreakContext;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
 import io.github.pylonmc.pylon.core.config.Config;
-import io.github.pylonmc.pylon.core.config.PylonConfig;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.event.PylonBlockUnloadEvent;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
@@ -73,6 +72,7 @@ import io.papermc.paper.event.player.PlayerOpenSignEvent;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BellResonateEvent;
@@ -132,7 +132,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     private final @Nullable FluidBufferBlockData fluidBufferBlockData = GlobalVars.getFluidBufferBlockData(getKey());
     private final ProgressItem progressItem = new ProgressItem(ItemStackBuilder.of(GuiItems.background()));
     private @Nullable PylonRecipe processingRecipe = null;
-    private int remainingTicks;
+    private int remainingSeconds;
 
     public CustomBlock(final Block block) {
         super(block);
@@ -313,18 +313,41 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
 
     @Override
     public int getTickInterval() {
-        if (!isFunctionExists("tick"))
-            return Integer.MAX_VALUE;
+        if (!isFunctionExists("tick")) {
+            if (loadRecipeType == null) {
+                setTickInterval(Integer.MAX_VALUE);
+                return Integer.MAX_VALUE;
+            }
+        }
+        if (isFunctionExists("getTickInterval")) {
+            var v = callScript(this);
+            if (v instanceof Number number) {
+                var v2 = number.intValue();
+                setTickInterval(v2);
+                return v2;
+            }
+        }
         var settings = getSettingsOrNull();
-        if (settings == null) return PylonConfig.getDefaultTickInterval();
-        return settings.get("tick-interval", ConfigAdapter.INT, PylonConfig.getDefaultTickInterval());
+        if (settings == null) return PylonTickingBlock.super.getTickInterval();
+        var v3 = settings.get("tick-interval", ConfigAdapter.INT, PylonTickingBlock.super.getTickInterval());
+        setTickInterval(v3);
+        return v3;
     }
 
     @Override
     public boolean isAsync() {
+        if (isFunctionExists("isAsync")) {
+            var v = callScript(this);
+            if (v instanceof Boolean b) {
+                setAsync(b);
+                return b;
+            }
+        }
         var settings = getSettingsOrNull();
-        if (settings == null) return false;
-        return settings.get("async", ConfigAdapter.BOOLEAN, false);
+        if (settings == null) return PylonTickingBlock.super.isAsync();
+        var v2 = settings.get("async", ConfigAdapter.BOOLEAN, PylonTickingBlock.super.isAsync());
+        setAsync(v2);
+        return v2;
     }
 
     @Nullable
@@ -340,8 +363,8 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     @Override
     public void tick(final double deltaSeconds) {
         if (processingRecipe != null) {
-            remainingTicks--;
-            if (remainingTicks <= 0) {
+            remainingSeconds--;
+            if (remainingSeconds <= 0) {
                 progressItem.setTotalTime(null);
                 // push item or fluid
                 for (var e : processingRecipe.getResults()) {
@@ -353,8 +376,9 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                         setFluid(fluid.fluid(), Math.min(fluidCapacity(fluid.fluid()), fluidAmount(fluid.fluid()) + fluid.amountMillibuckets()));
                     }
                 }
+                processingRecipe = null;
             } else {
-                progressItem.setRemainingTimeTicks(remainingTicks);
+                progressItem.setRemainingTimeSeconds(remainingSeconds);
                 return;
             }
         }
@@ -407,10 +431,11 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                 // found recipe
                 processingRecipe = recipe;
                 if (recipe instanceof CustomRecipe cr) {
-                    int totalTicks = cr.getTimeTicks() / getSpeed();
-                    remainingTicks = totalTicks;
-                    progressItem.setTotalTimeTicks(totalTicks);
-                    progressItem.setRemainingTimeTicks(remainingTicks);
+                    int totalSeconds = (int) Math.round((double) cr.getTimeSeconds() / getSpeed());
+                    remainingSeconds = totalSeconds;
+                    progressItem.setTotalTimeSeconds(totalSeconds);
+                    progressItem.setRemainingTimeSeconds(remainingSeconds);
+                    progressItem.setItemStackBuilder(ItemStackBuilder.of(getRepresentativeIcon(processingRecipe)));
                 }
 
                 // consume items and fluids
@@ -445,7 +470,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         if (v instanceof Boolean b) {
             return b;
         }
-        return false;
+        return true;
     }
 
     public int getSpeed() {
@@ -539,11 +564,15 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                 return gui;
             }
         }
+        if (!haveSetLogisticGroups) setupLogisticGroups();
         return CustomRecipeType.makeGui(guiData, vs, progressItem);
     }
 
+    boolean haveSetLogisticGroups = false;
+
     @Override
     public void setupLogisticGroups() {
+        if (haveSetLogisticGroups) return;
         if (logisticBlockData != null && guiData != null) {
             for (var e : logisticBlockData) {
                 var size = 0;
@@ -566,6 +595,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                 createLogisticGroup(e.name(), e.slotType(), v);
             }
         }
+        haveSetLogisticGroups = true;
     }
 
     public boolean canOutputFluid(Map<PylonFluid, Double> results, FluidBufferBlockData fluidBufferBlockData) {
@@ -580,14 +610,9 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     }
 
     public boolean canOutputItems(Object2IntLinkedOpenHashMap<ItemStack> results, VirtualInventory inventory) {
-        int[] r = inventory.simulateAdd(results.sequencedKeySet().stream().toList());
-        int[] target = results.sequencedValues().stream().mapToInt(i -> i).toArray();
+        int[] lefts = inventory.simulateAdd(results.sequencedKeySet().stream().toList());
 
-        for (int i = 0; i < r.length; i++) {
-            if (r[i] < target[i]) {
-                return false;
-            }
-        }
+        for (final int i : lefts) if (i != 0) return false;
 
         return true;
     }
@@ -629,5 +654,18 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         }
 
         return ret;
+    }
+
+    public static ItemStack getRepresentativeIcon(PylonRecipe recipe) {
+        for (var r : recipe.getResults()) {
+            if (r instanceof FluidOrItem.Item item) {
+                return item.item();
+            }
+            if (r instanceof FluidOrItem.Fluid fluid) {
+                return fluid.fluid().getItem();
+            }
+        }
+
+        return ItemStack.of(Material.IRON_PICKAXE);
     }
 }

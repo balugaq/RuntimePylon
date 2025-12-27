@@ -46,7 +46,7 @@ import java.util.Set;
 public class CustomRecipeType extends ConfigurableRecipeType<PylonRecipe> {
 
     public static final Map<String, Handler> DEFAULT_CONFIG_READER = Map.of(
-            "inputs", new Handler(GenericDeserializer.newDeserializer(MyArrayList.class).setDeserializer(Deserializer.RECIPE_INPUT_ITEM), new ArrayList<>()),
+            "inputs", new Handler(GenericDeserializer.newDeserializer(MyArrayList.class).setDeserializer(Deserializer.RECIPE_INPUT), new ArrayList<>()),
             "results", new Handler(GenericDeserializer.newDeserializer(MyArrayList.class).setDeserializer(Deserializer.FLUID_OR_ITEM), new ArrayList<>())
     );
 
@@ -119,9 +119,9 @@ public class CustomRecipeType extends ConfigurableRecipeType<PylonRecipe> {
         }
         List<RecipeInput> inputs = readInputs(other.get("inputs"));
         List<FluidOrItem> results = readResults(other.get("results"));
-        int timeTicks = section.get("time-ticks", ConfigAdapter.INT, 0);
+        int timeSeconds = section.get("time-seconds", ConfigAdapter.INT, 0);
 
-        return new CustomRecipe(this, key, inputs, results, timeTicks, other);
+        return new CustomRecipe(this, key, inputs, results, timeSeconds, other);
     }
 
     private List<FluidOrItem> readResults(Object object) {

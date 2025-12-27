@@ -6,7 +6,6 @@ import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +30,7 @@ public class CustomRecipe implements PylonRecipe {
     private final NamespacedKey key;
     private final List<RecipeInput> inputs;
     private final List<FluidOrItem> results;
-    private final int timeTicks;
+    private final int timeSeconds;
     private final Map<String, Object> other;
 
     @Override

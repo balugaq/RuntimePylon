@@ -87,7 +87,7 @@ import java.util.Set;
  *           <li>recipe_types</li>
  *           <li>recipes/</li>
  *           <li>multiblocks</li>
- *           <li>machines</li> // todo: loadRecipeType:
+ *           <li>machines</li>
  *           <li>settings/</li>
  *           <li>scripts/</li>
  *           <li>saveditems/</li>

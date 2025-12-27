@@ -26,7 +26,7 @@ public record SingletonLogisticBlockData(String name, LogisticSlotType slotType,
                     String name = section.getString("name");
                     if (name == null) throw new MissingArgumentException("name");
                     LogisticSlotType slotType = Deserializer.LOGISTIC_SLOT_TYPE.deserialize(section.get("type"));
-                    char invSlotChar = section.getString("invSlotChar", "i").charAt(0);
+                    char invSlotChar = section.getString("inv-slot-char", "i").charAt(0);
                     return new SingletonLogisticBlockData(name, slotType, invSlotChar);
                 }
         );

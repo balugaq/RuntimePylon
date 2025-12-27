@@ -13,9 +13,6 @@ import com.caoccao.javet.interop.V8Runtime;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
-import io.github.pylonmc.pylon.core.recipe.RecipeType;
-import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
-import kotlin.Pair;
 import lombok.Getter;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -25,7 +22,6 @@ import org.jetbrains.annotations.UnknownNullability;
 import org.jetbrains.annotations.Unmodifiable;
 import org.joml.Vector3i;
 import org.jspecify.annotations.NullMarked;
-import xyz.xenondevs.invui.inventory.VirtualInventory;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -68,7 +64,7 @@ public class GlobalVars {
     }
 
     @CanIgnoreReturnValue
-    public static GuiData putGui(NamespacedKey key, GuiData data) {
+    public static GuiData putGuiData(NamespacedKey key, GuiData data) {
         guis.put(key, data);
         return data;
     }
@@ -78,7 +74,7 @@ public class GlobalVars {
         return guis.get(key);
     }
 
-    public static Result<GuiData> getGuiO(NamespacedKey key) {
+    public static Result<GuiData> getGuiDataO(NamespacedKey key) {
         return Result.of(getGuiData(key));
     }
 

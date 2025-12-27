@@ -54,7 +54,7 @@ public class JSScriptExecutor extends ScriptExecutor {
 
     @Override
     @Nullable
-    protected Object executeFunction0(String functionName, Object... parameters) throws Exception {
+    protected Object executeFunction0(String functionName, @Nullable Object... parameters) throws Exception {
         if (scriptObject == null) return null;
         try (V8Value value = scriptObject.get(functionName)) {
             if (!(value instanceof V8ValueFunction function)) {

@@ -22,8 +22,8 @@ public record SingletonFluidBufferBlockData(PylonFluid fluid, double capacity, b
                 ConfigurationSection.class, section -> {
                     PylonFluid fluid = Deserializer.PYLON_FLUID.deserialize(section.get("fluid"));
                     double capacity = section.getDouble("capacity", 0);
-                    boolean input = section.getBoolean("input", true);
-                    boolean output = section.getBoolean("output", true);
+                    boolean input = section.getBoolean("input", false);
+                    boolean output = section.getBoolean("output", false);
                     return new SingletonFluidBufferBlockData(fluid, capacity, input, output);
                 }
         );

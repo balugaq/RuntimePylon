@@ -234,5 +234,4 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     }
 }
 
-//todo machine, machine template
 //todo multiblock template

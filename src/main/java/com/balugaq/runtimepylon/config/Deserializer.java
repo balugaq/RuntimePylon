@@ -17,6 +17,7 @@ import com.balugaq.runtimepylon.exceptions.UnknownFluidOrItemException;
 import com.balugaq.runtimepylon.exceptions.UnknownItemException;
 import com.balugaq.runtimepylon.exceptions.UnknownKeyedException;
 import com.balugaq.runtimepylon.exceptions.UnknownMultiblockComponentException;
+import com.balugaq.runtimepylon.exceptions.UnknownRecipeInputException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.util.ClassUtil;
@@ -95,17 +96,18 @@ public interface Deserializer<T> {
         return t;
     }
 
-    ItemStackDeserializer ITEMSTACK = new ItemStackDeserializer();
-    PylonFluidDeserializer PYLON_FLUID = new PylonFluidDeserializer();
+    Deserializer<ItemStack> ITEMSTACK = new ItemStackDeserializer();
+    Deserializer<PylonFluid> PYLON_FLUID = new PylonFluidDeserializer();
     MultiblockComponentDeserializer MULTIBLOCK_COMPONENT = new MultiblockComponentDeserializer();
     Vector3iDeserializer VECTOR3I = new Vector3iDeserializer();
-    RecipeChoiceDeserializer RECIPE_CHOICE = new RecipeChoiceDeserializer();
-    KeyedDeserializer<TrimPattern> TRIM_PATTERN = KeyedDeserializer.of(RegistryAccess.registryAccess().getRegistry(RegistryKey.TRIM_PATTERN));
-    BlockDataDeserializer BLOCK_DATA = new BlockDataDeserializer();
-    RecipeInputItemDeserializer RECIPE_INPUT_ITEM = new RecipeInputItemDeserializer();
-    RecipeInputFluidDeserializer RECIPE_INPUT_FLUID = new RecipeInputFluidDeserializer();
-    FluidOrItemDeserializer FLUID_OR_ITEM = new FluidOrItemDeserializer();
-    FluidMapDeserializer FLUID_MAP = new FluidMapDeserializer();
+    Deserializer<RecipeChoice.ExactChoice> RECIPE_CHOICE = new RecipeChoiceDeserializer();
+    Deserializer<TrimPattern> TRIM_PATTERN = KeyedDeserializer.of(RegistryAccess.registryAccess().getRegistry(RegistryKey.TRIM_PATTERN));
+    Deserializer<BlockData> BLOCK_DATA = new BlockDataDeserializer();
+    Deserializer<RecipeInput.Item> RECIPE_INPUT_ITEM = new RecipeInputItemDeserializer();
+    Deserializer<RecipeInput.Fluid> RECIPE_INPUT_FLUID = new RecipeInputFluidDeserializer();
+    Deserializer<RecipeInput> RECIPE_INPUT = new RecipeInputDeserializer();
+    Deserializer<FluidOrItem> FLUID_OR_ITEM = new FluidOrItemDeserializer();
+    Deserializer<MyObject2ObjectOpenHashMap<PylonFluid, Double>> FLUID_MAP = new FluidMapDeserializer();
     Deserializer<Byte> BYTE = warp(ConfigAdapter.BYTE);
     Deserializer<Short> SHORT = warp(ConfigAdapter.SHORT);
     Deserializer<Integer> INT = warp(ConfigAdapter.INT);
@@ -750,6 +752,10 @@ public interface Deserializer<T> {
         }
     }
 
+    /**
+     * @author balugaq
+     */
+    @NullMarked
     class FluidMapDeserializer extends MyObject2ObjectOpenHashMap<PylonFluid, Double> {
         public FluidMapDeserializer() {
             setGenericType(PylonFluid.class);
@@ -758,6 +764,86 @@ public interface Deserializer<T> {
             setDeserializer2(() -> ConfigReader.list(String.class, Double::parseDouble, Double.class, s -> s, Integer.class, s -> (double)s));
             setAdvancer(t -> t);
             setAdvancer2(t -> t);
+        }
+    }
+
+    /**
+     * @author balugaq
+     */
+    @NullMarked
+    class RecipeInputDeserializer implements Deserializer<RecipeInput> {
+        @Override
+        public List<ConfigReader<?, RecipeInput>> readers() {
+            return ConfigReader.list(
+                    String.class, s -> {
+                        try {
+                            var r = RECIPE_INPUT_ITEM.deserialize(s);
+                            if (r != null)
+                                return r;
+                        } catch (Exception ignored) {
+                        }
+
+                        try {
+                            var r2 = PYLON_FLUID.deserialize(s);
+                            if (r2 != null) return RecipeInput.of(r2, 144);
+                        } catch (Exception ignored) {
+                        }
+
+                        try {
+                            var r3 = ITEMSTACK.deserialize(s);
+                            if (r3 != null) return RecipeInput.of(r3);
+                        } catch (Exception ignored) {
+                        }
+
+                        throw new UnknownRecipeInputException(s);
+                    },
+                    Map.class, m -> {
+                        try {
+                            var r = RECIPE_INPUT_ITEM.deserialize(m);
+                            if (r != null)
+                                return r;
+                        } catch (Exception ignored) {
+                        }
+
+                        try {
+                            var r2 = RECIPE_INPUT_FLUID.deserialize(m);
+                            if (r2 != null)
+                                return r2;
+                        } catch (Exception ignored) {
+                        }
+
+                        try {
+                            var r3 = ITEMSTACK.deserialize(m);
+                            if (r3 != null) return RecipeInput.of(r3);
+                        } catch (Exception ignored) {
+                        }
+
+                        throw new UnknownFluidOrItemException(m.toString());
+                    },
+                    ConfigurationSection.class, c -> {
+                        try {
+                            var r = RECIPE_INPUT_ITEM.deserialize(c);
+                            if (r != null)
+                                return r;
+                        } catch (Exception ignored) {
+                        }
+
+                        try {
+                            var r2 = RECIPE_INPUT_FLUID.deserialize(c);
+                            if (r2 != null)
+                                return r2;
+                        } catch (Exception ignored) {
+                        }
+
+                        try {
+                            var r3 = ITEMSTACK.deserializeOrNull(c);
+                            if (r3 != null) return RecipeInput.of(r3);
+                        } catch (Exception ignored) {
+                        }
+
+                        throw new UnknownRecipeInputException(c.toString());
+                    }
+            );
         }
     }
 }

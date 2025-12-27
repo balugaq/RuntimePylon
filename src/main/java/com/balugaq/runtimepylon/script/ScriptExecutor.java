@@ -28,7 +28,7 @@ public abstract class ScriptExecutor {
     }
 
     @CanIgnoreReturnValue
-    public final GlobalVars.Result<?> executeFunction(String functionName, Object... parameters) {
+    public final GlobalVars.Result<?> executeFunction(String functionName, @Nullable Object... parameters) {
         if (failedFunctions.contains(functionName)) {
             return GlobalVars.Result.EMPTY;
         }
@@ -48,7 +48,7 @@ public abstract class ScriptExecutor {
 
     public abstract boolean isFunctionExists(String functionName);
 
-    protected abstract @Nullable Object executeFunction0(String functionName, Object... parameters) throws Exception;
+    protected abstract @Nullable Object executeFunction0(String functionName, @Nullable Object... parameters) throws Exception;
 
     public abstract void close();
 }
