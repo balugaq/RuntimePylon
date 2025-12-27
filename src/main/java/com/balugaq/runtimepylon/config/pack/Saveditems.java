@@ -25,7 +25,7 @@ import java.util.Map;
 @NoArgsConstructor(force = true)
 @NullMarked
 public class Saveditems implements FileObject<Saveditems> {
-    // todo: update items
+    // todo: update items when /runtime updatesaveditems
     private final Map<SaveditemDesc, ItemStack> items = new HashMap<>();
 
     @Nullable

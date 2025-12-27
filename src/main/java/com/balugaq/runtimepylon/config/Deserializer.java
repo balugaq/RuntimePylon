@@ -8,7 +8,6 @@ import com.balugaq.runtimepylon.config.pack.PackVersion;
 import com.balugaq.runtimepylon.config.pack.WebsiteLink;
 import com.balugaq.runtimepylon.config.register.RegisterCondition;
 import com.balugaq.runtimepylon.config.register.RegisterConditions;
-import com.balugaq.runtimepylon.data.MyMultiBlockComponent;
 import com.balugaq.runtimepylon.data.MyObject2ObjectOpenHashMap;
 import com.balugaq.runtimepylon.exceptions.DeserializationException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
@@ -29,6 +28,7 @@ import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
 import io.github.pylonmc.pylon.core.item.ItemTypeWrapper;
 import io.github.pylonmc.pylon.core.item.PylonItemSchema;
+import io.github.pylonmc.pylon.core.logistics.LogisticSlotType;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
@@ -136,6 +136,7 @@ public interface Deserializer<T> {
     Deserializer<SaveditemDesc> SAVEDITEM_DESC = Deserializer.newDeserializer(SaveditemDesc.class);
     Deserializer<RegisterConditions> REGISTER_CONDITIONS = Deserializer.newDeserializer(RegisterConditions.class);
     Deserializer<MinecraftVersion> MINECRAFT_VERSION = Deserializer.newDeserializer(MinecraftVersion.class);
+    Deserializer<LogisticSlotType> LOGISTIC_SLOT_TYPE = enumDeserializer(LogisticSlotType.class).forceUpperCase();
 
     static <E extends Enum<E>> EnumDeserializer<E> enumDeserializer(Class<E> clazz) {
         return EnumDeserializer.of(clazz);
@@ -544,17 +545,7 @@ public interface Deserializer<T> {
                             }
                         }
 
-                        List<BlockData> blockDataList = list.stream().map(c -> switch (c) {
-                            case PylonSimpleMultiblock.PylonMultiblockComponent c2 ->
-                                    List.of(PylonRegistry.BLOCKS.get(c2.key()).getMaterial().createBlockData());
-                            case PylonSimpleMultiblock.VanillaMultiblockComponent c2 ->
-                                    c2.component1().stream().map(Material::createBlockData).toList();
-                            case PylonSimpleMultiblock.VanillaBlockdataMultiblockComponent c2 -> c2.component1();
-                            case MyMultiBlockComponent c2 -> c2.blockDataList();
-                            default -> null;
-                        }).filter(Objects::nonNull).flatMap(Collection::stream).toList();
-
-                        return new MyMultiBlockComponent(list, blockDataList);
+                        return new PylonSimpleMultiblock.MixedMultiblockComponent(list);
                     }
             );
         }

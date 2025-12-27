@@ -1,29 +1,39 @@
 package com.balugaq.runtimepylon.object;
 
+import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.config.BiGenericDeserializer;
 import com.balugaq.runtimepylon.config.ConfigReader;
 import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.GenericDeserializer;
+import com.balugaq.runtimepylon.config.GuiData;
 import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.data.MyArrayList;
 import com.balugaq.runtimepylon.data.MyObject2ObjectOpenHashMap;
 import com.balugaq.runtimepylon.data.MyObjectOpenHashSet;
+import com.balugaq.runtimepylon.exceptions.InvalidEnumClassException;
+import com.balugaq.runtimepylon.exceptions.UnknownDeserializerException;
+import com.balugaq.runtimepylon.exceptions.WrongEnumDeserializerException;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.config.ConfigSection;
+import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.item.ItemTypeWrapper;
 import io.github.pylonmc.pylon.core.recipe.ConfigurableRecipeType;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet;
+import kotlin.Pair;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.gui.Gui;
+import xyz.xenondevs.invui.inventory.VirtualInventory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +65,15 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
         return makeGui(structure, provider, gui, recipe);
     }
 
+    @Nullable
+    @Contract("null -> null; !null -> !null")
+    public static Gui makeGui(@Nullable GuiData data) {
+        if (data == null) {
+            return null;
+        }
+        return makeGui(data.key(), data.structure(), data.provider(), Gui.normal(), data.recipe());
+    }
+
     public static Gui makeGui(List<String> structure, @Nullable ItemStackProvider provider, Gui.Builder.Normal gui, @Nullable CustomRecipe recipe) {
         var s = structure.toArray(new String[0]);
         gui.setStructure(s);
@@ -70,6 +89,22 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
         return gui.build();
     }
 
+    public static Gui makeGui(NamespacedKey key, List<String> structure, @Nullable ItemStackProvider provider, Gui.Builder.Normal gui, @Nullable CustomRecipe recipe) {
+        var s = structure.toArray(new String[0]);
+        gui.setStructure(s);
+        CharOpenHashSet set = new CharOpenHashSet();
+        for (var s2 : s) {
+            for (var c : s2.toCharArray()) {
+                set.add(c);
+            }
+        }
+        for (char c : set) {
+            gui.addIngredient(c, (provider == null ? Pack.DEFAULT_GUI_PROVIDER : provider).display(c, recipe));
+        }
+        return gui.build();
+    }
+
+    @Override
     protected CustomRecipe loadRecipe(final NamespacedKey key, final ConfigSection section) {
         Map<String, Object> other = new HashMap<>();
         for (Map.Entry<String, Handler> e : configReader.entrySet()) {
@@ -81,8 +116,9 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
         }
         List<RecipeInput> inputs = readInputs(other.get("inputs"));
         List<FluidOrItem> results = readResults(other.get("results"));
+        int timeTicks = section.get("time-ticks", ConfigAdapter.INT, 0);
 
-        return new CustomRecipe(this, key, inputs, results, other);
+        return new CustomRecipe(this, key, inputs, results, timeTicks, other);
     }
 
     private List<FluidOrItem> readResults(Object object) {
@@ -151,7 +187,7 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
 
         private static Deserializer<?> readDeserializer(List<String> parts) {
             if (parts.isEmpty()) {
-                return Deserializer.ANY; // fallback
+                throw new UnknownDeserializerException();
             }
 
             String p = parts.getFirst();
@@ -176,17 +212,17 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
 
             if (p.equalsIgnoreCase("enum")) {
                 if (parts.size() < 2) {
-                    return Deserializer.ANY; // fallback
+                    throw new WrongEnumDeserializerException(parts);
                 }
                 Class<?> clazz = findClass(parts.get(1));
                 if (clazz == null || !clazz.isEnum()) {
-                    return Deserializer.ANY; // fallback
+                    throw new InvalidEnumClassException(parts.get(1));
                 }
 
                 return Deserializer.enumDeserializer((Class<? extends Enum>) clazz);
             }
 
-            return Deserializer.ANY; // fallback
+            throw new UnknownDeserializerException(parts);
         }
 
         @Nullable

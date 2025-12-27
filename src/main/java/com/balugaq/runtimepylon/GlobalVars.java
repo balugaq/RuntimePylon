@@ -2,6 +2,7 @@ package com.balugaq.runtimepylon;
 
 import com.balugaq.runtimepylon.config.FluidBlockData;
 import com.balugaq.runtimepylon.config.FluidBufferBlockData;
+import com.balugaq.runtimepylon.config.GuiData;
 import com.balugaq.runtimepylon.config.LogisticBlockData;
 import com.balugaq.runtimepylon.data.KeyedMap;
 import com.balugaq.runtimepylon.script.ScriptExecutor;
@@ -13,6 +14,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
+import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
+import kotlin.Pair;
 import lombok.Getter;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -22,8 +25,7 @@ import org.jetbrains.annotations.UnknownNullability;
 import org.jetbrains.annotations.Unmodifiable;
 import org.joml.Vector3i;
 import org.jspecify.annotations.NullMarked;
-import xyz.xenondevs.invui.gui.Gui;
-import xyz.xenondevs.invui.item.ItemProvider;
+import xyz.xenondevs.invui.inventory.VirtualInventory;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -34,10 +36,8 @@ import java.util.function.Supplier;
  */
 @NullMarked
 public class GlobalVars {
-    public static final @Getter Gui PLACEHOLDER_GUI = Gui.normal().setStructure("B B B B B B B B B").addIngredient('B', ItemProvider.EMPTY).build();
-    public static final @Getter Key PLACEHOLDER_KEY = com.balugaq.runtimepylon.util.Key.create("placeholder").key();
     private static final @Getter KeyedMap<ScriptExecutor> scripts = new KeyedMap<>();
-    private static final @Getter KeyedMap<Gui> guis = new KeyedMap<>();
+    private static final @Getter KeyedMap<GuiData> guis = new KeyedMap<>();
     private static final @Getter KeyedMap<SimpleStaticGuidePage> customPages = new KeyedMap<>();
     private static final @Getter KeyedMap<FluidBlockData> fluidBlockDatas = new KeyedMap<>();
     private static final @Getter KeyedMap<FluidBufferBlockData> fluidBufferBlockDatas = new KeyedMap<>();
@@ -61,12 +61,7 @@ public class GlobalVars {
             .build();
 
     static {
-        guis.defaultReturnValue(PLACEHOLDER_GUI);
-        fluidBlockDatas.defaultReturnValue(FluidBlockData.EMPTY);
-        fluidBufferBlockDatas.defaultReturnValue(FluidBufferBlockData.EMPTY);
         multiBlockComponents.defaultReturnValue(Map.of());
-        logisticBlockDatas.defaultReturnValue(LogisticBlockData.EMPTY);
-        equipmentTypes.defaultReturnValue(PLACEHOLDER_KEY);
     }
 
     public static void destroy() {
@@ -74,18 +69,18 @@ public class GlobalVars {
     }
 
     @CanIgnoreReturnValue
-    public static Gui putGui(NamespacedKey key, Gui gui) {
-        guis.put(key, gui);
-        return gui;
+    public static GuiData putGui(NamespacedKey key, GuiData data) {
+        guis.put(key, data);
+        return data;
     }
 
     @Nullable
-    public static Gui getGui(NamespacedKey key) {
+    public static GuiData getGuiData(NamespacedKey key) {
         return guis.get(key);
     }
 
-    public static Result<Gui> getGuiO(NamespacedKey key) {
-        return Result.of(guis.get(key));
+    public static Result<GuiData> getGuiO(NamespacedKey key) {
+        return Result.of(getGuiData(key));
     }
 
     @CanIgnoreReturnValue
@@ -94,12 +89,13 @@ public class GlobalVars {
         return script;
     }
 
+    @Nullable
     public static ScriptExecutor getScript(NamespacedKey key) {
         return scripts.get(key);
     }
 
     public static Result<ScriptExecutor> getScriptO(NamespacedKey key) {
-        return Result.of(scripts.get(key));
+        return Result.of(getScript(key));
     }
 
     @CanIgnoreReturnValue
@@ -108,12 +104,13 @@ public class GlobalVars {
         return page;
     }
 
+    @Nullable
     public static SimpleStaticGuidePage getCustomPage(NamespacedKey key) {
         return customPages.get(key);
     }
 
     public static Result<SimpleStaticGuidePage> getCustomPageO(NamespacedKey key) {
-        return Result.of(customPages.get(key));
+        return Result.of(getCustomPage(key));
     }
 
     @CanIgnoreReturnValue
@@ -122,12 +119,13 @@ public class GlobalVars {
         return data;
     }
 
+    @Nullable
     public static FluidBlockData getFluidBlockData(NamespacedKey key) {
         return fluidBlockDatas.get(key);
     }
 
     public static Result<FluidBlockData> getFluidBlockDataO(NamespacedKey key) {
-        return Result.of(fluidBlockDatas.get(key));
+        return Result.of(getFluidBlockData(key));
     }
 
     @CanIgnoreReturnValue
@@ -136,12 +134,13 @@ public class GlobalVars {
         return data;
     }
 
+    @Nullable
     public static FluidBufferBlockData getFluidBufferBlockData(NamespacedKey key) {
         return fluidBufferBlockDatas.get(key);
     }
 
     public static Result<FluidBufferBlockData> getFluidBufferBlockDataO(NamespacedKey key) {
-        return Result.of(fluidBufferBlockDatas.get(key));
+        return Result.of(getFluidBufferBlockData(key));
     }
 
     @CanIgnoreReturnValue
@@ -160,12 +159,13 @@ public class GlobalVars {
         return data;
     }
 
+    @Nullable
     public static LogisticBlockData getLogisticBlockData(NamespacedKey key) {
         return logisticBlockDatas.get(key);
     }
 
     public static Result<LogisticBlockData> getLogisticBlockDataO(NamespacedKey key) {
-        return Result.of(logisticBlockDatas.get(key));
+        return Result.of(getLogisticBlockData(key));
     }
 
     @CanIgnoreReturnValue
@@ -180,7 +180,7 @@ public class GlobalVars {
     }
 
     public static Result<RecipeType<?>> getLoadRecipeTypeO(NamespacedKey key) {
-        return Result.of(loadRecipeTypes.get(key));
+        return Result.of(getLoadRecipeType(key));
     }
 
     @CanIgnoreReturnValue
@@ -189,12 +189,13 @@ public class GlobalVars {
         return equipmentType;
     }
 
+    @Nullable
     public static Key getEquipmentType(NamespacedKey key) {
         return equipmentTypes.get(key);
     }
 
     public static Result<Key> getEquipmentTypeO(NamespacedKey key) {
-        return Result.of(equipmentTypes.get(key));
+        return Result.of(getEquipmentType(key));
     }
 
     /**

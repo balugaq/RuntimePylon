@@ -6,6 +6,7 @@ import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.FluidBlockData;
 import com.balugaq.runtimepylon.config.FluidBufferBlockData;
+import com.balugaq.runtimepylon.config.GuiData;
 import com.balugaq.runtimepylon.config.GuiReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.LogisticBlockData;
@@ -29,6 +30,7 @@ import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.util.MaterialUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
+import it.unimi.dsi.fastutil.chars.CharArrayList;
 import lombok.Data;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -81,7 +83,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  *       "0;-1;0": [Multiblock Component Symbol]
  *     blocks:
  *       [Multiblock Component Symbol]: [Multiblock Component Desc]
- *     *load-recipe-type: [RecipeType Desc]
  *   *logistic:
  *     *input: [SingleLogisticBlockData]
  *     *output: [SingleLogisticBlockData]
@@ -157,11 +158,6 @@ public class Blocks implements FileObject<Blocks> {
                     ScriptDesc scriptdesc = Pack.readOrNull(section, ScriptDesc.class, "script");
                     namespace.registerScript(id, scriptdesc);
 
-                    // gui
-                    var gui = GuiReader.read(section, namespace, scriptdesc);
-                    if (gui != GuiReader.Result.EMPTY)
-                        GlobalVars.putGui(id.key(), CustomRecipeType.makeGui(gui.structure(), gui.provider(), Gui.normal(), null));
-
                     // fluid-block
                     var fluidBlock = section.getConfigurationSection("fluid-block");
                     if (fluidBlock != null) {
@@ -225,6 +221,11 @@ public class Blocks implements FileObject<Blocks> {
 
                         GlobalVars.putMultiBlockComponents(id.key(), components);
 
+                        } catch (Exception ex) {
+                            StackFormatter.handle(ex);
+                        }
+
+                        // recipe-type
                         RecipeTypeDesc desc = Pack.readOrNull(multiblock, RecipeTypeDesc.class, "load-recipe-type", t -> t.setPackNamespace(namespace));
                         if (desc != null) {
                             var recipeType = desc.findRecipeType();
@@ -232,26 +233,33 @@ public class Blocks implements FileObject<Blocks> {
                             GlobalVars.putLoadRecipeType(id.key(), recipeType);
                         }
 
-                        } catch (Exception ex) {
-                            StackFormatter.handle(ex);
-                        }
-
                         // logistic
                         var logistic = section.getConfigurationSection("logistic");
+                        CharArrayList invSlotChars = new CharArrayList();
                         if (logistic != null) {
                             try (var ignored2 = StackFormatter.setPosition("Reading logistic section: " + key)) {
 
-                            SingletonLogisticBlockData input = Pack.readOrNull(logistic, SingletonLogisticBlockData.class, "input");
-                            SingletonLogisticBlockData output = Pack.readOrNull(logistic, SingletonLogisticBlockData.class, "output");
-                            GlobalVars.putLogisticBlockData(id.key(), new LogisticBlockData(input, output));
+                            List<SingletonLogisticBlockData> singletons = new ArrayList<>();
+                            for (String k : logistic.getKeys(false)) {
+                                var singleton = Pack.read(logistic, SingletonLogisticBlockData.class, k);
+                                singletons.add(singleton);
+                            }
+                            GlobalVars.putLogisticBlockData(id.key(), new LogisticBlockData(id.key(), singletons));
+
+                            for (var singleton : singletons) {
+                                invSlotChars.add(singleton.invSlotChar());
+                            }
 
                             } catch (Exception ex) {
                                 StackFormatter.handle(ex);
                             }
                         }
+
+                        // gui
+                        var gui = GuiReader.read(section, namespace, scriptdesc);
+                        if (gui != GuiReader.Result.EMPTY)
+                            GlobalVars.putGui(id.key(), new GuiData(id.key(), gui.structure(), gui.provider(), Gui.normal(), null, invSlotChars));
                     }
-
-
                 } catch (Exception e) {
                     StackFormatter.handle(e);
                 }}

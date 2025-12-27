@@ -12,9 +12,6 @@ import java.util.List;
 @NullMarked
 public record FluidBlockData(
         @Unmodifiable List<SingletonFluidBlockData> data) implements Iterable<SingletonFluidBlockData> {
-    @Unmodifiable
-    public static final FluidBlockData EMPTY = new FluidBlockData(List.of());
-
     @Override
     public Iterator<SingletonFluidBlockData> iterator() {
         return data.iterator();
