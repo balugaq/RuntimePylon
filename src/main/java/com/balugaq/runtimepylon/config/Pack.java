@@ -117,9 +117,10 @@ public class Pack implements FileObject<Pack> {
      * I: input border
      * O: output border
      */
+    @Deprecated
     public static final ItemStackProvider DEFAULT_GUI_PROVIDER = (c, r) -> {
         if (r != null) {
-            if ('a' <= c && c <= 'z') {
+            if ('a' <= c && c <= 'z' && c != 'i' && c != 'o') {
                 var i = r.getInputs();
                 var k = c - 'a';
                 if (k >= i.size()) return () -> EMPTY;
@@ -672,6 +673,11 @@ public class Pack implements FileObject<Pack> {
                 RegisteredObjectID id = e.id();
 
                 CustomRecipeType recipeType = new CustomRecipeType(id.key(), e.structure(), e.guiProvider(), e.configReader());
+                if (e.cloneType() != null) {
+                    for (var r : e.cloneType().getRecipes()) {
+                        recipeType.addRecipe(r);
+                    }
+                }
                 recipeType.register();
                 Debug.debug("Registered RecipeType: " + id.key());
                 recipeTypes.getLoadedRecipeTypes().incrementAndGet();

@@ -43,7 +43,6 @@ public class GlobalVars {
     private static final @Getter KeyedMap<FluidBufferBlockData> fluidBufferBlockDatas = new KeyedMap<>();
     private static final @Getter KeyedMap<Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent>> multiBlockComponents = new KeyedMap<>();
     private static final @Getter KeyedMap<LogisticBlockData> logisticBlockDatas = new KeyedMap<>();
-    private static final @Getter KeyedMap<RecipeType<?>> loadRecipeTypes = new KeyedMap<>();
     private static final @Getter KeyedMap<Key> equipmentTypes = new KeyedMap<>();
     private static final @Getter V8Runtime scriptRuntime;
     static {
@@ -166,21 +165,6 @@ public class GlobalVars {
 
     public static Result<LogisticBlockData> getLogisticBlockDataO(NamespacedKey key) {
         return Result.of(getLogisticBlockData(key));
-    }
-
-    @CanIgnoreReturnValue
-    public static RecipeType<?> putLoadRecipeType(NamespacedKey key, RecipeType<?> recipeType) {
-        loadRecipeTypes.put(key, recipeType);
-        return recipeType;
-    }
-
-    @Nullable
-    public static RecipeType<?> getLoadRecipeType(NamespacedKey key) {
-        return loadRecipeTypes.get(key);
-    }
-
-    public static Result<RecipeType<?>> getLoadRecipeTypeO(NamespacedKey key) {
-        return Result.of(getLoadRecipeType(key));
     }
 
     @CanIgnoreReturnValue

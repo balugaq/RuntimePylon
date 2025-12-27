@@ -26,7 +26,6 @@ import com.balugaq.runtimepylon.exceptions.InvalidMultiblockComponentException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.exceptions.UnknownRecipeTypeException;
 import com.balugaq.runtimepylon.exceptions.UnknownSymbolException;
-import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.util.MaterialUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
@@ -86,7 +85,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   *logistic:
  *     *input: [SingleLogisticBlockData]
  *     *output: [SingleLogisticBlockData]
- *   *load-recipe-type: [RecipeType Desc]
  *
  * <p>
  * [SingletonFluidBlockData]:
@@ -223,14 +221,6 @@ public class Blocks implements FileObject<Blocks> {
 
                         } catch (Exception ex) {
                             StackFormatter.handle(ex);
-                        }
-
-                        // recipe-type
-                        RecipeTypeDesc desc = Pack.readOrNull(multiblock, RecipeTypeDesc.class, "load-recipe-type", t -> t.setPackNamespace(namespace));
-                        if (desc != null) {
-                            var recipeType = desc.findRecipeType();
-                            if (recipeType == null) throw new UnknownRecipeTypeException(desc.getKey().toString());
-                            GlobalVars.putLoadRecipeType(id.key(), recipeType);
                         }
 
                         // logistic

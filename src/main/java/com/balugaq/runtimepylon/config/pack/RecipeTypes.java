@@ -1,11 +1,13 @@
 package com.balugaq.runtimepylon.config.pack;
 
+import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;
 import com.balugaq.runtimepylon.config.GuiReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.Pack;
+import com.balugaq.runtimepylon.config.RecipeTypeDesc;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.config.StackFormatter;
@@ -13,8 +15,11 @@ import com.balugaq.runtimepylon.config.preloads.PreparedRecipeType;
 import com.balugaq.runtimepylon.config.register.PreRegister;
 import com.balugaq.runtimepylon.exceptions.InvalidStructureException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
+import com.balugaq.runtimepylon.exceptions.UnknownRecipeTypeException;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.util.StringUtil;
+import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
+import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import lombok.Data;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -104,8 +109,16 @@ public class RecipeTypes implements FileObject<RecipeTypes> {
                             var gui = GuiReader.read(section, namespace, scriptdesc);
                             if (gui == GuiReader.Result.EMPTY) throw new InvalidStructureException(gui.structure());
 
+                            // clone
+                            RecipeTypeDesc desc = Pack.readOrNull(section, RecipeTypeDesc.class, "clone", t -> t.setPackNamespace(namespace));
+                            RecipeType<? extends PylonRecipe> cloneType = null;
+                            if (desc != null) {
+                                cloneType = desc.findRecipeType();
+                                if (cloneType == null) throw new UnknownRecipeTypeException(desc.getKey().toString());
+                            }
+
                             boolean postLoad = section.getBoolean("postload", false);
-                            recipeTypes.put(id, new PreparedRecipeType(id, gui.structure(), gui.provider(), loader, postLoad));
+                            recipeTypes.put(id, new PreparedRecipeType(id, gui.structure(), gui.provider(), loader, postLoad, cloneType));
                         } catch (Exception e) {
                             StackFormatter.handle(e);
                         }

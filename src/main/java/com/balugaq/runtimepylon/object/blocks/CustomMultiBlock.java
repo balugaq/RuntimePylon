@@ -1,9 +1,12 @@
 package com.balugaq.runtimepylon.object.blocks;
 
 import com.balugaq.runtimepylon.GlobalVars;
+import com.balugaq.runtimepylon.object.CustomRecipe;
+import com.balugaq.runtimepylon.object.CustomRecipeType;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
+import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -18,6 +21,8 @@ import java.util.Map;
  */
 @NullMarked
 public class CustomMultiBlock extends CustomBlock implements PylonSimpleMultiblock {
+    private final @Nullable CustomRecipeType recipeType = (CustomRecipeType) PylonRegistry.RECIPE_TYPES.get(getKey());
+
     public CustomMultiBlock(final Block block) {
         super(block);
     }
@@ -38,9 +43,5 @@ public class CustomMultiBlock extends CustomBlock implements PylonSimpleMultiblo
     @Override
     public @Nullable BlockFace getFacing() {
         return PylonSimpleMultiblock.super.getFacing();
-    }
-
-    public RecipeType<?> getRecipeType() {
-        return GlobalVars.getLoadRecipeType(getKey());
     }
 }

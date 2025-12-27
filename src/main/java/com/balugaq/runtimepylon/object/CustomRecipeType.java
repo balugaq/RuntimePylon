@@ -1,6 +1,5 @@
 package com.balugaq.runtimepylon.object;
 
-import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.config.BiGenericDeserializer;
 import com.balugaq.runtimepylon.config.ConfigReader;
 import com.balugaq.runtimepylon.config.Deserializer;
@@ -20,9 +19,11 @@ import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.item.ItemTypeWrapper;
 import io.github.pylonmc.pylon.core.recipe.ConfigurableRecipeType;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
+import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
+import io.github.pylonmc.pylon.core.util.gui.ProgressItem;
+import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet;
-import kotlin.Pair;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
@@ -33,7 +34,6 @@ import xyz.xenondevs.invui.inventory.VirtualInventory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +43,7 @@ import java.util.Set;
  * @author balugaq
  */
 @NullMarked
-public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
+public class CustomRecipeType extends ConfigurableRecipeType<PylonRecipe> {
 
     public static final Map<String, Handler> DEFAULT_CONFIG_READER = Map.of(
             "inputs", new Handler(GenericDeserializer.newDeserializer(MyArrayList.class).setDeserializer(Deserializer.RECIPE_INPUT_ITEM), new ArrayList<>()),
@@ -66,30 +66,23 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
     }
 
     @Nullable
+    @Contract("null, _, _ -> null; !null, _, _ -> !null")
+    public static Gui makeGui(@Nullable GuiData data, @Nullable Map<Character, VirtualInventory> vs, @Nullable ProgressItem progressItem) {
+        if (data == null) return null;
+        return makeGui(data.structure(), data.provider(), Gui.normal(), data.recipe(), vs, progressItem);
+    }
+
+    @Nullable
     @Contract("null -> null; !null -> !null")
     public static Gui makeGui(@Nullable GuiData data) {
-        if (data == null) {
-            return null;
-        }
-        return makeGui(data.key(), data.structure(), data.provider(), Gui.normal(), data.recipe());
+        return makeGui(data, null, null);
     }
 
     public static Gui makeGui(List<String> structure, @Nullable ItemStackProvider provider, Gui.Builder.Normal gui, @Nullable CustomRecipe recipe) {
-        var s = structure.toArray(new String[0]);
-        gui.setStructure(s);
-        CharOpenHashSet set = new CharOpenHashSet();
-        for (var s2 : s) {
-            for (var c : s2.toCharArray()) {
-                set.add(c);
-            }
-        }
-        for (char c : set) {
-            gui.addIngredient(c, (provider == null ? Pack.DEFAULT_GUI_PROVIDER : provider).display(c, recipe));
-        }
-        return gui.build();
+        return makeGui(structure, provider, gui, recipe, null, null);
     }
 
-    public static Gui makeGui(NamespacedKey key, List<String> structure, @Nullable ItemStackProvider provider, Gui.Builder.Normal gui, @Nullable CustomRecipe recipe) {
+    public static Gui makeGui(List<String> structure, @Nullable ItemStackProvider provider, Gui.Builder.Normal gui, @Nullable CustomRecipe recipe, @Nullable Map<Character, VirtualInventory> vs, @Nullable ProgressItem progressItem) {
         var s = structure.toArray(new String[0]);
         gui.setStructure(s);
         CharOpenHashSet set = new CharOpenHashSet();
@@ -99,7 +92,17 @@ public class CustomRecipeType extends ConfigurableRecipeType<CustomRecipe> {
             }
         }
         for (char c : set) {
-            gui.addIngredient(c, (provider == null ? Pack.DEFAULT_GUI_PROVIDER : provider).display(c, recipe));
+            if (c != 'i' && c != 'o') {
+                gui.addIngredient(c, (provider == null ? Pack.DEFAULT_GUI_PROVIDER : provider).display(c, recipe));
+            }
+        }
+        if (vs != null) {
+            for (Map.Entry<Character, VirtualInventory> e : vs.entrySet()) {
+                gui.addIngredient(e.getKey(), e.getValue());
+            }
+        }
+        if (progressItem != null) {
+            gui.addIngredient('p', progressItem);
         }
         return gui.build();
     }

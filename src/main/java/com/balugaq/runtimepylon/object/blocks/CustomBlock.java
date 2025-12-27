@@ -49,11 +49,16 @@ import io.github.pylonmc.pylon.core.config.PylonConfig;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.event.PylonBlockUnloadEvent;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
+import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
+import io.github.pylonmc.pylon.core.logistics.LogisticSlotType;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
+import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.github.pylonmc.pylon.core.util.PylonUtils;
+import io.github.pylonmc.pylon.core.util.gui.GuiItems;
+import io.github.pylonmc.pylon.core.util.gui.ProgressItem;
 import io.papermc.paper.event.block.BeaconActivatedEvent;
 import io.papermc.paper.event.block.BeaconDeactivatedEvent;
 import io.papermc.paper.event.block.CompostItemEvent;
@@ -99,6 +104,7 @@ import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.inventory.VirtualInventory;
+import xyz.xenondevs.invui.inventory.event.PlayerUpdateReason;
 import xyz.xenondevs.invui.inventory.event.UpdateReason;
 import xyz.xenondevs.invui.window.Window;
 
@@ -118,13 +124,14 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                                                        PylonPiston, PylonRedstoneBlock, PylonShearable, PylonSign, PylonSneakableBlock,
                                                        PylonSponge, PylonTargetBlock, PylonTNT, PylonTrialVault, PylonUnloadBlock,
                                                        PylonGuiBlock, PylonLogisticBlock, Scriptable {
-    private final Char2ObjectOpenHashMap<VirtualInventory> vis = new Char2ObjectOpenHashMap<>();
-    private final @Nullable RecipeType<?> loadRecipeType = GlobalVars.getLoadRecipeType(getKey());
+    private final Char2ObjectOpenHashMap<VirtualInventory> vs = new Char2ObjectOpenHashMap<>();
+    private final @Nullable RecipeType<?> loadRecipeType = PylonRegistry.RECIPE_TYPES.get(getKey());
     private final @Nullable GuiData guiData = GlobalVars.getGuiData(getKey());
     private final @Nullable LogisticBlockData logisticBlockData = GlobalVars.getLogisticBlockData(getKey());
     private final @Nullable FluidBlockData fluidBlockData = GlobalVars.getFluidBlockData(getKey());
     private final @Nullable FluidBufferBlockData fluidBufferBlockData = GlobalVars.getFluidBufferBlockData(getKey());
-    private @Nullable CustomRecipe processingRecipe = null;
+    private final ProgressItem progressItem = new ProgressItem(ItemStackBuilder.of(GuiItems.background()));
+    private @Nullable PylonRecipe processingRecipe = null;
     private int remainingTicks;
 
     public CustomBlock(final Block block) {
@@ -137,8 +144,10 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
 
     public CustomBlock(final Block block, final BlockCreateContext context) {
         super(block, context);
-        for (var e : fluidBlockData) {
-            createFluidPoint(e.fluidPointType(), e.face(), context, e.allowVerticalFaces());
+        if (fluidBlockData != null) {
+            for (var e : fluidBlockData) {
+                createFluidPoint(e.fluidPointType(), e.face(), context, e.allowVerticalFaces());
+            }
         }
         if (fluidBufferBlockData != null) {
             for (var e : fluidBufferBlockData) {
@@ -333,10 +342,11 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         if (processingRecipe != null) {
             remainingTicks--;
             if (remainingTicks <= 0) {
+                progressItem.setTotalTime(null);
                 // push item or fluid
                 for (var e : processingRecipe.getResults()) {
                     if (e instanceof FluidOrItem.Item item) {
-                        var vo = vis.get('o');
+                        var vo = vs.get('o');
                         vo.addItem(UpdateReason.SUPPRESSED, item.item());
                     }
                     if (e instanceof FluidOrItem.Fluid fluid) {
@@ -344,15 +354,16 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                     }
                 }
             } else {
+                progressItem.setRemainingTimeTicks(remainingTicks);
                 return;
             }
         }
 
         if (loadRecipeType != null) {
-            Collection<CustomRecipe> recipes = (Collection<CustomRecipe>) loadRecipeType.getRecipes();
-            @Nullable var vi = vis.get('i');
-            @Nullable var vo = vis.get('o');
-            recipe: for (CustomRecipe recipe : recipes) {
+            Collection<? extends PylonRecipe> recipes = loadRecipeType.getRecipes();
+            @Nullable var vi = vs.get('i');
+            @Nullable var vo = vs.get('o');
+            recipe: for (PylonRecipe recipe : recipes) {
                 for (var e : recipe.getInputs()) {
                     switch (e) {
                         case RecipeInput.Item item -> {
@@ -378,16 +389,29 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                 }
 
                 var ret = countResults(recipe);
-                if (!ret.isEmpty() && (vo == null || (vo != null && logisticBlockData != null && !canOutputItems(ret, vo)))) continue recipe;
-                if (fluidBufferBlockData != null && !canOutputFluid(countOutputFluids(recipe), fluidBufferBlockData)) continue recipe;
+                if (!ret.isEmpty() && (vo == null || (vo != null && logisticBlockData != null && !canOutputItems(ret, vo)))) {
+                    continue;
+                }
+                if (fluidBufferBlockData != null && !canOutputFluid(countOutputFluids(recipe), fluidBufferBlockData)) {
+                    continue;
+                }
 
-                if (!recipe.getOther().isEmpty()) {
-                    if (!handleRecipeOther(this, recipe, logisticBlockData, fluidBufferBlockData, loadRecipeType)) continue recipe;
+                if (recipe instanceof CustomRecipe cr) {
+                    if (!cr.getOther().isEmpty()) {
+                        if (!handleRecipeOther(this, recipe, logisticBlockData, fluidBufferBlockData, loadRecipeType)) {
+                            continue;
+                        }
+                    }
                 }
 
                 // found recipe
                 processingRecipe = recipe;
-                remainingTicks = recipe.getTimeTicks();
+                if (recipe instanceof CustomRecipe cr) {
+                    int totalTicks = cr.getTimeTicks() / getSpeed();
+                    remainingTicks = totalTicks;
+                    progressItem.setTotalTimeTicks(totalTicks);
+                    progressItem.setRemainingTimeTicks(remainingTicks);
+                }
 
                 // consume items and fluids
                 for (var e : recipe.getInputs()) {
@@ -413,7 +437,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                 }
             }
         }
-        callScript(this, deltaSeconds);
+        callScript(this, processingRecipe, progressItem, deltaSeconds);
     }
 
     public boolean handleRecipeOther(@Nullable Object... args) {
@@ -422,6 +446,19 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
             return b;
         }
         return false;
+    }
+
+    public int getSpeed() {
+        if (isFunctionExists("getSpeed")) {
+            var v = callScript(this);
+            if (v instanceof Number n) {
+                return n.intValue();
+            }
+        }
+
+        var settings = getSettingsOrNull();
+        if (settings == null) return 1;
+        return settings.get("speed", ConfigAdapter.INT, 1);
     }
 
     @Override
@@ -496,18 +533,37 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
 
     @Override
     public Gui createGui() {
-        return CustomRecipeType.makeGui(guiData);
+        if (isFunctionExists("createGui")) {
+            var v = callScript(this);
+            if (v instanceof Gui gui) {
+                return gui;
+            }
+        }
+        return CustomRecipeType.makeGui(guiData, vs, progressItem);
     }
 
     @Override
     public void setupLogisticGroups() {
-        if (logisticBlockData != null) {
+        if (logisticBlockData != null && guiData != null) {
             for (var e : logisticBlockData) {
-                var vi = vis.get(e.invSlotChar());
-                if (vi == null) {
-                    continue;
+                var size = 0;
+                for (var line : guiData.structure()) {
+                    for (var c : line.toCharArray()) {
+                        if (c == e.invSlotChar()) {
+                            size += 1;
+                        }
+                    }
                 }
-                createLogisticGroup(e.name(), e.slotType(), vi);
+                var v = new VirtualInventory(size);
+                vs.put(e.invSlotChar(), v);
+                if (e.slotType() == LogisticSlotType.OUTPUT || e.slotType() == LogisticSlotType.BOTH) {
+                    v.setPreUpdateHandler(event -> {
+                        if (!event.isRemove() && event.getUpdateReason() instanceof PlayerUpdateReason) {
+                            event.setCancelled(true);
+                        }
+                    });
+                }
+                createLogisticGroup(e.name(), e.slotType(), v);
             }
         }
     }

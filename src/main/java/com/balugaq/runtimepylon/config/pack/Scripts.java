@@ -63,7 +63,7 @@ public class Scripts implements FileObject<Scripts> {
                             continue;
                         }
                         if (EVENTS_SCRIPT_FILE.equals(file.getName())) {
-                            eventsScript = createJSScriptExecutor(file);
+                            eventsScript = createJSScriptExecutor(file); // todo
                             continue;
                         }
                         scripts.put(StringUtil.simplifyPath(file.getPath()), createJSScriptExecutor(file));
