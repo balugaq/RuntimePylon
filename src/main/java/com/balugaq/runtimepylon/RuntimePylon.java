@@ -147,6 +147,11 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         registerWithPylon();
     }
 
+    @Override
+    public void onDisable() {
+        RuntimePylon.getPackManager().destroy();
+    }
+
     private void setupLibraries() {
         BukkitLibraryManager libraryManager = new BukkitLibraryManager(this);
 

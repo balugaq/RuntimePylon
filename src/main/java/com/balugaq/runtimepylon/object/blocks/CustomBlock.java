@@ -228,6 +228,8 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
 
     @Override
     public void onBreak(final List<ItemStack> drops, final BlockBreakContext context) {
+        PylonFluidBufferBlock.super.onBreak(drops, context);
+        PylonGuiBlock.super.onBreak(drops, context);
         callScript(this, drops, context);
     }
 
