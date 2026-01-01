@@ -1,7 +1,17 @@
-package com.balugaq.runtimepylon.config;
+package com.balugaq.runtimepylon.manager;
 
 import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.RuntimePylon;
+import com.balugaq.runtimepylon.config.DependencyType;
+import com.balugaq.runtimepylon.config.FileObject;
+import com.balugaq.runtimepylon.config.Pack;
+import com.balugaq.runtimepylon.config.PackDesc;
+import com.balugaq.runtimepylon.config.PackSorter;
+import com.balugaq.runtimepylon.config.PluginDesc;
+import com.balugaq.runtimepylon.config.PostLoadTask;
+import com.balugaq.runtimepylon.config.PostLoadable;
+import com.balugaq.runtimepylon.config.SaveditemDesc;
+import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.config.pack.Saveditems;
 import com.balugaq.runtimepylon.data.MyArrayList;
 import com.balugaq.runtimepylon.exceptions.IdConflictException;
@@ -14,6 +24,7 @@ import com.balugaq.runtimepylon.exceptions.UnsupportedVersionException;
 import com.balugaq.runtimepylon.object.CustomGuidePage;
 import com.balugaq.runtimepylon.object.PackAddon;
 import com.balugaq.runtimepylon.util.Debug;
+import com.balugaq.runtimepylon.util.GitHubUpdater;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import io.github.pylonmc.pylon.core.block.BlockStorage;
@@ -34,6 +45,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -159,7 +171,6 @@ import java.util.function.Consumer;
 @SuppressWarnings("JavadocLinkAsPlainText")
 @NullMarked
 public @Data class PackManager {
-    public static final File PACKS_FOLDER = new File(RuntimePylon.getInstance().getDataFolder(), "packs");
     private static final List<PostLoadTask<? extends PostLoadable>> postLoads = new ObjectArrayList<>(32);
     private final List<Pack> packs = new ArrayList<>();
 
@@ -208,42 +219,62 @@ public @Data class PackManager {
         return RuntimePylon.getPackManager().packs;
     }
 
+    public void loadPack(File packFolder) {
+        if (!packFolder.exists()) return;
+        if (!packFolder.isDirectory()) return;
+        try (var ignored = StackFormatter.setPosition("Loading pack folder: " + packFolder.getName())) {
+            Debug.log("Loading pack: " + packFolder.getName());
+            Pack pack = FileObject.newDeserializer(Pack.class).deserialize(packFolder);
+            MinecraftVersion min = pack.getPackMinAPIVersion();
+            if (min != null && MinecraftVersion.current().isBefore(min)) {
+                throw new UnsupportedVersionException("Current minecraft version is: " + MinecraftVersion.current().humanize() + ", but minimum version to load is: " + min.humanize());
+            }
+            MinecraftVersion max = pack.getPackMaxAPIVersion();
+            if (max != null && MinecraftVersion.current().isAtLeast(max)) {
+                throw new UnsupportedVersionException("Current minecraft version is: " + MinecraftVersion.current().humanize() + ", but maximum version to load is: " + max.humanize());
+            }
+            MyArrayList<PluginDesc> pluginDependencies = pack.getPluginDependencies();
+            if (pluginDependencies != null) {
+                ArrayList<PluginDesc> missing = new ArrayList<>();
+                for (PluginDesc pluginDependency : pluginDependencies) {
+                    if (!Bukkit.getPluginManager().isPluginEnabled(pluginDependency.getId()))
+                        missing.add(pluginDependency);
+                }
+
+                if (!missing.isEmpty()) throw new PluginDependencyMissingException(pack, missing);
+            }
+            for (Pack pk : packs) {
+                if (pk.getPackID().equals(pack.getPackID())) {
+                    throw new IdConflictException(pk.getPackID(), pk.getDir(), pack.getDir());
+                }
+            }
+            packs.add(pack);
+        } catch (Exception e) {
+            StackFormatter.handle(e);
+        }
+    }
+
     public void loadPacks() {
-        if (!PACKS_FOLDER.exists()) PACKS_FOLDER.mkdirs();
-        for (File packFolder : PACKS_FOLDER.listFiles()) {
+        if (!RuntimePylon.getPacksFolder().exists()) RuntimePylon.getPacksFolder().mkdirs();
+        for (File packFolder : RuntimePylon.getPacksFolder().listFiles()) {
             if (!packFolder.isDirectory()) {
                 continue;
             }
 
-            try (var ignored = StackFormatter.setPosition("Loading Pack Folder: " + packFolder.getName())) {
-                Debug.log("Loading pack: " + packFolder.getName());
-                Pack pack = FileObject.newDeserializer(Pack.class).deserialize(packFolder);
-                MinecraftVersion min = pack.getPackMinAPIVersion();
-                if (min != null && MinecraftVersion.current().isBefore(min)) {
-                    throw new UnsupportedVersionException("Current version is: " + MinecraftVersion.current().humanize() + ", but minimum version to load is: " + min.humanize());
-                }
-                MinecraftVersion max = pack.getPackMaxAPIVersion();
-                if (max != null && MinecraftVersion.current().isAtLeast(max)) {
-                    throw new UnsupportedVersionException("Current version is: " + MinecraftVersion.current().humanize() + ", but maximum version to load is: " + max.humanize());
-                }
-                MyArrayList<PluginDesc> pluginDependencies = pack.getPluginDependencies();
-                if (pluginDependencies != null) {
-                    ArrayList<PluginDesc> missing = new ArrayList<>();
-                    for (PluginDesc pluginDependency : pluginDependencies) {
-                        if (!Bukkit.getPluginManager().isPluginEnabled(pluginDependency.getId()))
-                            missing.add(pluginDependency);
-                    }
+            loadPack(packFolder);
+        }
 
-                    if (!missing.isEmpty()) throw new PluginDependencyMissingException(pack, missing);
-                }
-                for (Pack pk : packs) {
-                    if (pk.getPackID().equals(pack.getPackID())) {
-                        throw new IdConflictException(pk.getPackID(), pk.getDir(), pack.getDir());
+        for (Pack pack : packs) {
+            if (pack.getGithubUpdateLink() != null) {
+                Debug.log("Updating pack: " + pack.getPackID().getId());
+                try {
+                    if (GitHubUpdater.tryUpdate(pack)) {
+                        loadPack(pack.getDir());
+                        Debug.log("Updated pack: " + pack.getPackID().getId());
                     }
+                } catch (IOException e) {
+                    Debug.warning(e);
                 }
-                packs.add(pack);
-            } catch (Exception e) {
-                StackFormatter.handle(e);
             }
         }
 

@@ -27,6 +27,7 @@ import com.balugaq.runtimepylon.exceptions.MissingFileException;
 import com.balugaq.runtimepylon.exceptions.PackException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
 import com.balugaq.runtimepylon.exceptions.UnknownItemException;
+import com.balugaq.runtimepylon.manager.PackManager;
 import com.balugaq.runtimepylon.object.CustomFluid;
 import com.balugaq.runtimepylon.object.CustomGuidePage;
 import com.balugaq.runtimepylon.object.CustomRecipeType;

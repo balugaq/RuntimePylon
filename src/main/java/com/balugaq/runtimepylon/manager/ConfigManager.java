@@ -16,12 +16,14 @@ import java.io.Reader;
 /**
  * @author balugaq
  */
-@SuppressWarnings({"ConstantValue", "unused"})
+@SuppressWarnings("unused")
 @NullMarked
 public class ConfigManager {
     private final JavaPlugin plugin;
     private final boolean AUTO_UPDATE;
     private final boolean DEBUG;
+    private final boolean ENABLED_PACK_UPDATE;
+    private final boolean UPDATE_PRE_RELEASE_PACKS;
 
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -30,6 +32,8 @@ public class ConfigManager {
 
         this.AUTO_UPDATE = cfg.getBoolean("auto-update", false);
         this.DEBUG = cfg.getBoolean("debug", false);
+        this.ENABLED_PACK_UPDATE = cfg.getBoolean("pack-update.enabled", true);
+        this.UPDATE_PRE_RELEASE_PACKS = cfg.getBoolean("pack-update.pre-releases", false);
     }
 
     private void setupDefaultConfig() {
@@ -74,5 +78,13 @@ public class ConfigManager {
 
     public boolean isDebug() {
         return DEBUG;
+    }
+
+    public boolean isEnabledPackUpdate() {
+        return ENABLED_PACK_UPDATE;
+    }
+
+    public boolean isUpdatePreReleasePacks() {
+        return UPDATE_PRE_RELEASE_PACKS;
     }
 }

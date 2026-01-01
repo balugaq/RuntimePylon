@@ -10,7 +10,6 @@ import java.io.File;
  */
 @NullMarked
 public interface DebuggablePlugin extends Plugin {
-    File getErrorReportsFolder();
     String getRepoOwner();
     String getRepoName();
 

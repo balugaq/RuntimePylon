@@ -4,7 +4,7 @@ import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.Language;
 import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.PackDesc;
-import com.balugaq.runtimepylon.config.PackManager;
+import com.balugaq.runtimepylon.manager.PackManager;
 import com.balugaq.runtimepylon.config.PluginDesc;
 import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.config.pack.Author;

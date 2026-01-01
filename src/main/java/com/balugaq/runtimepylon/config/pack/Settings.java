@@ -1,6 +1,6 @@
 package com.balugaq.runtimepylon.config.pack;
 
-import com.balugaq.runtimepylon.config.PackManager;
+import com.balugaq.runtimepylon.manager.PackManager;
 import com.balugaq.runtimepylon.util.Debug;
 import lombok.AllArgsConstructor;
 import lombok.Data;

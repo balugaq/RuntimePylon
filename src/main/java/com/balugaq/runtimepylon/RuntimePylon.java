@@ -1,7 +1,7 @@
 package com.balugaq.runtimepylon;
 
 import com.balugaq.runtimepylon.command.RuntimePylonCommand;
-import com.balugaq.runtimepylon.config.PackManager;
+import com.balugaq.runtimepylon.manager.PackManager;
 import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.listener.ChatInputListener;
 import com.balugaq.runtimepylon.manager.ConfigManager;
@@ -45,11 +45,13 @@ import java.util.stream.Collectors;
  */
 @NullMarked
 public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePlugin {
+    public final File PACKS_FOLDER = new File(getInstance().getDataFolder(), "packs");
     @Getter
     @UnknownNullability
     private static RuntimePylon instance;
     private final Set<Locale> SUPPORTED_LANGUAGES = new HashSet<>();
-    private final File ERROR_REPORTS_FOLDER = new File(RuntimePylon.getInstance().getDataFolder(), "error-reports");
+    private final File ERROR_REPORTS_FOLDER = new File(getInstance().getDataFolder(), "error-reports");
+    private final File PACK_UPDATE_DOWNLOAD_FOLDER = new File(getInstance().getDataFolder(), "pack-update-downloads");
     @UnknownNullability
     private ConfigManager configManager;
     @UnknownNullability
@@ -243,9 +245,8 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePl
         SUPPORTED_LANGUAGES.addAll(languages);
     }
 
-    @Override
-    public File getErrorReportsFolder() {
-        return ERROR_REPORTS_FOLDER;
+    public static File getErrorReportsFolder() {
+        return getInstance().ERROR_REPORTS_FOLDER;
     }
 
     @Override
@@ -257,6 +258,12 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePl
     public String getRepoName() {
         return getName();
     }
-}
 
-//todo multiblock template
+    public static File getPackUpdateDownloadFolder() {
+        return getInstance().PACK_UPDATE_DOWNLOAD_FOLDER;
+    }
+
+    public static File getPacksFolder() {
+        return getInstance().PACKS_FOLDER;
+    }
+}

@@ -71,7 +71,7 @@ public class Debug {
         String fileName = "error-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"))
                 + "-" + e.getClass().getSimpleName() + "-" + UUID.randomUUID() + ".txt";
 
-        File file = new File(getPlugin().getErrorReportsFolder(), fileName);
+        File file = new File(RuntimePylon.getErrorReportsFolder(), fileName);
         try {
             file.createNewFile();
             try (PrintStream stream = new PrintStream(file, StandardCharsets.UTF_8)) {

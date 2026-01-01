@@ -1,5 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
+import com.balugaq.runtimepylon.manager.PackManager;
 import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.NullMarked;
 
