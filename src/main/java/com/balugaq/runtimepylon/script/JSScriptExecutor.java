@@ -7,6 +7,7 @@ import com.caoccao.javet.values.V8Value;
 import com.caoccao.javet.values.reference.V8Script;
 import com.caoccao.javet.values.reference.V8ValueFunction;
 import com.caoccao.javet.values.reference.V8ValueObject;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
@@ -17,6 +18,7 @@ import java.io.File;
  */
 @NullMarked
 public class JSScriptExecutor extends ScriptExecutor {
+    private final ObjectOpenHashSet<String> failedFunctions = new ObjectOpenHashSet<>();
     @Nullable private V8ValueObject scriptObject;
 
     public JSScriptExecutor(File file) {
@@ -40,6 +42,7 @@ public class JSScriptExecutor extends ScriptExecutor {
     }
 
     public boolean isFunctionExists(String functionName) {
+        if (failedFunctions.contains(functionName)) return false;
         try {
             V8Value value = GlobalVars.getScriptRuntime().getGlobalObject().get(functionName);
             boolean exists = value instanceof V8ValueFunction;
@@ -48,6 +51,7 @@ public class JSScriptExecutor extends ScriptExecutor {
             }
             return exists;
         } catch (JavetException e) {
+            failedFunctions.add(functionName);
             return false;
         }
     }

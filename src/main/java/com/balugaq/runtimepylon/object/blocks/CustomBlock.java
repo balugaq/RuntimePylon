@@ -158,7 +158,8 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
 
     @Override
     public void onInteract(final PlayerInteractEvent event) {
-        callScriptA("onPreInteract", this, event);
+        var v = callScriptA("onPreInteract", this, event);
+        if (v instanceof Boolean cancelled && cancelled) return;
 
         if (!event.getAction().isRightClick()
                 || event.getPlayer().isSneaking()
@@ -357,7 +358,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         try {
             return (Config) ReflectionUtil.invokeMethod(PylonUtils.class, "mergeGlobalConfig", PylonUtils.getAddon(getKey()), "settings/" + getKey().getKey() + ".yml", "settings/" + getKey().getNamespace() + "/" + getKey().getKey() + ".yml", false);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            Debug.warn(e);
+            Debug.warning(e);
             return null;
         }
     }

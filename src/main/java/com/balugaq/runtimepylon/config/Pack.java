@@ -768,7 +768,7 @@ public class Pack implements FileObject<Pack> {
 
     private void checkLanguage(YamlConfiguration config, Language language, PackAddon addon, String path) {
         if (!config.contains(path)) {
-            Debug.warn("Missing language [" + addon.namespace() + "] [" + language.localeCode() + "]: " + path);
+            Debug.warning("Missing language [" + addon.namespace() + "] [" + language.localeCode() + "]: " + path);
         }
     }
 

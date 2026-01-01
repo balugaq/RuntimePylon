@@ -234,7 +234,7 @@ public class RuntimePylonCommand {
         try {
             ReflectionUtil.getStaticValue(PylonUtils.class, "globalConfigCache", Map.class).clear();
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            Debug.warn(e);
+            Debug.warning(e);
         }
         return Command.SINGLE_SUCCESS;
     }

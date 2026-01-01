@@ -195,7 +195,7 @@ public @Data class PackManager {
         if (dependencyType == DependencyType.HARD) {
             Debug.severe("Found a pack hard dependency cycle, packs will NOT be loaded: " + cycleStr);
         } else {
-            Debug.warn("Found a pack soft dependency cycle, packs will be loaded from " + cycle.stream().min(String::compareTo).get() + ": " + cycleStr);
+            Debug.warning("Found a pack soft dependency cycle, packs will be loaded from " + cycle.stream().min(String::compareTo).get() + ": " + cycleStr);
         }
     }
 

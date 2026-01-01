@@ -238,7 +238,7 @@ public class CustomItem extends PylonItem implements PylonArmor, PylonArrow, Pyl
         try {
             return (Config) ReflectionUtil.invokeMethod(PylonUtils.class, "mergeGlobalConfig", PylonUtils.getAddon(getKey()), "settings/" + getKey().getKey() + ".yml", "settings/" + getKey().getNamespace() + "/" + getKey().getKey() + ".yml", false);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            Debug.warn(e);
+            Debug.warning(e);
             return null;
         }
     }

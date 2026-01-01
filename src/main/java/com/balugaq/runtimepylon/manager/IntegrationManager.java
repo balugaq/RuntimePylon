@@ -42,7 +42,7 @@ public class IntegrationManager {
         try {
             ReflectionUtil.setValue(instance().isEnabled, name, enabled);
         } catch (Exception e) {
-            Debug.warn(e);
+            Debug.warning(e);
         }
         if (enabled) {
             var integration = supplier.get();

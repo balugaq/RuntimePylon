@@ -29,6 +29,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NullMarked;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,11 +44,12 @@ import java.util.stream.Collectors;
  * @author balugaq
  */
 @NullMarked
-public class RuntimePylon extends JavaPlugin implements PylonAddon {
+public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePlugin {
     @Getter
     @UnknownNullability
     private static RuntimePylon instance;
     private final Set<Locale> SUPPORTED_LANGUAGES = new HashSet<>();
+    private final File ERROR_REPORTS_FOLDER = new File(RuntimePylon.getInstance().getDataFolder(), "error-reports");
     @UnknownNullability
     private ConfigManager configManager;
     @UnknownNullability
@@ -239,6 +241,21 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
 
     public void addSupportedLanguages(Set<Locale> languages) {
         SUPPORTED_LANGUAGES.addAll(languages);
+    }
+
+    @Override
+    public File getErrorReportsFolder() {
+        return ERROR_REPORTS_FOLDER;
+    }
+
+    @Override
+    public String getRepoOwner() {
+        return "balugaq";
+    }
+
+    @Override
+    public String getRepoName() {
+        return getName();
     }
 }
 

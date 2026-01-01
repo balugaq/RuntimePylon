@@ -29,15 +29,15 @@ public class StackFormatter implements AutoCloseable {
             }
         }
 
-        Debug.warn(t.getClass().getSimpleName() + ": " + t.getMessage());
+        Debug.warning(t.getClass().getSimpleName() + ": " + t.getMessage());
 
         for (int i = 1; i <= backup.size(); i++)
-            Debug.warn("  ".repeat(i - 1) + "\u2514When " + backup.get(i));
+            Debug.warning("  ".repeat(i - 1) + "\u2514When " + backup.get(i));
 
         if (RuntimePylon.getConfigManager().isDebug())
             e.printStackTrace();
 
-        Debug.warn("-".repeat(40));
+        Debug.warning("-".repeat(40));
         if (RuntimePylon.getConfigManager().isDebug())
             Thread.dumpStack();
     }
