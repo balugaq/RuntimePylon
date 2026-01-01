@@ -300,12 +300,12 @@ public @Data class PackManager {
         }
 
         try {
-            ReflectionUtil.invokeMethod(BlockStorage.class, "cleanup", plugin);
+            ReflectionUtil.invokeMethod(BlockStorage.INSTANCE, "cleanup$pylon_core", plugin);
         } catch (Exception e) {
             StackFormatter.handle(e);
         }
         try {
-            ReflectionUtil.invokeMethod(EntityStorage.class, "cleanup", plugin);
+            ReflectionUtil.invokeMethod(EntityStorage.INSTANCE, "cleanup$pylon_core", plugin);
         } catch (Exception e) {
             StackFormatter.handle(e);
         }
