@@ -149,7 +149,7 @@ public class Pack implements FileObject<Pack> {
     private final PackNamespace packNamespace;
     private final PackVersion packVersion;
     @Nullable
-    private final YamlConfiguration packConfig; // todo
+    private final YamlConfiguration packConfig;
     @Nullable
     private final MinecraftVersion packMinAPIVersion;
     @Nullable
@@ -395,12 +395,14 @@ public class Pack implements FileObject<Pack> {
 
                 boolean suppressLanguageMissingWarning = config.getBoolean("suppressLanguageMissingWarning", false);
 
+                YamlConfiguration packConfig = YamlConfiguration.loadConfiguration(new File(dir, "pack.yml"));
+
                 return new Pack(
                         dir,
                         id,
                         namespace,
                         version,
-                        new YamlConfiguration(),
+                        packConfig,
                         minAPIVersion,
                         maxAPIVersion,
                         packLoadBefores,

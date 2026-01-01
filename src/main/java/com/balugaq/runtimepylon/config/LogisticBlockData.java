@@ -1,12 +1,9 @@
 package com.balugaq.runtimepylon.config;
 
-import com.balugaq.runtimepylon.GlobalVars;
 import io.github.pylonmc.pylon.core.logistics.LogisticSlotType;
 import org.bukkit.NamespacedKey;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NullMarked;
-import xyz.xenondevs.invui.inventory.VirtualInventory;
 
 import java.util.ArrayList;
 import java.util.Iterator;

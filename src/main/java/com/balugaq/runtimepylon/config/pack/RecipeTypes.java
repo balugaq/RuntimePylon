@@ -1,6 +1,5 @@
 package com.balugaq.runtimepylon.config.pack;
 
-import com.balugaq.runtimepylon.GlobalVars;
 import com.balugaq.runtimepylon.config.Deserializer;
 import com.balugaq.runtimepylon.config.FileObject;
 import com.balugaq.runtimepylon.config.FileReader;

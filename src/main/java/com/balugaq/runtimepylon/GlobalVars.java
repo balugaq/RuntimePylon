@@ -23,6 +23,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import org.joml.Vector3i;
 import org.jspecify.annotations.NullMarked;
 
+import java.io.File;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -41,6 +42,10 @@ public class GlobalVars {
     private static final @Getter KeyedMap<LogisticBlockData> logisticBlockDatas = new KeyedMap<>();
     private static final @Getter KeyedMap<Key> equipmentTypes = new KeyedMap<>();
     private static final @Getter V8Runtime scriptRuntime;
+    private static final File PACKS_FOLDER = new File(RuntimePylon.getInstance().getDataFolder(), "packs");
+    private static final File ERROR_REPORTS_FOLDER = new File(RuntimePylon.getInstance().getDataFolder(), "error-reports");
+    private static final File PACK_UPDATE_DOWNLOAD_FOLDER = new File(RuntimePylon.getInstance().getDataFolder(), "pack-update-downloads");
+
     static {
         try {
             scriptRuntime = V8Host.getV8Instance().createV8Runtime();
@@ -176,6 +181,18 @@ public class GlobalVars {
 
     public static Result<Key> getEquipmentTypeO(NamespacedKey key) {
         return Result.of(getEquipmentType(key));
+    }
+
+    public static File getErrorReportsFolder() {
+        return ERROR_REPORTS_FOLDER;
+    }
+
+    public static File getPackUpdateDownloadFolder() {
+        return PACK_UPDATE_DOWNLOAD_FOLDER;
+    }
+
+    public static File getPacksFolder() {
+        return PACKS_FOLDER;
     }
 
     /**

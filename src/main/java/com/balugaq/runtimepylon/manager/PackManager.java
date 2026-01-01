@@ -201,6 +201,26 @@ public @Data class PackManager {
         return itemStack;
     }
 
+    public static ItemStack findSaveditem(Pack pack, SaveditemDesc itemDesc) throws
+                                                                             SaveditemsNotFoundException, UnknownSaveditemException {
+        Saveditems saveditems = pack.getSaveditems();
+        if (saveditems == null) throw new SaveditemsNotFoundException(pack.getPackID().toDesc());
+        ItemStack itemStack = saveditems.find(itemDesc);
+        if (itemStack == null) throw new UnknownSaveditemException(pack.getPackID().toDesc(), itemDesc);
+        return itemStack;
+    }
+
+    @Nullable
+    public static ItemStack getSaveditemById(Pack pack, String itemId) {
+        if (pack.getSaveditems() == null) return null;
+        return pack.getSaveditems().getItems().entrySet()
+                .stream()
+                .filter(e -> e.getKey().getFile().getName().equals(itemId))
+                .findFirst()
+                .map(Map.Entry::getValue)
+                .orElse(null);
+    }
+
     public static void packDependencyCycle(List<String> cycle, DependencyType dependencyType) {
         String cycleStr = String.join(" -> ", cycle);
         if (dependencyType == DependencyType.HARD) {

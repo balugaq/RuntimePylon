@@ -1,11 +1,11 @@
 package com.balugaq.runtimepylon;
 
 import com.balugaq.runtimepylon.command.RuntimePylonCommand;
-import com.balugaq.runtimepylon.manager.PackManager;
 import com.balugaq.runtimepylon.config.StackFormatter;
 import com.balugaq.runtimepylon.listener.ChatInputListener;
 import com.balugaq.runtimepylon.manager.ConfigManager;
 import com.balugaq.runtimepylon.manager.IntegrationManager;
+import com.balugaq.runtimepylon.manager.PackManager;
 import com.balugaq.runtimepylon.pylon.RuntimeBlocks;
 import com.balugaq.runtimepylon.pylon.RuntimeItems;
 import com.balugaq.runtimepylon.util.Debug;
@@ -45,13 +45,10 @@ import java.util.stream.Collectors;
  */
 @NullMarked
 public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePlugin {
-    public final File PACKS_FOLDER = new File(getInstance().getDataFolder(), "packs");
     @Getter
     @UnknownNullability
     private static RuntimePylon instance;
     private final Set<Locale> SUPPORTED_LANGUAGES = new HashSet<>();
-    private final File ERROR_REPORTS_FOLDER = new File(getInstance().getDataFolder(), "error-reports");
-    private final File PACK_UPDATE_DOWNLOAD_FOLDER = new File(getInstance().getDataFolder(), "pack-update-downloads");
     @UnknownNullability
     private ConfigManager configManager;
     @UnknownNullability
@@ -203,6 +200,8 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePl
         for (String dependency : dependencies) {
             loadLibrary(libraryManager, "com.caoccao.javet", dependency, javetVersion);
         }
+
+        loadLibrary(libraryManager, "org.apache.httpcomponents", "httpclient", "4.5.14");
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -245,10 +244,6 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePl
         SUPPORTED_LANGUAGES.addAll(languages);
     }
 
-    public static File getErrorReportsFolder() {
-        return getInstance().ERROR_REPORTS_FOLDER;
-    }
-
     @Override
     public String getRepoOwner() {
         return "balugaq";
@@ -259,11 +254,15 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePl
         return getName();
     }
 
+    public static File getErrorReportsFolder() {
+        return GlobalVars.getErrorReportsFolder();
+    }
+
     public static File getPackUpdateDownloadFolder() {
-        return getInstance().PACK_UPDATE_DOWNLOAD_FOLDER;
+        return GlobalVars.getPackUpdateDownloadFolder();
     }
 
     public static File getPacksFolder() {
-        return getInstance().PACKS_FOLDER;
+        return GlobalVars.getPacksFolder();
     }
 }

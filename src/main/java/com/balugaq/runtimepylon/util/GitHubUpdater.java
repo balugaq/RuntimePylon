@@ -3,12 +3,20 @@ package com.balugaq.runtimepylon.util;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.Pack;
 import com.balugaq.runtimepylon.config.PackDesc;
-import com.balugaq.runtimepylon.manager.PackManager;
 import com.balugaq.runtimepylon.config.pack.GitHubUpdateLink;
 import com.balugaq.runtimepylon.config.pack.PackID;
 import com.balugaq.runtimepylon.config.pack.PackVersion;
 import com.balugaq.runtimepylon.data.GitHubRelease;
+import com.balugaq.runtimepylon.manager.PackManager;
 import com.google.gson.Gson;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -23,14 +31,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NullMarked;
 
 /**
  * @author lijinhong11

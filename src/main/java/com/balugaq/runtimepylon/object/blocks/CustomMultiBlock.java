@@ -1,11 +1,9 @@
 package com.balugaq.runtimepylon.object.blocks;
 
 import com.balugaq.runtimepylon.GlobalVars;
-import com.balugaq.runtimepylon.object.CustomRecipe;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
-import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;

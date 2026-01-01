@@ -60,7 +60,7 @@ dependencies {
     compileOnly("com.caoccao.javet:javet-v8-macos-arm64:5.0.2")
     compileOnly("com.caoccao.javet:javet-v8-macos-x86_64:5.0.2")
     compileOnly("com.caoccao.javet:javet-v8-windows-x86_64:5.0.2")
-    implementation("org.apache.httpcomponents:httpclient:4.5.14")
+    compileOnly("org.apache.httpcomponents:httpclient:4.5.14")
 }
 
 idea {
