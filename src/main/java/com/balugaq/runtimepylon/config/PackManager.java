@@ -11,7 +11,7 @@ import com.balugaq.runtimepylon.exceptions.SaveditemsNotFoundException;
 import com.balugaq.runtimepylon.exceptions.UnknownPackException;
 import com.balugaq.runtimepylon.exceptions.UnknownSaveditemException;
 import com.balugaq.runtimepylon.exceptions.UnsupportedVersionException;
-import com.balugaq.runtimepylon.object.CustomPage;
+import com.balugaq.runtimepylon.object.CustomGuidePage;
 import com.balugaq.runtimepylon.object.PackAddon;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.MinecraftVersion;
@@ -310,7 +310,7 @@ public @Data class PackManager {
             StackFormatter.handle(e);
         }
         RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {
-            return item instanceof PageButton pb && pb.getPage() instanceof CustomPage;
+            return item instanceof PageButton pb && pb.getPage() instanceof CustomGuidePage;
         }));
 
         RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {

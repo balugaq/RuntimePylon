@@ -39,7 +39,7 @@ public interface Scriptable {
 
     @CanIgnoreReturnValue
     @Nullable
-    default <T extends Event & Cancellable> Object callOrCancelEvent(Scriptable self, T event, Object... objects) {
+    default <T extends Event & Cancellable> Object callOrCancelEvent(Scriptable self, T event, @Nullable Object... objects) {
         String caller = getCallerMethodName();
         var v = callScriptA(caller, self, event, objects);
         if (v == null) event.setCancelled(true);
@@ -48,7 +48,7 @@ public interface Scriptable {
 
     @CanIgnoreReturnValue
     @Nullable
-    default Object callScriptA(String methodName, Object... objects) {
+    default Object callScriptA(String methodName, @Nullable Object... objects) {
         return GlobalVars.getScriptO(getKey()).ifPresent(script -> script.executeFunction(
                 methodName,
                 objects

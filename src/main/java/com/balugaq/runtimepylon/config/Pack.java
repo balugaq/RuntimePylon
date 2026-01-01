@@ -28,7 +28,7 @@ import com.balugaq.runtimepylon.exceptions.PackException;
 import com.balugaq.runtimepylon.exceptions.UnknownEnumException;
 import com.balugaq.runtimepylon.exceptions.UnknownItemException;
 import com.balugaq.runtimepylon.object.CustomFluid;
-import com.balugaq.runtimepylon.object.CustomPage;
+import com.balugaq.runtimepylon.object.CustomGuidePage;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.object.ItemStackProvider;
 import com.balugaq.runtimepylon.object.PackAddon;
@@ -542,7 +542,7 @@ public class Pack implements FileObject<Pack> {
                 RegisteredObjectID id = e.id();
                 try (var sk = StackFormatter.setPosition("Loading page: " + id)) {
                     Material icon = e.material();
-                    CustomPage page = new CustomPage(id.key(), icon);
+                    CustomGuidePage page = new CustomGuidePage(id.key(), icon);
                     if (e.parents() == null) {
                         PylonGuide.getRootPage().addPage(page);
                     } else {

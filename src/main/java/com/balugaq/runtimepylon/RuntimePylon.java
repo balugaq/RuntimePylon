@@ -80,15 +80,23 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
         Bukkit.getScheduler().runTaskAsynchronously(getInstance(), runnable);
     }
 
-    public static void runTaskAsyncLater(Runnable runnable, long delay) {
+    public static void runTaskLaterAsync(Runnable runnable, long delay) {
         Bukkit.getScheduler().runTaskLaterAsynchronously(getInstance(), runnable, delay);
+    }
+
+    public static void runTaskTimerAsync(Runnable runnable, long delay, long period) {
+        Bukkit.getScheduler().runTaskTimerAsynchronously(getInstance(), runnable, delay, period);
+    }
+
+    public static void runTaskTimerAsync(Consumer<? super BukkitTask> task, long delay, long period) {
+        Bukkit.getScheduler().runTaskTimerAsynchronously(getInstance(), task, delay, period);
     }
 
     public static void runTaskTimer(Runnable runnable, long delay, long period) {
         Bukkit.getScheduler().runTaskTimer(getInstance(), runnable, delay, period);
     }
 
-    public static void runTaskTimer(Consumer<BukkitTask> consumer, long delay, long period) {
+    public static void runTaskTimer(Consumer<? super BukkitTask> consumer, long delay, long period) {
         Bukkit.getScheduler().runTaskTimer(getInstance(), consumer, delay, period);
     }
 
@@ -107,11 +115,6 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon {
     @Override
     public void onEnable() {
         // `/runtime updatepacks` to update packs from github // todo
-        // `/runtime clearsettings` to clear settings
-        // `/runtime clearrecipes` to clear recipes
-        // `/runtime clearlang` to clear lang files
-        // `/runtime clearall` to clear all
-        // `/runtime reloadpacks` to reload packs
         instance = this;
         addSupportedLanguages(Locale.ENGLISH);
         setupLibraries();
