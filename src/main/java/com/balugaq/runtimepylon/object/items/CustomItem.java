@@ -58,6 +58,35 @@ import org.jspecify.annotations.NullMarked;
 import java.lang.reflect.InvocationTargetException;
 
 /**
+ * {@link Scriptable} proxy methods:
+ * - onUsedToClickBlock
+ * - onUsedAsBrewingStandFuel
+ * - onConsumed
+ * - onUsedToRightClick
+ * - onDispense
+ * - onTick
+ * - getTickInterval
+ * - onSplash
+ * - onBurntAsFuel
+ * - onArrowReady
+ * - onArrowShotFromBow
+ * - onArrowHit
+ * - onArrowDamage
+ * - onBowReady
+ * - onBowFired
+ * - onBucketEmptied
+ * - onBucketFilled
+ * - respectCooldown
+ * - onRemovedFromInventory
+ * - onAddedToInventory
+ * - onItemDamaged
+ * - onItemBreaks
+ * - onItemMended
+ * - onUsedToDamageBlock
+ * - onUsedToBreakBlock
+ * - onUsedToDamageEntity
+ * - onUsedToKillEntity
+ *
  * @author balugaq
  */
 @NullMarked
@@ -101,8 +130,14 @@ public class CustomItem extends PylonItem implements PylonArmor, PylonArrow, Pyl
 
     @Override
     public long getTickInterval() {
-        if (!isFunctionExists("tick"))
+        if (!isFunctionExists("onTick"))
             return Integer.MAX_VALUE;
+        if (isFunctionExists("getTickInterval")) {
+            var v = callScript(this);
+            if (v instanceof Number number) {
+                return number.intValue();
+            }
+        }
         var settings = getSettingsOrNull();
         if (settings == null) return PylonConfig.getDefaultTickInterval();
         return settings.get("tick-interval", ConfigAdapter.LONG, (long) PylonConfig.getDefaultTickInterval());
@@ -165,6 +200,11 @@ public class CustomItem extends PylonItem implements PylonArmor, PylonArrow, Pyl
 
     @Override
     public boolean respectCooldown() {
+        if (isFunctionExists("respectCooldown")) {
+            var v = callScript(this);
+            if (v instanceof Boolean respectCooldown)
+                return respectCooldown;
+        }
         var settings = getSettingsOrNull();
         if (settings == null) return true;
         return settings.get("respect-cooldown", ConfigAdapter.BOOLEAN, true);

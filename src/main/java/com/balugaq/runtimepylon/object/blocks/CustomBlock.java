@@ -114,6 +114,57 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * {@link Scriptable} proxy methods:
+ * - onPreInteract
+ * - onPostInteract
+ * - onFlowerPotManipulated
+ * - onActivated
+ * - onDeactivated
+ * - onEffectChange
+ * - onEffectApply
+ * - onRing
+ * - onResonate
+ * - preBreak
+ * - onBreak
+ * - postBreak
+ * - onStartCooking
+ * - onEndCooking
+ * - onLevelChange
+ * - onCompostByHopper
+ * - onCompostByEntity
+ * - onInventoryOpen
+ * - onItemMoveTo
+ * - onItemMoveFrom
+ * - onDecayNaturally
+ * - onJumpedOn
+ * - onGrow
+ * - onFertilize
+ * - onInsertBook
+ * - onRemoveBook
+ * - onChangePage
+ * - preOnTick
+ * - onTick
+ * - getTickInterval
+ * - isAsync
+ * - getSpeed
+ * - onNotePlay
+ * - onCurrentChange
+ * - onShear
+ * - onAbsorb
+ * - onIgnite
+ * - onHit
+ * - onDisplayItem
+ * - onUnload
+ * - onExtend
+ * - onRetract
+ * - onSignChange
+ * - onOpen
+ * - onSneakedOn
+ * - onUnsneakedOn
+ * - createGui
+ * - onPreSetupLogisticGroups
+ * - onPostSetupLogisticGroups
+ *
  * @author balugaq
  */
 @NullMarked
@@ -316,7 +367,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
 
     @Override
     public int getTickInterval() {
-        if (!isFunctionExists("tick")) {
+        if (!isFunctionExists("onTick")) {
             if (loadRecipeType == null) {
                 setTickInterval(Integer.MAX_VALUE);
                 return Integer.MAX_VALUE;
@@ -365,6 +416,8 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
 
     @Override
     public void tick(final double deltaSeconds) {
+        var v = callScriptA("preOnTick", this, processingRecipe, progressItem, deltaSeconds);
+        if (v instanceof Boolean cancelled && cancelled) return;
         if (processingRecipe != null) {
             remainingSeconds--;
             if (remainingSeconds <= 0) {
@@ -465,7 +518,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                 }
             }
         }
-        callScript(this, processingRecipe, progressItem, deltaSeconds);
+        callScript("onTick", this, processingRecipe, progressItem, deltaSeconds);
     }
 
     public boolean handleRecipeOther(@Nullable Object... args) {
@@ -576,6 +629,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     @Override
     public void setupLogisticGroups() {
         if (haveSetLogisticGroups) return;
+        callScript("onPreSetupLogisticGroups", this);
         if (logisticBlockData != null && guiData != null) {
             for (var e : logisticBlockData) {
                 var size = 0;
@@ -598,10 +652,11 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                 createLogisticGroup(e.name(), e.slotType(), v);
             }
         }
+        callScript("onPostSetupLogisticGroups", this);
         haveSetLogisticGroups = true;
     }
 
-    public boolean canOutputFluid(Map<PylonFluid, Double> results, FluidBufferBlockData fluidBufferBlockData) {
+    private boolean canOutputFluid(Map<PylonFluid, Double> results, FluidBufferBlockData fluidBufferBlockData) {
         for (var e : results.entrySet()) {
             if (!hasFluid(e.getKey())
             || !fluidBufferBlockData.outputFluids().contains(e.getKey())
@@ -612,7 +667,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         return true;
     }
 
-    public boolean canOutputItems(Object2IntLinkedOpenHashMap<ItemStack> results, VirtualInventory inventory) {
+    private boolean canOutputItems(Object2IntLinkedOpenHashMap<ItemStack> results, VirtualInventory inventory) {
         int[] lefts = inventory.simulateAdd(results.sequencedKeySet().stream().toList());
 
         for (final int i : lefts) if (i != 0) return false;
@@ -620,7 +675,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         return true;
     }
 
-    public static Object2DoubleOpenHashMap<PylonFluid> countOutputFluids(PylonRecipe recipe) {
+    private static Object2DoubleOpenHashMap<PylonFluid> countOutputFluids(PylonRecipe recipe) {
         if (recipe instanceof CustomRecipe cr && cr.getCountOutputFluids() != null) {
             return cr.getCountOutputFluids();
         }
@@ -639,7 +694,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         return ret;
     }
 
-    public static Object2IntLinkedOpenHashMap<ItemStack> countResults(PylonRecipe recipe) {
+    private static Object2IntLinkedOpenHashMap<ItemStack> countResults(PylonRecipe recipe) {
         if (recipe instanceof CustomRecipe cr && cr.getCountOutputItems() != null) {
             return cr.getCountOutputItems();
         }
@@ -659,7 +714,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         return ret;
     }
 
-    public static ItemStack getRepresentativeIcon(PylonRecipe recipe) {
+    private static ItemStack getRepresentativeIcon(PylonRecipe recipe) {
         for (var r : recipe.getResults()) {
             if (r instanceof FluidOrItem.Item item) {
                 return item.item();
