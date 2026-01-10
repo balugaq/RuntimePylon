@@ -13,7 +13,6 @@ import com.balugaq.runtimepylon.util.OSUtil;
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
-import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
@@ -21,7 +20,6 @@ import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.byteflux.libby.LibraryManager;
 import org.bukkit.Bukkit;
-import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -56,20 +54,17 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePl
     @UnknownNullability
     private PackManager packManager;
 
-    public static Map<NamespacedKey, SimpleStaticGuidePage> getGuidePages() {
-        var pages = new HashMap<>(PylonGuide.getRootPage().getButtons()
+    public static Map<NamespacedKey, PageButton> getGuidePages() {
+        Map<NamespacedKey, PageButton> pages = new HashMap<>(PylonGuide.getRootPage().getButtons()
           .stream()
           .filter(button -> button instanceof PageButton)
-          .map(button -> ((PageButton) button).getPage())
-          .filter(page -> page instanceof SimpleStaticGuidePage)
-          .map(page -> (SimpleStaticGuidePage) page)
+          .map(button -> (PageButton) button)
           .collect(Collectors.toMap(
-                  Keyed::getKey,
-                  page -> page,
+                  button -> button.getPage().getKey(),
+                  button -> button,
                   (a, b) -> b
           )));
         pages.putAll(GlobalVars.getCustomPages());
-        pages.put(PylonGuide.getRootPage().getKey(), PylonGuide.getRootPage());
         return pages;
     }
 

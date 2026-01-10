@@ -1,6 +1,6 @@
 package com.balugaq.runtimepylon.config;
 
-import io.github.pylonmc.pylon.core.logistics.LogisticSlotType;
+import io.github.pylonmc.pylon.core.logistics.LogisticGroupType;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NullMarked;
@@ -27,7 +27,7 @@ public record LogisticBlockData(NamespacedKey key, @Unmodifiable List<SingletonL
     public List<Character> inputInventories() {
         List<Character> chars = new ArrayList<>();
         for (var e : data) {
-            if (e.slotType() == LogisticSlotType.INPUT || e.slotType() == LogisticSlotType.BOTH) {
+            if (e.slotType() == LogisticGroupType.INPUT || e.slotType() == LogisticGroupType.BOTH) {
                 chars.add(e.invSlotChar());
             }
         }
@@ -37,7 +37,7 @@ public record LogisticBlockData(NamespacedKey key, @Unmodifiable List<SingletonL
     public List<Character> outputInventories() {
         List<Character> chars = new ArrayList<>();
         for (var e : data) {
-            if (e.slotType() == LogisticSlotType.OUTPUT || e.slotType() == LogisticSlotType.BOTH) {
+            if (e.slotType() == LogisticGroupType.OUTPUT || e.slotType() == LogisticGroupType.BOTH) {
                 chars.add(e.invSlotChar());
             }
         }

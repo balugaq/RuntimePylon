@@ -49,12 +49,13 @@ import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.event.PylonBlockUnloadEvent;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
-import io.github.pylonmc.pylon.core.logistics.LogisticSlotType;
+import io.github.pylonmc.pylon.core.logistics.LogisticGroupType;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
+import io.github.pylonmc.pylon.core.util.MachineUpdateReason;
 import io.github.pylonmc.pylon.core.util.PylonUtils;
 import io.github.pylonmc.pylon.core.util.gui.GuiItems;
 import io.github.pylonmc.pylon.core.util.gui.ProgressItem;
@@ -103,8 +104,8 @@ import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper;
 import xyz.xenondevs.invui.gui.Gui;
+import xyz.xenondevs.invui.inventory.Inventory;
 import xyz.xenondevs.invui.inventory.VirtualInventory;
-import xyz.xenondevs.invui.inventory.event.PlayerUpdateReason;
 import xyz.xenondevs.invui.inventory.event.UpdateReason;
 import xyz.xenondevs.invui.window.Window;
 
@@ -112,6 +113,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * {@link Scriptable} proxy methods:
@@ -162,8 +164,7 @@ import java.util.Map;
  * - onSneakedOn
  * - onUnsneakedOn
  * - createGui
- * - onPreSetupLogisticGroups
- * - onPostSetupLogisticGroups
+ * - onPostInitialise
  *
  * @author balugaq
  */
@@ -231,6 +232,19 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         }
 
         callScriptA("onPostInteract", this, event);
+    }
+
+    @Override
+    public Map<String, Inventory> createInventoryMapping() {
+        if (logisticBlockData == null) return Map.of();
+        return logisticBlockData.data()
+                .stream()
+                .map(e -> Map.entry(e.name(), vs.get(e.invSlotChar())))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> a)
+                );
     }
 
     @Override
@@ -415,8 +429,8 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
     }
 
     @Override
-    public void tick(final double deltaSeconds) {
-        var v = callScriptA("preOnTick", this, processingRecipe, progressItem, deltaSeconds);
+    public void tick() {
+        var v = callScriptA("preOnTick", this, processingRecipe, progressItem);
         if (v instanceof Boolean cancelled && cancelled) return;
         if (processingRecipe != null) {
             remainingSeconds--;
@@ -439,86 +453,92 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
             }
         }
 
-        if (loadRecipeType != null) {
-            Collection<? extends PylonRecipe> recipes = loadRecipeType.getRecipes();
-            @Nullable var vi = vs.get('i');
-            @Nullable var vo = vs.get('o');
-            recipe: for (PylonRecipe recipe : recipes) {
-                for (var e : recipe.getInputs()) {
-                    switch (e) {
-                        case RecipeInput.Item item -> {
-                            if (logisticBlockData == null || vi == null) continue recipe;
-                            if (!vi.contains(item::contains)) continue recipe;
-                            if (vi.count(item::contains) < item.getAmount()) continue recipe;
-                        }
-                        case RecipeInput.Fluid fluid -> {
-                            if (fluidBufferBlockData == null) continue recipe;
-                            boolean enough = false;
-                            for (var f : fluid.fluids()) {
-                                if (hasFluid(f) && fluidAmount(f) >= fluid.amountMillibuckets() && fluidBufferBlockData.inputFluids().contains(f)) {
-                                    enough = true;
-                                    break;
-                                }
-                            }
-                            if (!enough) continue recipe;
-                        }
-                        default -> {
-                            continue recipe;
-                        }
+        tryStartRecipe();
+        callScript("onTick", this, processingRecipe, progressItem);
+    }
+
+    public void tryStartRecipe() {
+        if (processingRecipe != null || loadRecipeType == null) {
+            return;
+        }
+
+        Collection<? extends PylonRecipe> recipes = loadRecipeType.getRecipes();
+        @Nullable var vi = vs.get('i');
+        @Nullable var vo = vs.get('o');
+        recipe: for (PylonRecipe recipe : recipes) {
+            for (var e : recipe.getInputs()) {
+                switch (e) {
+                    case RecipeInput.Item item -> {
+                        if (logisticBlockData == null || vi == null) continue recipe;
+                        if (!vi.contains(item::contains)) continue recipe;
+                        if (vi.count(item::contains) < item.getAmount()) continue recipe;
                     }
-                }
-
-                var ret = countResults(recipe);
-                if (!ret.isEmpty() && (vo == null || (vo != null && logisticBlockData != null && !canOutputItems(ret, vo)))) {
-                    continue;
-                }
-                if (fluidBufferBlockData != null && !canOutputFluid(countOutputFluids(recipe), fluidBufferBlockData)) {
-                    continue;
-                }
-
-                if (recipe instanceof CustomRecipe cr) {
-                    if (!cr.getOther().isEmpty()) {
-                        if (!handleRecipeOther(this, recipe, logisticBlockData, fluidBufferBlockData, loadRecipeType)) {
-                            continue;
-                        }
-                    }
-                }
-
-                // found recipe
-                processingRecipe = recipe;
-                if (recipe instanceof CustomRecipe cr) {
-                    int totalSeconds = (int) Math.round((double) cr.getTimeSeconds() / getSpeed());
-                    remainingSeconds = totalSeconds;
-                    progressItem.setTotalTimeSeconds(totalSeconds);
-                    progressItem.setRemainingTimeSeconds(remainingSeconds);
-                    progressItem.setItemStackBuilder(ItemStackBuilder.of(getRepresentativeIcon(processingRecipe)));
-                }
-
-                // consume items and fluids
-                for (var e : recipe.getInputs()) {
-                    if (e instanceof RecipeInput.Item item) {
-                        int remainToConsume = item.getAmount();
-                        for (int i = 0; i < vi.getSize(); i++) {
-                            ItemStack stack = vi.getItem(i);
-                            if (stack == null || stack.getType().isAir()) continue;
-                            if (item.matches(stack)) {
-                                int consume = Math.min(remainToConsume, stack.getAmount());
-                                vi.setItemAmount(UpdateReason.SUPPRESSED, i, stack.getAmount() - consume);
-                                remainToConsume -= consume;
-                            }
-                        }
-                    }
-                    if (e instanceof RecipeInput.Fluid fluid) {
+                    case RecipeInput.Fluid fluid -> {
+                        if (fluidBufferBlockData == null) continue recipe;
+                        boolean enough = false;
                         for (var f : fluid.fluids()) {
                             if (hasFluid(f) && fluidAmount(f) >= fluid.amountMillibuckets() && fluidBufferBlockData.inputFluids().contains(f)) {
-                                removeFluid(f, fluid.amountMillibuckets());
+                                enough = true;
+                                break;
                             }
+                        }
+                        if (!enough) continue recipe;
+                    }
+                    default -> {
+                        continue recipe;
+                    }
+                }
+            }
+
+            var ret = countResults(recipe);
+            if (!ret.isEmpty() && (vo == null || (vo != null && logisticBlockData != null && !canOutputItems(ret, vo)))) {
+                continue;
+            }
+            if (fluidBufferBlockData != null && !canOutputFluid(countOutputFluids(recipe), fluidBufferBlockData)) {
+                continue;
+            }
+
+            if (recipe instanceof CustomRecipe cr) {
+                if (!cr.getOther().isEmpty()) {
+                    if (!handleRecipeOther(this, recipe, logisticBlockData, fluidBufferBlockData, loadRecipeType)) {
+                        continue;
+                    }
+                }
+            }
+
+            // found recipe
+            processingRecipe = recipe;
+            if (recipe instanceof CustomRecipe cr) {
+                int totalSeconds = (int) Math.round((double) cr.getTimeSeconds() / getSpeed());
+                remainingSeconds = totalSeconds;
+                progressItem.setTotalTimeSeconds(totalSeconds);
+                progressItem.setRemainingTimeSeconds(remainingSeconds);
+                progressItem.setItemStackBuilder(ItemStackBuilder.of(getRepresentativeIcon(processingRecipe)));
+            }
+
+            // consume items and fluids
+            for (var e : recipe.getInputs()) {
+                if (e instanceof RecipeInput.Item item) {
+                    int remainToConsume = item.getAmount();
+                    for (int i = 0; i < vi.getSize(); i++) {
+                        ItemStack stack = vi.getItem(i);
+                        if (stack == null || stack.getType().isAir()) continue;
+                        if (item.matches(stack)) {
+                            int consume = Math.min(remainToConsume, stack.getAmount());
+                            vi.setItemAmount(UpdateReason.SUPPRESSED, i, stack.getAmount() - consume);
+                            remainToConsume -= consume;
+                        }
+                    }
+                }
+                if (e instanceof RecipeInput.Fluid fluid) {
+                    for (var f : fluid.fluids()) {
+                        if (hasFluid(f) && fluidAmount(f) >= fluid.amountMillibuckets() && fluidBufferBlockData.inputFluids().contains(f)) {
+                            removeFluid(f, fluid.amountMillibuckets());
                         }
                     }
                 }
             }
         }
-        callScript("onTick", this, processingRecipe, progressItem, deltaSeconds);
     }
 
     public boolean handleRecipeOther(@Nullable Object... args) {
@@ -620,40 +640,59 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                 return gui;
             }
         }
-        if (!haveSetLogisticGroups) setupLogisticGroups();
+
+        if (!havePostInitialised) postInitialise();
         return CustomRecipeType.makeGui(guiData, vs, progressItem);
     }
 
-    boolean haveSetLogisticGroups = false;
+    boolean havePostInitialised = false;
 
     @Override
-    public void setupLogisticGroups() {
-        if (haveSetLogisticGroups) return;
-        callScript("onPreSetupLogisticGroups", this);
-        if (logisticBlockData != null && guiData != null) {
-            for (var e : logisticBlockData) {
-                var size = 0;
-                for (var line : guiData.structure()) {
-                    for (var c : line.toCharArray()) {
-                        if (c == e.invSlotChar()) {
-                            size += 1;
-                        }
+    public void postInitialise() {
+        if (havePostInitialised || logisticBlockData == null || guiData == null) {
+            return;
+        }
+
+        havePostInitialised = true;
+        for (var e : logisticBlockData) {
+            var size = 0;
+            for (var line : guiData.structure()) {
+                for (var c : line.toCharArray()) {
+                    if (c == e.invSlotChar()) {
+                        size += 1;
                     }
                 }
-                var v = new VirtualInventory(size);
-                vs.put(e.invSlotChar(), v);
-                if (e.slotType() == LogisticSlotType.OUTPUT || e.slotType() == LogisticSlotType.BOTH) {
-                    v.setPreUpdateHandler(event -> {
-                        if (!event.isRemove() && event.getUpdateReason() instanceof PlayerUpdateReason) {
-                            event.setCancelled(true);
+            }
+            var v = new VirtualInventory(size);
+            vs.put(e.invSlotChar(), v);
+            switch (e.slotType()) {
+                case INPUT -> {
+                    v.setPostUpdateHandler(event -> {
+                        if (!(event.getUpdateReason() instanceof MachineUpdateReason)) {
+                            tryStartRecipe();
                         }
                     });
+                    createLogisticGroup(e.name(), LogisticGroupType.INPUT, v);
                 }
-                createLogisticGroup(e.name(), e.slotType(), v);
+                case OUTPUT -> {
+                    v.setPreUpdateHandler(PylonUtils.DISALLOW_PLAYERS_FROM_ADDING_ITEMS_HANDLER);
+                    v.setPostUpdateHandler(event -> tryStartRecipe());
+                    createLogisticGroup(e.name(), LogisticGroupType.OUTPUT, v);
+                }
+                case BOTH -> {
+                    v.setPreUpdateHandler(PylonUtils.DISALLOW_PLAYERS_FROM_ADDING_ITEMS_HANDLER);
+                    v.setPostUpdateHandler(event -> {
+                        if (!(event.getUpdateReason() instanceof MachineUpdateReason)) {
+                            tryStartRecipe();
+                        }
+                    });
+                    createLogisticGroup(e.name(), LogisticGroupType.BOTH, v);
+                }
             }
+            createLogisticGroup(e.name(), e.slotType(), v);
         }
-        callScript("onPostSetupLogisticGroups", this);
-        haveSetLogisticGroups = true;
+
+        callScript("onPostInitialise", this);
     }
 
     private boolean canOutputFluid(Map<PylonFluid, Double> results, FluidBufferBlockData fluidBufferBlockData) {

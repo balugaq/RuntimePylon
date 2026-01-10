@@ -3,7 +3,7 @@ package com.balugaq.runtimepylon.config;
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.PackNamespace;
 import com.balugaq.runtimepylon.exceptions.UnknownPageException;
-import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
+import io.github.pylonmc.pylon.core.guide.button.PageButton;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -55,8 +55,8 @@ public class PageDesc implements Deserializer<PageDesc> {
         );
     }
 
-    public SimpleStaticGuidePage getPage() {
-        SimpleStaticGuidePage page = RuntimePylon.getGuidePages().get(key);
+    public PageButton getPage() {
+        PageButton page = RuntimePylon.getGuidePages().get(key);
         if (page == null) throw new UnknownPageException(key.toString());
 
         return page;

@@ -30,6 +30,7 @@ import com.balugaq.runtimepylon.exceptions.UnknownItemException;
 import com.balugaq.runtimepylon.manager.PackManager;
 import com.balugaq.runtimepylon.object.CustomFluid;
 import com.balugaq.runtimepylon.object.CustomGuidePage;
+import com.balugaq.runtimepylon.object.CustomPageButton;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.object.ItemStackProvider;
 import com.balugaq.runtimepylon.object.PackAddon;
@@ -44,6 +45,7 @@ import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
 import io.github.pylonmc.pylon.core.guide.button.FluidButton;
 import io.github.pylonmc.pylon.core.guide.button.ItemButton;
+import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.item.research.Research;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
@@ -383,7 +385,7 @@ public class Pack implements FileObject<Pack> {
                 StackFormatter.destroy();
 
                 Researches researches = null;
-                if (PylonConfig.getResearchesEnabled()) {
+                if (PylonConfig.RESEARCHES_ENABLED) {
                     StackFormatter.setPosition("Reading researches");
                     var researchesFolder = findDir(files, "researches");
                     if (researchesFolder != null)
@@ -545,15 +547,16 @@ public class Pack implements FileObject<Pack> {
                 RegisteredObjectID id = e.id();
                 try (var sk = StackFormatter.setPosition("Loading page: " + id)) {
                     Material icon = e.material();
-                    CustomGuidePage page = new CustomGuidePage(id.key(), icon);
+                    CustomGuidePage page = new CustomGuidePage(id.key());
+                    CustomPageButton button = new CustomPageButton(id.key(), ItemStack.of(icon), page);
                     if (e.parents() == null) {
-                        PylonGuide.getRootPage().addPage(page);
+                        PylonGuide.getRootPage().addButton(button);
                     } else {
                         for (var parent : e.parents()) {
-                            parent.getPage().addPage(page);
+                            PylonGuide.getRootPage().addButton(button);
                         }
                     }
-                    GlobalVars.putCustomPage(page.getKey(), page);
+                    GlobalVars.putCustomPage(page.getKey(), button);
                     Debug.debug("Registered Page: " + id.key());
                     pages.getLoadedPages().incrementAndGet();
                 } catch (Exception ex) {
@@ -582,7 +585,9 @@ public class Pack implements FileObject<Pack> {
                     List<PageDesc> descs = e.pages();
                     if (descs != null) descs.forEach(desc -> {
                         try (var ignored = StackFormatter.setPosition("Adding to page: " + desc.getKey())) {
-                            desc.getPage().addItem(e.icon());
+                            if (desc.getPage().getPage() instanceof SimpleStaticGuidePage ssg) {
+                                ssg.addItem(e.icon());
+                            }
                         } catch (Exception ex) {
                             StackFormatter.handle(ex);
                         }
@@ -664,7 +669,11 @@ public class Pack implements FileObject<Pack> {
                 fluids.getLoadedFluids().incrementAndGet();
 
                 List<PageDesc> pages = e.pages();
-                if (pages != null) pages.forEach(desc -> desc.getPage().addFluid(fluid));
+                if (pages != null) pages.forEach(desc -> {
+                    if (desc.getPage().getPage() instanceof SimpleStaticGuidePage ssg) {
+                        ssg.addFluid(fluid);
+                    }
+                });
             });
         }
     }

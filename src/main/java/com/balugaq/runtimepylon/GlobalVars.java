@@ -5,6 +5,7 @@ import com.balugaq.runtimepylon.config.FluidBufferBlockData;
 import com.balugaq.runtimepylon.config.GuiData;
 import com.balugaq.runtimepylon.config.LogisticBlockData;
 import com.balugaq.runtimepylon.data.KeyedMap;
+import com.balugaq.runtimepylon.object.CustomPageButton;
 import com.balugaq.runtimepylon.script.ScriptExecutor;
 import com.balugaq.runtimepylon.script.callbacks.APICallbacks;
 import com.caoccao.javet.exceptions.JavetException;
@@ -12,7 +13,7 @@ import com.caoccao.javet.interop.V8Host;
 import com.caoccao.javet.interop.V8Runtime;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
-import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
+import io.github.pylonmc.pylon.core.guide.button.PageButton;
 import lombok.Getter;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -35,7 +36,7 @@ import java.util.function.Supplier;
 public class GlobalVars {
     private static final @Getter KeyedMap<ScriptExecutor> scripts = new KeyedMap<>();
     private static final @Getter KeyedMap<GuiData> guis = new KeyedMap<>();
-    private static final @Getter KeyedMap<SimpleStaticGuidePage> customPages = new KeyedMap<>();
+    private static final @Getter KeyedMap<CustomPageButton> customPages = new KeyedMap<>();
     private static final @Getter KeyedMap<FluidBlockData> fluidBlockDatas = new KeyedMap<>();
     private static final @Getter KeyedMap<FluidBufferBlockData> fluidBufferBlockDatas = new KeyedMap<>();
     private static final @Getter KeyedMap<Map<Vector3i, PylonSimpleMultiblock.MultiblockComponent>> multiBlockComponents = new KeyedMap<>();
@@ -99,17 +100,17 @@ public class GlobalVars {
     }
 
     @CanIgnoreReturnValue
-    public static SimpleStaticGuidePage putCustomPage(NamespacedKey key, SimpleStaticGuidePage page) {
+    public static CustomPageButton putCustomPage(NamespacedKey key, CustomPageButton page) {
         customPages.put(key, page);
         return page;
     }
 
     @Nullable
-    public static SimpleStaticGuidePage getCustomPage(NamespacedKey key) {
+    public static CustomPageButton getCustomPage(NamespacedKey key) {
         return customPages.get(key);
     }
 
-    public static Result<SimpleStaticGuidePage> getCustomPageO(NamespacedKey key) {
+    public static Result<PageButton> getCustomPageO(NamespacedKey key) {
         return Result.of(getCustomPage(key));
     }
 

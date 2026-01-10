@@ -23,9 +23,11 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.gui.Gui;
+import xyz.xenondevs.invui.inventory.Inventory;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 
 import java.util.HashMap;
@@ -148,6 +150,11 @@ public class FluidHub extends PylonBlock implements
     public WithFluidTag setTag(@Nullable ItemStack tag) {
         this.tag = tag;
         return this;
+    }
+
+    @Override
+    public @NotNull Map<String, Inventory> createInventoryMapping() {
+        return Map.of();
     }
 
     public static class FluidHubButtonSet<T extends FluidHub> extends ButtonSet<T> {

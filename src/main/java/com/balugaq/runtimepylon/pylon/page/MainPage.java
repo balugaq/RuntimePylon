@@ -12,10 +12,10 @@ import org.jspecify.annotations.NullMarked;
  */
 @NullMarked
 public class MainPage {
-    private static final SimpleStaticGuidePage MAIN = new SimpleStaticGuidePage(RuntimeKeys.main, Material.CLOCK);
+    private static final SimpleStaticGuidePage MAIN = new SimpleStaticGuidePage(RuntimeKeys.main);
 
     static {
-        PylonGuide.getRootPage().addPage(MAIN);
+        PylonGuide.getRootPage().addPage(Material.CLOCK, MAIN);
     }
 
     public static void addItem(ItemStack itemStack) {

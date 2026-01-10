@@ -30,7 +30,7 @@ import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.fluid.tags.FluidTemperature;
 import io.github.pylonmc.pylon.core.item.ItemTypeWrapper;
 import io.github.pylonmc.pylon.core.item.PylonItemSchema;
-import io.github.pylonmc.pylon.core.logistics.LogisticSlotType;
+import io.github.pylonmc.pylon.core.logistics.LogisticGroupType;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
 import io.github.pylonmc.pylon.core.recipe.RecipeInput;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
@@ -137,13 +137,13 @@ public interface Deserializer<T> {
     Deserializer<SaveditemDesc> SAVEDITEM_DESC = Deserializer.newDeserializer(SaveditemDesc.class);
     Deserializer<RegisterConditions> REGISTER_CONDITIONS = Deserializer.newDeserializer(RegisterConditions.class);
     Deserializer<MinecraftVersion> MINECRAFT_VERSION = Deserializer.newDeserializer(MinecraftVersion.class);
-    Deserializer<LogisticSlotType> LOGISTIC_SLOT_TYPE = enumDeserializer(LogisticSlotType.class).forceUpperCase();
+    Deserializer<LogisticGroupType> LOGISTIC_GROUP_TYPE = enumDeserializer(LogisticGroupType.class).forceUpperCase();
 
     static <E extends Enum<E>> EnumDeserializer<E> enumDeserializer(Class<E> clazz) {
         return EnumDeserializer.of(clazz);
     }
 
-    static < K extends Keyed> KeyedDeserializer<K> keyedDeserializer(Registry<K> registry) {
+    static <K extends Keyed> KeyedDeserializer<K> keyedDeserializer(Registry<K> registry) {
         return KeyedDeserializer.of(registry);
     }
 

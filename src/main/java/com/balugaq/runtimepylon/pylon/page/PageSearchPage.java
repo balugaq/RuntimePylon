@@ -10,7 +10,6 @@ import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.translation.GlobalTranslator;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.invui.item.Item;
@@ -27,7 +26,7 @@ public class PageSearchPage extends SearchPage {
     private final Consumer<SimpleStaticGuidePage> consumer;
 
     public PageSearchPage(Consumer<SimpleStaticGuidePage> consumer) {
-        super(RuntimeKeys.page_search_page, Material.STONE);
+        super(RuntimeKeys.page_search_page);
         this.consumer = consumer;
     }
 
@@ -43,11 +42,14 @@ public class PageSearchPage extends SearchPage {
 
                     return new Pair<>(
                             (Item) GuiItem.create(null) // unused null
-                                    .item(block -> page.getItem())
+                                    .item(block -> page.getItemProvider())
                                     .click((block, clickType, p2, event) -> {
-                                        consumer.accept(page);
-                                        SearchPages.triggerBackGuide(player, false);
-                                        return true;
+                                        if (page.getPage() instanceof SimpleStaticGuidePage ssg) {
+                                            consumer.accept(ssg);
+                                            SearchPages.triggerBackGuide(player, false);
+                                            return true;
+                                        }
+                                        return false;
                                     }),
                             name
                     );

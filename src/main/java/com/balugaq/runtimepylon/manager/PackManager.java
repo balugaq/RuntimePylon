@@ -33,6 +33,7 @@ import io.github.pylonmc.pylon.core.guide.button.FluidButton;
 import io.github.pylonmc.pylon.core.guide.button.ItemButton;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
 import io.github.pylonmc.pylon.core.guide.button.ResearchButton;
+import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -360,26 +361,43 @@ public @Data class PackManager {
         } catch (Exception e) {
             StackFormatter.handle(e);
         }
-        RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {
-            return item instanceof PageButton pb && pb.getPage() instanceof CustomGuidePage;
-        }));
-
-        RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {
-            if (!(item instanceof ItemButton ib)) {
-                return false;
+        RuntimePylon.getGuidePages().values().forEach(page -> {
+            if (page.getPage() instanceof SimpleStaticGuidePage ssg) {
+                ssg.getButtons().removeIf(item -> {
+                    return item instanceof PageButton pb && pb.getPage() instanceof CustomGuidePage;
+                });
             }
+        });
 
-            var pylon = PylonItem.fromStack(ib.getCurrentStack());
-            return pylon != null && pylon.getAddon() == plugin;
-        }));
+        RuntimePylon.getGuidePages().values().forEach(page -> {
+            if (page.getPage() instanceof SimpleStaticGuidePage ssg) {
+                ssg.getButtons().removeIf(item -> {
+                    if (!(item instanceof ItemButton ib)) {
+                        return false;
+                    }
 
-        RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {
-            return item instanceof FluidButton fb && fb.getCurrentFluid().getKey().getNamespace().equals(plugin.namespace());
-        }));
+                    var pylon = PylonItem.fromStack(ib.getCurrentStack());
+                    return pylon != null && pylon.getAddon() == plugin;
+                });
+            }
+        });
 
-        RuntimePylon.getGuidePages().values().forEach(page -> page.getButtons().removeIf(item -> {
-            return item instanceof ResearchButton rb && rb.getResearch().getKey().getNamespace().equals(plugin.namespace());
-        }));
+
+        RuntimePylon.getGuidePages().values().forEach(page -> {
+            if (page.getPage() instanceof SimpleStaticGuidePage ssg) {
+                ssg.getButtons().removeIf(item -> {
+                    return item instanceof FluidButton fb && fb.getCurrentFluid().getKey().getNamespace().equals(plugin.namespace());
+                });
+            }
+        });
+
+        RuntimePylon.getGuidePages().values().forEach(page -> {
+            if (page.getPage() instanceof SimpleStaticGuidePage ssg) {
+                ssg.getButtons().removeIf(item -> {
+                    return item instanceof ResearchButton rb && rb.getResearch().getKey().getNamespace().equals(plugin.namespace());
+                });
+            }
+        });
 
         PylonRegistry.GAMETESTS.unregisterAllFromAddon(plugin);
         PylonRegistry.ITEMS.unregisterAllFromAddon(plugin);

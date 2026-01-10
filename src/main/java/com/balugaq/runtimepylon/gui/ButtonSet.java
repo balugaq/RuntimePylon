@@ -12,6 +12,7 @@ import com.balugaq.runtimepylon.util.RecipeAdapter;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.guide.button.ItemButton;
+import io.github.pylonmc.pylon.core.guide.button.PageButton;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
@@ -107,12 +108,14 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     assertNotNull(data.getItemId(), set_page_1);
                     assertNotNull(data.getPageId(), set_page_2);
 
-                    Map<NamespacedKey, SimpleStaticGuidePage> pages = RuntimePylon.getGuidePages();
-                    SimpleStaticGuidePage page = assertNotNull(pages.get(data.getPageId()), set_page_3);
+                    Map<NamespacedKey, PageButton> pages = RuntimePylon.getGuidePages();
+                    PageButton page = assertNotNull(pages.get(data.getPageId()), set_page_3);
 
                     assertNotNull(PylonRegistry.ITEMS.get(data.getItemId()), set_page_4);
                     assertNotNull(data.getModel(), set_page_4);
-                    page.addItem(data.getModel());
+                    if (page.getPage() instanceof SimpleStaticGuidePage ssg) {
+                        ssg.addItem(data.getModel());
+                    }
 
                     done(player, set_page_5, data.getItemId(), data.getPageId());
                     return true;
@@ -151,18 +154,20 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                     var data = assertBlock(block, WithPage.class);
                     assertNotNull(data.getItemId(), unset_page_1);
                     assertNotNull(data.getPageId(), unset_page_2);
-                    Map<NamespacedKey, SimpleStaticGuidePage> pages = RuntimePylon.getGuidePages();
-                    SimpleStaticGuidePage page = assertNotNull(pages.get(data.getPageId()), unset_page_3);
-                    page.getButtons().removeIf(item -> {
-                        if (!(item instanceof ItemButton button)) {
-                            return false;
-                        }
+                    Map<NamespacedKey, PageButton> pages = RuntimePylon.getGuidePages();
+                    PageButton page = assertNotNull(pages.get(data.getPageId()), unset_page_3);
+                    if (page.getPage() instanceof SimpleStaticGuidePage ssg) {
+                        ssg.getButtons().removeIf(item -> {
+                            if (!(item instanceof ItemButton button)) {
+                                return false;
+                            }
 
-                        PylonItem pylon = PylonItem.fromStack(button.getCurrentStack());
-                        if (pylon == null) return false;
+                            PylonItem pylon = PylonItem.fromStack(button.getCurrentStack());
+                            if (pylon == null) return false;
 
-                        return pylon.getKey().equals(data.getItemId());
-                    });
+                            return pylon.getKey().equals(data.getItemId());
+                        });
+                    }
                     done(player, unset_page_4, data.getItemId(), data.getPageId());
                     return true;
                 });
@@ -232,7 +237,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                                 RuntimeKeys.page
                         );
                     } else {
-                        return RuntimePylon.getGuidePages().get(data.getPageId()).getItem();
+                        return RuntimePylon.getGuidePages().get(data.getPageId()).getItemProvider();
                     }
                 })
                 .click((block, clickType, player, event) -> {

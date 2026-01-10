@@ -26,7 +26,7 @@ public class RecipeTypeSearchPage extends SearchPage {
     private final Consumer<RecipeType<? extends PylonRecipe>> consumer;
 
     public RecipeTypeSearchPage(Consumer<RecipeType<? extends PylonRecipe>> consumer) {
-        super(RuntimeKeys.recipe_type_search_page, Material.STONE);
+        super(RuntimeKeys.recipe_type_search_page);
         this.consumer = consumer;
     }
 

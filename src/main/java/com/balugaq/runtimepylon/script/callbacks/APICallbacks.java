@@ -12,7 +12,6 @@ import io.github.pylonmc.pylon.core.entity.PylonEntitySchema;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.item.PylonItemSchema;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
-import io.github.pylonmc.pylon.core.registry.PylonRegistryKey;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -55,11 +54,6 @@ public class APICallbacks {
     @V8Function
     public PylonRegistry<PylonAddon> getAddonRegistry() {
         return PylonRegistry.ADDONS;
-    }
-
-    @V8Function
-    public PylonRegistry<?> getPylonRegistry(NamespacedKey key) {
-        return PylonRegistry.getRegistry(new PylonRegistryKey<>(key));
     }
 
     @V8Function

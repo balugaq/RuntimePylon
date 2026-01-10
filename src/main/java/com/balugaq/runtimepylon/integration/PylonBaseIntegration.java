@@ -139,7 +139,7 @@ public class PylonBaseIntegration implements Integration {
                 inputs,
                 catalyst,
                 Deserializer.ITEMSTACK.deserialize(section.get("result")),
-                section.getDouble("time-seconds")
+                section.getInt("time-seconds")
         );
     }
 

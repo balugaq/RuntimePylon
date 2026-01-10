@@ -3,6 +3,7 @@ package com.balugaq.runtimepylon.object;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
 import io.github.pylonmc.pylon.core.guide.pages.base.GuidePage;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
+import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import io.github.pylonmc.pylon.core.item.research.Research;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -17,12 +18,12 @@ import java.util.List;
  */
 @NullMarked
 public class CustomGuidePage extends SimpleStaticGuidePage {
-    public CustomGuidePage(final NamespacedKey key, final Material material, final List<Item> buttons) {
-        super(key, material, buttons);
+    public CustomGuidePage(final NamespacedKey key, final List<Item> buttons) {
+        super(key, buttons);
     }
 
-    public CustomGuidePage(final NamespacedKey key, final Material material) {
-        super(key, material);
+    public CustomGuidePage(final NamespacedKey key) {
+        super(key);
     }
 
     @Override
@@ -41,7 +42,22 @@ public class CustomGuidePage extends SimpleStaticGuidePage {
     }
 
     @Override
-    public boolean addPage(GuidePage page) {
-        return getButtons().add(new CustomPageButton(getKey(), page));
+    public boolean addButton(Item button) {
+        return getButtons().add(button);
+    }
+
+    @Override
+    public boolean addPage(Material material, GuidePage page) {
+        return addButton(new CustomPageButton(getKey(), ItemStack.of(material), page));
+    }
+
+    @Override
+    public boolean addPage(ItemStack stack, GuidePage page) {
+        return addButton(new CustomPageButton(getKey(), stack.clone(), page));
+    }
+
+    @Override
+    public boolean addPage(ItemStackBuilder builder, GuidePage page) {
+        return addButton(new CustomPageButton(getKey(), builder.build().clone(), page));
     }
 }
