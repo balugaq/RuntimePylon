@@ -24,6 +24,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NullMarked;
 
@@ -54,6 +55,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePl
     @UnknownNullability
     private PackManager packManager;
 
+    @ApiStatus.Obsolete
     public static Map<NamespacedKey, PageButton> getGuidePages() {
         Map<NamespacedKey, PageButton> pages = new HashMap<>(PylonGuide.getRootPage().getButtons()
           .stream()
