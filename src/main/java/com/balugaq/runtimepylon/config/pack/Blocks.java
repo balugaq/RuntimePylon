@@ -11,6 +11,7 @@ import com.balugaq.runtimepylon.config.GuiReader;
 import com.balugaq.runtimepylon.config.InternalObjectID;
 import com.balugaq.runtimepylon.config.LogisticBlockData;
 import com.balugaq.runtimepylon.config.Pack;
+import com.balugaq.runtimepylon.config.RecipeTypeDesc;
 import com.balugaq.runtimepylon.config.RegisteredObjectID;
 import com.balugaq.runtimepylon.config.ScriptDesc;
 import com.balugaq.runtimepylon.config.SingletonFluidBlockData;
@@ -23,10 +24,13 @@ import com.balugaq.runtimepylon.exceptions.IncompatibleKeyFormatException;
 import com.balugaq.runtimepylon.exceptions.IncompatibleMaterialException;
 import com.balugaq.runtimepylon.exceptions.InvalidMultiblockComponentException;
 import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
+import com.balugaq.runtimepylon.exceptions.UnknownRecipeTypeException;
 import com.balugaq.runtimepylon.exceptions.UnknownSymbolException;
+import com.balugaq.runtimepylon.object.CustomRecipeType;
 import com.balugaq.runtimepylon.util.MaterialUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
 import io.github.pylonmc.pylon.core.block.base.PylonSimpleMultiblock;
+import io.github.pylonmc.pylon.core.config.ConfigSection;
 import it.unimi.dsi.fastutil.chars.CharArrayList;
 import lombok.Data;
 import org.bukkit.Material;
@@ -83,6 +87,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   *logistic:
  *     1: [SingleLogisticBlockData]
  *     2: [SingleLogisticBlockData]
+ *   *recipes:
+ *     ...
  *
  * <p>
  * [SingletonFluidBlockData]:
@@ -250,6 +256,32 @@ public class Blocks implements FileObject<Blocks> {
                     var gui = GuiReader.read(section, namespace, scriptdesc);
                     if (gui != GuiReader.Result.EMPTY)
                         GlobalVars.putGuiData(id.key(), new GuiData(id.key(), gui.structure(), gui.provider(), Gui.normal(), null, invSlotChars));
+
+                    var recipes = section.getConfigurationSection("recipes");
+                    if (recipes != null) {
+                        try (var ignored2 = StackFormatter.setPosition("Reading recipes section: " + key)) {
+
+                        // create recipe type automatically
+
+                        // clone
+                        CustomRecipeType recipeType = new CustomRecipeType(id.key(), gui.structure(), gui.provider(), null);
+
+                        RecipeTypeDesc desc = Pack.readOrNull(section, RecipeTypeDesc.class, "clone", t -> t.setPackNamespace(namespace));
+                        if (desc != null) {
+                            var cloneType = desc.findRecipeType();
+                            if (cloneType == null) throw new UnknownRecipeTypeException(desc.getKey().toString());
+
+                            for (var r : cloneType.getRecipes()) {
+                                recipeType.addRecipe(r);
+                            }
+                        }
+
+                        Recipes.loadRecipesNormal(namespace, recipeType, new ConfigSection(recipes), k -> {});
+
+                        } catch (Exception ex) {
+                            StackFormatter.handle(ex);
+                        }
+                    }
                 } catch (Exception e) {
                     StackFormatter.handle(e);
                 }}

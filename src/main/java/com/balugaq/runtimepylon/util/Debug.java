@@ -30,31 +30,6 @@ public class Debug {
         Thread.dumpStack();
     }
 
-    public static void traceExactly(Throwable e, @Nullable String doing, @Nullable Integer code) {
-        try {
-            severe("====================AN FATAL OCCURRED" + (doing != null ? (" WHEN " + doing.toUpperCase()) : "") + "====================");
-            severe("DO NOT REPORT THIS ERROR TO " + getPlugin().getName() + " DEVELOPERS!!! THIS IS NOT A " + getPlugin().getName() + " BUG!");
-            if (code != null) {
-                getPlugin().getLogger().severe("Error code: " + code);
-            }
-            severe("If you are sure that this is a " + getPlugin().getName() + " bug, please report to " + getPlugin().getIssueTrackerLink());
-            getPlugin().getLogger().severe("An unexpected error occurred" + (doing != null ? (" while " + doing) : "."));
-
-            e.printStackTrace();
-
-            getPlugin().getLogger().severe("ALL EXCEPTION INFORMATION IS BELOW:");
-            getPlugin().getLogger().severe("message: " + e.getMessage());
-            getPlugin().getLogger().severe("localizedMessage: " + e.getLocalizedMessage());
-            getPlugin().getLogger().severe("cause: " + e.getCause());
-            getPlugin().getLogger().severe("stackTrace: " + Arrays.toString(e.getStackTrace()));
-            getPlugin().getLogger().severe("suppressed: " + Arrays.toString(e.getSuppressed()));
-
-            dumpToFile(e, code);
-        } catch (Throwable e2) {
-            throw new RuntimeException(e2);
-        }
-    }
-
     public static void severe(String message) {
         RuntimePylon.getInstance().getLogger().severe(message);
     }

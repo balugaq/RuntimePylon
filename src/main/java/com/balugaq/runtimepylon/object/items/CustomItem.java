@@ -1,13 +1,12 @@
 package com.balugaq.runtimepylon.object.items;
 
 import com.balugaq.runtimepylon.GlobalVars;
+import com.balugaq.runtimepylon.object.RuntimeObject;
 import com.balugaq.runtimepylon.object.Scriptable;
-import com.balugaq.runtimepylon.util.Debug;
-import com.balugaq.runtimepylon.util.ReflectionUtil;
 import com.destroystokyo.paper.event.player.PlayerReadyArrowEvent;
-import io.github.pylonmc.pylon.core.config.Config;
 import io.github.pylonmc.pylon.core.config.PylonConfig;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
+import io.github.pylonmc.pylon.core.i18n.PylonArgument;
 import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.item.base.PylonArmor;
 import io.github.pylonmc.pylon.core.item.base.PylonArrow;
@@ -28,7 +27,6 @@ import io.github.pylonmc.pylon.core.item.base.PylonTool;
 import io.github.pylonmc.pylon.core.item.base.PylonUnmergeable;
 import io.github.pylonmc.pylon.core.item.base.PylonWeapon;
 import io.github.pylonmc.pylon.core.item.base.VanillaCookingFuel;
-import io.github.pylonmc.pylon.core.util.PylonUtils;
 import net.kyori.adventure.key.Key;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -52,10 +50,9 @@ import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.player.PlayerItemMendEvent;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
-import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 /**
  * {@link Scriptable} proxy methods:
@@ -93,7 +90,7 @@ import java.lang.reflect.InvocationTargetException;
 public class CustomItem extends PylonItem implements PylonArmor, PylonArrow, PylonBlockInteractor, PylonBow, PylonBrewingStandFuel,
                                                      PylonBucket, PylonConsumable, PylonDispensable, PylonInteractor, PylonInventoryEffectItem,
                                                      PylonInventoryTicker, PylonItemDamageable, PylonItemEntityInteractor, PylonLingeringPotion,
-                                                     PylonSplashPotion, PylonTool, PylonUnmergeable, PylonWeapon, VanillaCookingFuel, Scriptable {
+                                                     PylonSplashPotion, PylonTool, PylonUnmergeable, PylonWeapon, VanillaCookingFuel, RuntimeObject {
     public CustomItem(final ItemStack stack) {
         super(stack);
     }
@@ -273,13 +270,8 @@ public class CustomItem extends PylonItem implements PylonArmor, PylonArrow, Pyl
         return GlobalVars.getEquipmentType(getKey());
     }
 
-    @Nullable
-    public Config getSettingsOrNull() {
-        try {
-            return (Config) ReflectionUtil.invokeMethod(PylonUtils.class, "mergeGlobalConfig", PylonUtils.getAddon(getKey()), "settings/" + getKey().getKey() + ".yml", "settings/" + getKey().getNamespace() + "/" + getKey().getKey() + ".yml", false);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            Debug.warning(e);
-            return null;
-        }
+    @Override
+    public List<PylonArgument> getPlaceholders() {
+        return RuntimeObject.super.getPlaceholders();
     }
 }

@@ -7,9 +7,8 @@ import com.balugaq.runtimepylon.config.GuiData;
 import com.balugaq.runtimepylon.config.LogisticBlockData;
 import com.balugaq.runtimepylon.object.CustomRecipe;
 import com.balugaq.runtimepylon.object.CustomRecipeType;
+import com.balugaq.runtimepylon.object.RuntimeObject;
 import com.balugaq.runtimepylon.object.Scriptable;
-import com.balugaq.runtimepylon.util.Debug;
-import com.balugaq.runtimepylon.util.ReflectionUtil;
 import com.destroystokyo.paper.event.block.BeaconEffectEvent;
 import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
@@ -32,6 +31,7 @@ import io.github.pylonmc.pylon.core.block.base.PylonLogisticBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonNoVanillaContainerBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonNoteBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonPiston;
+import io.github.pylonmc.pylon.core.block.base.PylonRecipeProcessor;
 import io.github.pylonmc.pylon.core.block.base.PylonRedstoneBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonShearable;
 import io.github.pylonmc.pylon.core.block.base.PylonSign;
@@ -44,10 +44,10 @@ import io.github.pylonmc.pylon.core.block.base.PylonTrialVault;
 import io.github.pylonmc.pylon.core.block.base.PylonUnloadBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockBreakContext;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
-import io.github.pylonmc.pylon.core.config.Config;
 import io.github.pylonmc.pylon.core.config.adapter.ConfigAdapter;
 import io.github.pylonmc.pylon.core.event.PylonBlockUnloadEvent;
 import io.github.pylonmc.pylon.core.fluid.PylonFluid;
+import io.github.pylonmc.pylon.core.i18n.PylonArgument;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import io.github.pylonmc.pylon.core.logistics.LogisticGroupType;
 import io.github.pylonmc.pylon.core.recipe.FluidOrItem;
@@ -59,6 +59,7 @@ import io.github.pylonmc.pylon.core.util.MachineUpdateReason;
 import io.github.pylonmc.pylon.core.util.PylonUtils;
 import io.github.pylonmc.pylon.core.util.gui.GuiItems;
 import io.github.pylonmc.pylon.core.util.gui.ProgressItem;
+import io.github.pylonmc.pylon.core.waila.WailaDisplay;
 import io.papermc.paper.event.block.BeaconActivatedEvent;
 import io.papermc.paper.event.block.BeaconDeactivatedEvent;
 import io.papermc.paper.event.block.CompostItemEvent;
@@ -75,6 +76,7 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BellResonateEvent;
 import org.bukkit.event.block.BellRingEvent;
@@ -100,6 +102,7 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 import xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper;
@@ -109,7 +112,6 @@ import xyz.xenondevs.invui.inventory.VirtualInventory;
 import xyz.xenondevs.invui.inventory.event.UpdateReason;
 import xyz.xenondevs.invui.window.Window;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -175,16 +177,13 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                                                        PylonGrowable, PylonJumpBlock, PylonLeaf, PylonLectern, PylonNoteBlock,
                                                        PylonPiston, PylonRedstoneBlock, PylonShearable, PylonSign, PylonSneakableBlock,
                                                        PylonSponge, PylonTargetBlock, PylonTNT, PylonTrialVault, PylonUnloadBlock,
-                                                       PylonGuiBlock, PylonLogisticBlock, Scriptable {
+                                                       PylonGuiBlock, PylonLogisticBlock, PylonRecipeProcessor<CustomRecipe>, RuntimeObject {
     private final Char2ObjectOpenHashMap<VirtualInventory> vs = new Char2ObjectOpenHashMap<>();
     private final @Nullable RecipeType<?> loadRecipeType = PylonRegistry.RECIPE_TYPES.get(getKey());
     private final @Nullable GuiData guiData = GlobalVars.getGuiData(getKey());
     private final @Nullable LogisticBlockData logisticBlockData = GlobalVars.getLogisticBlockData(getKey());
     private final @Nullable FluidBlockData fluidBlockData = GlobalVars.getFluidBlockData(getKey());
     private final @Nullable FluidBufferBlockData fluidBufferBlockData = GlobalVars.getFluidBufferBlockData(getKey());
-    private final ProgressItem progressItem = new ProgressItem(ItemStackBuilder.of(GuiItems.background()));
-    private @Nullable PylonRecipe processingRecipe = null;
-    private int remainingSeconds;
 
     public CustomBlock(final Block block) {
         super(block);
@@ -206,6 +205,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
                 createFluidBuffer(e.fluid(), e.capacity(), e.input(), e.output());
             }
         }
+        setRecipeProgressItem(new ProgressItem(GuiItems.background()));
     }
 
     @Override
@@ -418,47 +418,35 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         return v2;
     }
 
-    @Nullable
-    public Config getSettingsOrNull() {
-        try {
-            return (Config) ReflectionUtil.invokeMethod(PylonUtils.class, "mergeGlobalConfig", PylonUtils.getAddon(getKey()), "settings/" + getKey().getKey() + ".yml", "settings/" + getKey().getNamespace() + "/" + getKey().getKey() + ".yml", false);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            Debug.warning(e);
-            return null;
+    @Override
+    public void onRecipeFinished(CustomRecipe recipe) {
+        getRecipeProgressItem().setItemStackBuilder(ItemStackBuilder.of(GuiItems.background()));
+        // push item or fluid
+        for (var e : recipe.getResults()) {
+            if (e instanceof FluidOrItem.Item item) {
+                var vo = vs.get('o');
+                vo.addItem(UpdateReason.SUPPRESSED, item.item());
+            }
+            if (e instanceof FluidOrItem.Fluid fluid) {
+                setFluid(fluid.fluid(), Math.min(fluidCapacity(fluid.fluid()), fluidAmount(fluid.fluid()) + fluid.amountMillibuckets()));
+            }
         }
     }
 
     @Override
     public void tick() {
-        var v = callScriptA("preOnTick", this, processingRecipe, progressItem);
+        var v = callScriptA("preOnTick", this);
         if (v instanceof Boolean cancelled && cancelled) return;
-        if (processingRecipe != null) {
-            remainingSeconds--;
-            if (remainingSeconds <= 0) {
-                progressItem.setTotalTime(null);
-                // push item or fluid
-                for (var e : processingRecipe.getResults()) {
-                    if (e instanceof FluidOrItem.Item item) {
-                        var vo = vs.get('o');
-                        vo.addItem(UpdateReason.SUPPRESSED, item.item());
-                    }
-                    if (e instanceof FluidOrItem.Fluid fluid) {
-                        setFluid(fluid.fluid(), Math.min(fluidCapacity(fluid.fluid()), fluidAmount(fluid.fluid()) + fluid.amountMillibuckets()));
-                    }
-                }
-                processingRecipe = null;
-            } else {
-                progressItem.setRemainingTimeSeconds(remainingSeconds);
-                return;
-            }
+        if (isProcessingRecipe()) {
+            progressRecipe(1);
+        } else {
+            tryStartRecipe();
         }
-
-        tryStartRecipe();
-        callScript("onTick", this, processingRecipe, progressItem);
+        callScript("onTick", this);
     }
 
     public void tryStartRecipe() {
-        if (processingRecipe != null || loadRecipeType == null) {
+        if (isProcessingRecipe() || loadRecipeType == null) {
             return;
         }
 
@@ -507,13 +495,10 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
             }
 
             // found recipe
-            processingRecipe = recipe;
             if (recipe instanceof CustomRecipe cr) {
                 int totalSeconds = (int) Math.round((double) cr.getTimeSeconds() / getSpeed());
-                remainingSeconds = totalSeconds;
-                progressItem.setTotalTimeSeconds(totalSeconds);
-                progressItem.setRemainingTimeSeconds(remainingSeconds);
-                progressItem.setItemStackBuilder(ItemStackBuilder.of(getRepresentativeIcon(processingRecipe)));
+                startRecipe(cr, totalSeconds);
+                getRecipeProgressItem().setItemStackBuilder(getRepresentativeIcon(recipe));
             }
 
             // consume items and fluids
@@ -642,7 +627,7 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         }
 
         if (!havePostInitialised) postInitialise();
-        return CustomRecipeType.makeGui(guiData, vs, progressItem);
+        return CustomRecipeType.makeGui(guiData, vs, getRecipeProgressItem());
     }
 
     boolean havePostInitialised = false;
@@ -753,16 +738,26 @@ public class CustomBlock extends PylonBlock implements PylonInteractBlock, Pylon
         return ret;
     }
 
-    private static ItemStack getRepresentativeIcon(PylonRecipe recipe) {
+    private static ItemStackBuilder getRepresentativeIcon(PylonRecipe recipe) {
         for (var r : recipe.getResults()) {
             if (r instanceof FluidOrItem.Item item) {
-                return item.item();
+                return ItemStackBuilder.of(item.item().asOne()).clearLore();
             }
             if (r instanceof FluidOrItem.Fluid fluid) {
-                return fluid.fluid().getItem();
+                return ItemStackBuilder.of(fluid.fluid().getItem().asOne()).clearLore();
             }
         }
 
-        return ItemStack.of(Material.IRON_PICKAXE);
+        return ItemStackBuilder.of(Material.IRON_PICKAXE);
+    }
+
+    @Override
+    public List<PylonArgument> getPlaceholders() {
+        return RuntimeObject.super.getPlaceholders();
+    }
+
+    @Override
+    public WailaDisplay getWaila(Player player) {
+        return new WailaDisplay(getDefaultWailaTranslationKey().arguments(getPlaceholders()));
     }
 }

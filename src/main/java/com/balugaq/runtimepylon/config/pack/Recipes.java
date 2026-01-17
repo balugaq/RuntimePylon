@@ -8,6 +8,7 @@ import com.balugaq.runtimepylon.exceptions.MissingArgumentException;
 import com.balugaq.runtimepylon.util.ReflectionUtil;
 import com.balugaq.runtimepylon.util.StringUtil;
 import io.github.pylonmc.pylon.core.config.Config;
+import io.github.pylonmc.pylon.core.config.ConfigSection;
 import io.github.pylonmc.pylon.core.recipe.ConfigurableRecipeType;
 import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
 import io.github.pylonmc.pylon.core.recipe.RecipeType;
@@ -50,7 +51,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 /**
  * @author balugaq
@@ -82,44 +85,20 @@ public class Recipes {
                     continue;
                 }
 
-                Config config = null;
-                YamlConfiguration cg = null;
+                Consumer<NamespacedKey> success = k -> {
+                    loadedRecipes.incrementAndGet();
+                    if (!registeredRecipes.containsKey(ctp)) {
+                        registeredRecipes.put(ctp, new HashSet<>());
+                    }
+                    registeredRecipes.get(ctp).add(k);
+                };
+
                 if (ADVANCED_RECIPE_TYPES.containsKey(key)) {
-                    cg = YamlConfiguration.loadConfiguration(new File(new File(recipeFolder, namespace), cfg.getName()));
+                    var cg = YamlConfiguration.loadConfiguration(new File(new File(recipeFolder, namespace), cfg.getName()));
+                    loadRecipesAdvanced(this.namespace, key, ctp, cg, success);
                 } else {
-                    config = new Config(cfg.toPath());
-                }
-                for (var ky : config == null ? cg.getKeys(false) : config.getKeys()) {
-                    var k = NamespacedKey.fromString(ky);
-                    if (k == null) {
-                        if (ky.contains(":")) {
-                            // a custom key
-                            throw new InvalidNamespacedKeyException(ky);
-                        }
-                        // default namespace
-                        k = new NamespacedKey(this.namespace.getNamespace(), ky);
-                    }
-                    try (var sk = StackFormatter.setPosition("Reading " + ky)) {
-                        if (ADVANCED_RECIPE_TYPES.containsKey(key)) {
-                            ReflectionUtil.invokeMethod(ctp, "addRecipe", ADVANCED_RECIPE_TYPES.get(key).apply(k, cg.getConfigurationSection(ky)));
-                        } else {
-                            ReflectionUtil.invokeMethod(
-                                    ctp, "addRecipe",
-                                    ReflectionUtil.invokeMethod(ctp, "loadRecipe", k, config.getSectionOrThrow(ky))
-                            );
-                        }
-                        //@formatter:on
-                        loadedRecipes.incrementAndGet();
-                        if (!registeredRecipes.containsKey(ctp)) {
-                            registeredRecipes.put(ctp, new HashSet<>());
-                        }
-                        registeredRecipes.get(ctp).add(k);
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException(
-                                "Failed to load recipe with key " + ky + " from config for recipe type " + ctp.getKey(),
-                                e
-                        );
-                    }
+                    var config = new Config(cfg.toPath());
+                    loadRecipesNormal(this.namespace, ctp, config, success);
                 }
 
                 } catch (Exception e) {
@@ -127,6 +106,66 @@ public class Recipes {
                 }
             }
         }
+    }
+
+    public static void loadRecipes(PackNamespace namespace, ConfigurableRecipeType<?> ctp, Consumer<NamespacedKey> success, Set<String> keys, BiConsumer<NamespacedKey, String> loader) {
+        for (var ky : keys) {
+            var k = NamespacedKey.fromString(ky);
+            if (k == null) {
+                if (ky.contains(":")) {
+                    // a custom key
+                    throw new InvalidNamespacedKeyException(ky);
+                }
+                // default namespace
+                k = new NamespacedKey(namespace.getNamespace(), ky);
+            }
+            try (var sk = StackFormatter.setPosition("Reading " + ky)) {
+                loader.accept(k, ky);
+                success.accept(k);
+            } catch (Exception e) {
+                throw new IllegalArgumentException(
+                        "Failed to load recipe with key " + ky + " from config for recipe type " + ctp.getKey(),
+                        e
+                );
+            }
+        }
+    }
+
+    public static void loadRecipesNormal(PackNamespace namespace, ConfigurableRecipeType<?> ctp, ConfigSection config, Consumer<NamespacedKey> success) {
+        loadRecipes(namespace, ctp, success, config.getKeys(), (k, ky) -> {
+            try {
+
+            ReflectionUtil.invokeMethod(
+                    ctp,
+                    "addRecipe",
+                    ReflectionUtil.invokeMethod(
+                            ctp,
+                            "loadRecipe",
+                            k,
+                            config.getSectionOrThrow(ky)
+                    )
+            );
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static void loadRecipesAdvanced(PackNamespace namespace, NamespacedKey key, ConfigurableRecipeType<?> ctp, ConfigurationSection cg, Consumer<NamespacedKey> success) {
+        loadRecipes(namespace, ctp, success, cg.getKeys(false), (k, ky) -> {
+            try {
+
+            ReflectionUtil.invokeMethod(
+                    ctp,
+                    "addRecipe",
+                    ADVANCED_RECIPE_TYPES.get(key).apply(k, cg.getConfigurationSection(ky))
+            );
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private static final Map<NamespacedKey, BiFunction<NamespacedKey, ConfigurationSection, ? extends PylonRecipe>> ADVANCED_RECIPE_TYPES = new HashMap<>();

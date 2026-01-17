@@ -110,7 +110,7 @@ import java.util.Set;
 @NoArgsConstructor(force = true)
 @NullMarked
 public class Pack implements FileObject<Pack> {
-    public static final File pylonCore = new File(RuntimePylon.getInstance().getDataFolder().getParent(), "PylonCore");
+    public static final File PYLON_CORE = new File(RuntimePylon.getInstance().getDataFolder().getParent(), "PylonCore");
     public static final Item EMPTY = new SimpleItem(ItemStack.empty());
     /**
      * deprecated, use virtual inventory instead.
@@ -537,7 +537,7 @@ public class Pack implements FileObject<Pack> {
     }
 
     public File getSettingsFolder() {
-        return new File(new File(pylonCore, "settings"), plugin().namespace());
+        return new File(new File(PYLON_CORE, "settings"), plugin().namespace());
     }
 
     private void registerPages() {
@@ -703,11 +703,11 @@ public class Pack implements FileObject<Pack> {
     }
 
     public static File getRecipesFolder() {
-        return new File(pylonCore, "recipes");
+        return new File(PYLON_CORE, "recipes");
     }
 
     public File getLangFolder() {
-        return new File(new File(pylonCore, "lang"), plugin().namespace());
+        return new File(new File(PYLON_CORE, "lang"), plugin().namespace());
     }
 
     public Pack unregister() {
