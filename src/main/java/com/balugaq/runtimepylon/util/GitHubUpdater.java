@@ -69,7 +69,7 @@ public class GitHubUpdater {
                     RuntimePylon.getPackUpdateDownloadFolder().mkdirs();
                 }
 
-                File zip = new File(RuntimePylon.getPackUpdateDownloadFolder(), packId + "-" + releaseName + ".zip");
+                File zip = new File(RuntimePylon.getPackUpdateDownloadFolder(), packId.getId() + "-" + releaseName + ".zip");
 
                 String zipUrl;
                 List<GitHubRelease.Asset> assets = release.getAssets();
@@ -112,11 +112,23 @@ public class GitHubUpdater {
                         mkdir(projectFolder);
                     }
 
-                    unzip(zip, projectFolder);
+                    File tempFolder = new File(RuntimePylon.getPackUpdateDownloadFolder(), "temp");
+                    if (!tempFolder.exists()) {
+                        mkdir(tempFolder);
+                    }
+                    unzip(zip, tempFolder);
 
-                    File pki = new File(projectFolder, "pack.yml");
+                    File pki = new File(tempFolder, "pack.yml");
                     YamlConfiguration packYml = YamlConfiguration.loadConfiguration(pki);
-                    String id = packYml.getString("id", "");
+                    String id = packYml.getString("id", null);
+                    if (id == null) {
+                        zip.delete();
+                        tempFolder.delete();
+                        return false;
+                    }
+
+                    tempFolder.delete();
+                    unzip(zip, projectFolder);
 
                     if (!id.equals(packId.getId())) {
                         Debug.log("Successfully updated " + packId + " with pack id changed: " + packId + " -> " + id);
@@ -124,6 +136,7 @@ public class GitHubUpdater {
                         Debug.log("Successfully updated  " + packId + "!");
                     }
 
+                    zip.delete();
                     return true;
                 }
                 return false;

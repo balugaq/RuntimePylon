@@ -285,20 +285,6 @@ public @Data class PackManager {
             loadPack(packFolder);
         }
 
-        for (Pack pack : packs) {
-            if (pack.getGithubUpdateLink() != null) {
-                Debug.log("Updating pack: " + pack.getPackID().getId());
-                try {
-                    if (GitHubUpdater.tryUpdate(pack)) {
-                        loadPack(pack.getDir());
-                        Debug.log("Updated pack: " + pack.getPackID().getId());
-                    }
-                } catch (IOException e) {
-                    Debug.warning(e);
-                }
-            }
-        }
-
         for (Pack pack : PackSorter.sortPacks(packs)) {
             try (var ignored = StackFormatter.setPosition("Registering Pack: " + pack.getPackID())) {
                 MyArrayList<PackDesc> packDependencies = pack.getPackDependencies();
@@ -313,6 +299,20 @@ public @Data class PackManager {
                 Debug.log("Registering pack: " + pack.getPackID().getId());
                 pack.register();
                 Debug.log("Registered pack: " + pack.getPackID().getId());
+
+                if (pack.getGithubUpdateLink() != null) {
+                    Debug.log("Updating pack: " + pack.getPackID().getId());
+                    RuntimePylon.runTaskAsync(() -> {
+                        try {
+                            if (GitHubUpdater.tryUpdate(pack)) {
+                                loadPack(pack.getDir());
+                                Debug.log("Updated pack: " + pack.getPackID().getId());
+                            }
+                        } catch (IOException e) {
+                            Debug.warning(e);
+                        }
+                    });
+                }
             } catch (Exception e) {
                 StackFormatter.handle(e);
             }
@@ -361,42 +361,34 @@ public @Data class PackManager {
         } catch (Exception e) {
             StackFormatter.handle(e);
         }
-        RuntimePylon.getGuidePages().values().forEach(page -> {
-            if (page.getPage() instanceof SimpleStaticGuidePage ssg) {
-                ssg.getButtons().removeIf(item -> {
-                    return item instanceof PageButton pb && pb.getPage() instanceof CustomGuidePage;
-                });
-            }
+        RuntimePylon.getPages().values().forEach(page -> {
+            page.getButtons().removeIf(item -> {
+                return item instanceof PageButton pb && pb.getPage() instanceof CustomGuidePage;
+            });
         });
 
-        RuntimePylon.getGuidePages().values().forEach(page -> {
-            if (page.getPage() instanceof SimpleStaticGuidePage ssg) {
-                ssg.getButtons().removeIf(item -> {
-                    if (!(item instanceof ItemButton ib)) {
-                        return false;
-                    }
+        RuntimePylon.getPages().values().forEach(page -> {
+            page.getButtons().removeIf(item -> {
+                if (!(item instanceof ItemButton ib)) {
+                    return false;
+                }
 
-                    var pylon = PylonItem.fromStack(ib.getCurrentStack());
-                    return pylon != null && pylon.getAddon() == plugin;
-                });
-            }
+                var pylon = PylonItem.fromStack(ib.getCurrentStack());
+                return pylon != null && pylon.getAddon() == plugin;
+            });
         });
 
 
-        RuntimePylon.getGuidePages().values().forEach(page -> {
-            if (page.getPage() instanceof SimpleStaticGuidePage ssg) {
-                ssg.getButtons().removeIf(item -> {
-                    return item instanceof FluidButton fb && fb.getCurrentFluid().getKey().getNamespace().equals(plugin.namespace());
-                });
-            }
+        RuntimePylon.getPages().values().forEach(page -> {
+            page.getButtons().removeIf(item -> {
+                return item instanceof FluidButton fb && fb.getCurrentFluid().getKey().getNamespace().equals(plugin.namespace());
+            });
         });
 
-        RuntimePylon.getGuidePages().values().forEach(page -> {
-            if (page.getPage() instanceof SimpleStaticGuidePage ssg) {
-                ssg.getButtons().removeIf(item -> {
-                    return item instanceof ResearchButton rb && rb.getResearch().getKey().getNamespace().equals(plugin.namespace());
-                });
-            }
+        RuntimePylon.getPages().values().forEach(page -> {
+            page.getButtons().removeIf(item -> {
+                return item instanceof ResearchButton rb && rb.getResearch().getKey().getNamespace().equals(plugin.namespace());
+            });
         });
 
         PylonRegistry.GAMETESTS.unregisterAllFromAddon(plugin);

@@ -123,8 +123,9 @@ public class CustomRecipeType extends ConfigurableRecipeType<PylonRecipe> {
         return new CustomRecipe(this, key, inputs, results, timeSeconds, other);
     }
 
-    private List<FluidOrItem> readResults(Object object) {
+    private List<FluidOrItem> readResults(@Nullable Object object) {
         List<FluidOrItem> s = new ArrayList<>();
+        if (object == null) return s;
         for (RecipeInput r : readInputs(object)) {
             if (r instanceof RecipeInput.Item item) {
                 for (ItemTypeWrapper wrapper : item.getItems()) {
@@ -139,8 +140,9 @@ public class CustomRecipeType extends ConfigurableRecipeType<PylonRecipe> {
         return s;
     }
 
-    private List<RecipeInput> readInputs(Object object) {
+    private List<RecipeInput> readInputs(@Nullable Object object) {
         List<RecipeInput> s = new ArrayList<>();
+        if (object == null) return s;
         switch (object) {
             case ItemStack stack -> {
                 return List.of(RecipeInput.of(stack));
@@ -240,19 +242,20 @@ public class CustomRecipeType extends ConfigurableRecipeType<PylonRecipe> {
         public List<ConfigReader<?, Handler>> readers() {
             return List.of(ConfigReader.of(
                     String.class, s -> {
-                        String[] a = s.split(";", 1);
+                        String[] a = s.split(";", 2);
                         if (a.length == 0) {
                             return this;
                         }
 
-                        String[] parts = a[0].split("-");
+                        String[] parts = a[0].split("\\.");
                         var adt = readDeserializer(List.of(parts));
 
-                        if (a.length > 1) {
-                            String def = a[1];
-                            return new Handler(adt, adt.deserialize(def));
+                        if (a.length == 1) {
+                            return new Handler(adt, null);
                         }
-                        return this;
+
+                        String def = a[1];
+                        return new Handler(adt, adt.deserialize(def));
                     }
             ));
         }

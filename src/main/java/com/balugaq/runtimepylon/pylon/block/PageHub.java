@@ -146,7 +146,7 @@ public class PageHub extends PylonBlock implements
                                     RuntimeKeys.nested_page
                             );
                         } else {
-                            return RuntimePylon.getGuidePages().get(data.getNestedPageId()).getItemProvider();
+                            return RuntimePylon.getPageButtons().get(data.getNestedPageId()).getItemProvider();
                         }
                     })
                     .click((data, clickType, player, event) -> {
@@ -187,11 +187,9 @@ public class PageHub extends PylonBlock implements
                     .click((data, clickType, player, event) -> {
                         assertNotNull(data.pageId, set_nested_page_1);
                         assertNotNull(data.nestedPageId, set_nested_page_2);
-                        PageButton page = assertNotNull(RuntimePylon.getGuidePages().get(data.pageId), set_nested_page_3);
-                        PageButton nestedPage = assertNotNull(RuntimePylon.getGuidePages().get(data.nestedPageId), set_nested_page_4);
-                        if (nestedPage.getPage() instanceof SimpleStaticGuidePage ssg) {
-                            ssg.addButton(page);
-                        }
+                        var page = assertNotNull(RuntimePylon.getPageButtons().get(data.pageId), set_nested_page_3);
+                        var nestedPage = assertNotNull(RuntimePylon.getPages().get(data.nestedPageId), set_nested_page_4);
+                        nestedPage.addButton(page);
                         done(player, set_nested_page_5, data.nestedPageId);
                         return false;
                     });
@@ -204,12 +202,10 @@ public class PageHub extends PylonBlock implements
                     .click((data, clickType, player, event) -> {
                         assertNotNull(data.pageId, unset_nested_page_1);
                         assertNotNull(data.nestedPageId, unset_nested_page_2);
-                        PageButton page = assertNotNull(RuntimePylon.getGuidePages().get(data.pageId), unset_nested_page_3);
-                        PageButton nestedPage = assertNotNull(RuntimePylon.getGuidePages().get(data.nestedPageId), unset_nested_page_4);
-                        if (nestedPage.getPage() instanceof SimpleStaticGuidePage ssg) {
-                            synchronized (ssg.getButtons()) {
-                                ssg.getButtons().removeIf(button -> button instanceof PageButton pb && pb.getPage() == page);
-                            }
+                        PageButton page = assertNotNull(RuntimePylon.getPageButtons().get(data.pageId), unset_nested_page_3);
+                        var nestedPage = assertNotNull(RuntimePylon.getPages().get(data.nestedPageId), unset_nested_page_4);
+                        synchronized (nestedPage.getButtons()) {
+                            nestedPage.getButtons().removeIf(button -> button instanceof PageButton pb && pb.getPage() == page);
                         }
                         done(player, unset_nested_page_5);
                         return false;

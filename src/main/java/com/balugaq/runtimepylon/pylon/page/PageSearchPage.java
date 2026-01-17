@@ -32,7 +32,7 @@ public class PageSearchPage extends SearchPage {
 
     @Override
     public List<Pair<Item, String>> getItemNamePairs(Player player, String search) {
-        return RuntimePylon.getGuidePages().values()
+        return RuntimePylon.getPageButtons().values()
                 .stream()
                 .map(page -> {
                     String name = PlainTextComponentSerializer.plainText().serialize(GlobalTranslator.render(

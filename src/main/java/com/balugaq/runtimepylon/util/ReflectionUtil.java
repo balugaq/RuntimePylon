@@ -62,7 +62,7 @@ public class ReflectionUtil {
     }
 
     public static @Nullable Field getField(Class<?> clazz, String fieldName) {
-        while (clazz != Object.class) {
+        while (clazz != null && clazz != Object.class) {
             for (Field field : clazz.getDeclaredFields()) {
                 if (field.getName().equals(fieldName)) {
                     return field;
@@ -103,7 +103,7 @@ public class ReflectionUtil {
     }
 
     public static @Nullable Method getMethod(Class<?> clazz, String methodName, boolean noargs) {
-        while (clazz != Object.class) {
+        while (clazz != null && clazz != Object.class) {
             for (Method method : clazz.getDeclaredMethods()) {
                 if (method.getName().equals(methodName) && (!noargs || method.getParameterTypes().length == 0)) {
                     return method;
@@ -116,7 +116,7 @@ public class ReflectionUtil {
     }
 
     public static @Nullable Method getMethod(Class<?> clazz, String methodName) {
-        while (clazz != Object.class) {
+        while (clazz != null && clazz != Object.class) {
             for (Method method : clazz.getDeclaredMethods()) {
                 if (method.getName().equals(methodName)) {
                     return method;
@@ -128,7 +128,7 @@ public class ReflectionUtil {
     }
 
     public static @Nullable Class<?> getClass(Class<?> clazz, String className) {
-        while (clazz != Object.class) {
+        while (clazz != null && clazz != Object.class) {
             if (clazz.getSimpleName().equals(className)) {
                 return clazz;
             }
@@ -142,6 +142,14 @@ public class ReflectionUtil {
         if (field != null) {
             field.setAccessible(true);
             return (T) field.get(object);
+        }
+
+        if (object instanceof Class<?> t) {
+            try {
+                return getStaticValue(t, fieldName, cast);
+            } catch (NoSuchFieldException e) {
+                return null;
+            }
         }
 
         return null;
@@ -227,6 +235,10 @@ public class ReflectionUtil {
             return method.invoke(object, args);
         }
 
+        if (object instanceof Class<?> t) {
+            return invokeStaticMethod(t, methodName, args);
+        }
+
         return null;
     }
 
@@ -234,7 +246,7 @@ public class ReflectionUtil {
             Class<?> clazz,
             String methodName,
             @Range(from = 0, to = Short.MAX_VALUE) int parameterCount) {
-        while (clazz != Object.class) {
+        while (clazz != null && clazz != Object.class) {
             for (Method method : clazz.getDeclaredMethods()) {
                 if (method.getName().equals(methodName) && method.getParameterTypes().length == parameterCount) {
                     return method;
@@ -247,13 +259,13 @@ public class ReflectionUtil {
 
     public static @Nullable Method getMethod(
             Class<?> clazz, String methodName, Class<?>... parameterTypes) {
-        while (clazz != Object.class) {
+        while (clazz != null && clazz != Object.class) {
             for (Method method : clazz.getDeclaredMethods()) {
                 if (method.getName().equals(methodName) && method.getParameterTypes().length == parameterTypes.length) {
                     boolean match = true;
                     // exact match
                     for (int i = 0; i < parameterTypes.length; i++) {
-                        if (method.getParameterTypes()[i] != parameterTypes[i]) {
+                        if (!toBoxedClass(method.getParameterTypes()[i]).isAssignableFrom(toBoxedClass(parameterTypes[i]))) {
                             match = false;
                             break;
                         }
@@ -262,7 +274,7 @@ public class ReflectionUtil {
                     if (!match) {
                         match = true;
                         for (int i = 0; i < parameterTypes.length; i++) {
-                            if (!method.getParameterTypes()[i].isAssignableFrom(parameterTypes[i])) {
+                            if (!toBoxedClass(method.getParameterTypes()[i]).isAssignableFrom(toBoxedClass(parameterTypes[i]))) {
                                 match = false;
                                 break;
                             }
@@ -313,5 +325,19 @@ public class ReflectionUtil {
         }
 
         return null;
+    }
+
+    public static Class<?> toBoxedClass(Class<?> clazz) {
+        return switch (clazz.getName()) {
+            case "boolean" -> Boolean.class;
+            case "byte" -> Byte.class;
+            case "char" -> Character.class;
+            case "double" -> Double.class;
+            case "float" -> Float.class;
+            case "int" -> Integer.class;
+            case "long" -> Long.class;
+            case "short" -> Short.class;
+            default -> clazz;
+        };
     }
 }

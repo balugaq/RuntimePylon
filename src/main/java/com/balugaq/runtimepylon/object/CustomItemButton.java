@@ -157,7 +157,7 @@ public class CustomItemButton extends AbstractItem implements Scriptable {
                 case DROP -> handleDropClick(clickType, player, event);
                 case CONTROL_DROP -> handleControlDropClick(clickType, player, event);
                 case SWAP_OFFHAND -> handleSwapOffhandClick(clickType, player, event);
-                default -> handleClick(clickType, player, event);
+                default -> handleOtherClick(clickType, player, event);
             }
             callScriptA("onPostClick", this, clickType, player, event);
         } catch (Exception e) {

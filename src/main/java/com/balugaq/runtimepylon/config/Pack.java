@@ -574,6 +574,8 @@ public class Pack implements FileObject<Pack> {
                 try (var sk = StackFormatter.setPosition("Loading item: " + id)) {
                     ItemStack icon = entry.icon();
 
+                    // suppress pylon core warnings
+                    PylonItem.suppressNameWarnings(id.key());
                     if (blocks != null && blocks.getBlocks().containsKey(id)) {
                         CustomItem.register(CustomItem.class, icon, id.key());
                     } else {
@@ -585,9 +587,7 @@ public class Pack implements FileObject<Pack> {
                     List<PageDesc> descs = e.pages();
                     if (descs != null) descs.forEach(desc -> {
                         try (var ignored = StackFormatter.setPosition("Adding to page: " + desc.getKey())) {
-                            if (desc.getPage().getPage() instanceof SimpleStaticGuidePage ssg) {
-                                ssg.addItem(e.icon());
-                            }
+                            desc.getPage().addItem(e.icon());
                         } catch (Exception ex) {
                             StackFormatter.handle(ex);
                         }
@@ -670,9 +670,7 @@ public class Pack implements FileObject<Pack> {
 
                 List<PageDesc> pages = e.pages();
                 if (pages != null) pages.forEach(desc -> {
-                    if (desc.getPage().getPage() instanceof SimpleStaticGuidePage ssg) {
-                        ssg.addFluid(fluid);
-                    }
+                    desc.getPage().addFluid(fluid);
                 });
             });
         }

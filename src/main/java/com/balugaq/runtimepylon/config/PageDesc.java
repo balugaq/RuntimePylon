@@ -4,6 +4,7 @@ import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.config.pack.PackNamespace;
 import com.balugaq.runtimepylon.exceptions.UnknownPageException;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
+import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -35,28 +36,21 @@ public class PageDesc implements Deserializer<PageDesc> {
     public List<ConfigReader<?, PageDesc>> readers() {
         return ConfigReader.list(
                 String.class, s -> {
-                    PackNamespace namespace;
-                    String k;
                     if (s.contains(":")) {
                         NamespacedKey key = NamespacedKey.fromString(s);
-                        if (key != null && RuntimePylon.getGuidePages().get(key) != null) {
+                        if (key != null) {
                             return new PageDesc(key);
+                        } else {
+                            return new PageDesc(InternalObjectID.of(s.substring(s.lastIndexOf(':') + 1)).register(this.packNamespace).key());
                         }
-                        namespace = Deserializer.PACK_DESC.deserialize(s.substring(0, s.indexOf(":"))).findPack().getPackNamespace();
-                        k = s.substring(s.indexOf(":") + 1);
-                    } else {
-                        namespace = this.packNamespace;
-                        k = s;
                     }
-
-                    NamespacedKey key = InternalObjectID.of(k).register(namespace).key();
-                    return new PageDesc(key);
+                    return new PageDesc(InternalObjectID.of(s).register(this.packNamespace).key());
                 }
         );
     }
 
-    public PageButton getPage() {
-        PageButton page = RuntimePylon.getGuidePages().get(key);
+    public SimpleStaticGuidePage getPage() {
+        SimpleStaticGuidePage page = RuntimePylon.getPages().get(key);
         if (page == null) throw new UnknownPageException(key.toString());
 
         return page;

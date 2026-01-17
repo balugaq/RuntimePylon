@@ -13,6 +13,8 @@ import com.balugaq.runtimepylon.util.OSUtil;
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
+import io.github.pylonmc.pylon.core.guide.pages.base.SimpleDynamicGuidePage;
+import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
@@ -27,6 +29,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NullMarked;
+import xyz.xenondevs.invui.item.impl.controlitem.PageItem;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -55,8 +58,7 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePl
     @UnknownNullability
     private PackManager packManager;
 
-    @ApiStatus.Obsolete
-    public static Map<NamespacedKey, PageButton> getGuidePages() {
+    public static Map<NamespacedKey, PageButton> getPageButtons() {
         Map<NamespacedKey, PageButton> pages = new HashMap<>(PylonGuide.getRootPage().getButtons()
           .stream()
           .filter(button -> button instanceof PageButton)
@@ -67,6 +69,30 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePl
                   (a, b) -> b
           )));
         pages.putAll(GlobalVars.getCustomPages());
+        return pages;
+    }
+
+    private static void scanPages(Map<NamespacedKey, SimpleStaticGuidePage> pages, SimpleStaticGuidePage page) {
+        for (var e : page.getButtons()) {
+            if (e instanceof PageButton p) {
+                var p2 = p.getPage();
+                if (p2 instanceof SimpleStaticGuidePage p3) {
+                    pages.put(p2.getKey(), p3);
+                    scanPages(pages, p3);
+                }
+            }
+        }
+    }
+
+    public static Map<NamespacedKey, SimpleStaticGuidePage> getPages() {
+        Map<NamespacedKey, SimpleStaticGuidePage> pages = new HashMap<>();
+        scanPages(pages, PylonGuide.getRootPage());
+        for (var e : GlobalVars.getCustomPages().entrySet()) {
+            if (e.getValue().getPage() instanceof SimpleStaticGuidePage p) {
+                pages.put(e.getKey(), p);
+            }
+        }
+        pages.put(PylonGuide.getRootPage().getKey(), PylonGuide.getRootPage());
         return pages;
     }
 
