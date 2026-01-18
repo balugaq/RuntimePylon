@@ -8,7 +8,6 @@ import static com.balugaq.runtimepylon.util.Keys.create;
 /**
  * @author balugaq
  */
-@Deprecated
 @NullMarked
 public class RuntimeKeys {
     // @formatter:off
@@ -52,6 +51,8 @@ public class RuntimeKeys {
     nested_page_id = create("nested_page_id"),
     nested_page = create("nested_page"),
     page_hub = create("page_hub"),
-    display_in_root = create("display_in_root")
+    display_in_root = create("display_in_root"),
+    recipe_copier = create("recipe_copier"),
+    make_recipe = create("make_recipe")
     ;// @formatter:on
 }

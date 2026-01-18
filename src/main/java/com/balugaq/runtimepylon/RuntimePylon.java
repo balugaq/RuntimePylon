@@ -6,12 +6,20 @@ import com.balugaq.runtimepylon.listener.ChatInputListener;
 import com.balugaq.runtimepylon.manager.ConfigManager;
 import com.balugaq.runtimepylon.manager.IntegrationManager;
 import com.balugaq.runtimepylon.manager.PackManager;
+import com.balugaq.runtimepylon.pylon.RuntimeBlocks;
+import com.balugaq.runtimepylon.pylon.RuntimeItems;
+import com.balugaq.runtimepylon.pylon.RuntimeKeys;
+import com.balugaq.runtimepylon.pylon.block.RecipeCopier;
+import com.balugaq.runtimepylon.pylon.page.MainPage;
 import com.balugaq.runtimepylon.util.Debug;
 import com.balugaq.runtimepylon.util.OSUtil;
 import io.github.pylonmc.pylon.core.addon.PylonAddon;
+import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
 import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
+import io.github.pylonmc.pylon.core.item.PylonItem;
+import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
@@ -21,6 +29,7 @@ import net.byteflux.libby.LibraryManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.UnknownNullability;
@@ -147,9 +156,9 @@ public class RuntimePylon extends JavaPlugin implements PylonAddon, DebuggablePl
         integrationManager = new IntegrationManager();
         packManager = new PackManager();
 
-        // deprecated
-        //RuntimeItems.initialize();
-        //RuntimeBlocks.initialize();
+        RuntimeItems.initialize();
+        RuntimeBlocks.initialize();
+
         runTaskLater(() -> {
             try (var ignored = StackFormatter.setPosition("Loading packs")) {
                 packManager.loadPacks();

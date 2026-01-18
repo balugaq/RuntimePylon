@@ -11,12 +11,7 @@ import java.util.Map;
  * @author balugaq
  */
 @NullMarked
-@Deprecated
-public interface WithRecipe extends WithModel {
-    @Nullable NamespacedKey getRecipeTypeId();
-
-    void setRecipeTypeId(@Nullable NamespacedKey recipeTypeId);
-
+public interface WithRecipe {
     Map<Integer, ItemStack> getRecipe();
 
     void setRecipe(Map<Integer, ItemStack> recipe);

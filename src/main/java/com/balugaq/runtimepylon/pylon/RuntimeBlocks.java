@@ -1,8 +1,6 @@
 package com.balugaq.runtimepylon.pylon;
 
-import com.balugaq.runtimepylon.pylon.block.FluidHub;
-import com.balugaq.runtimepylon.pylon.block.ItemHub;
-import com.balugaq.runtimepylon.pylon.block.PageHub;
+import com.balugaq.runtimepylon.pylon.block.RecipeCopier;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import org.bukkit.Material;
 import org.jspecify.annotations.NullMarked;
@@ -10,13 +8,10 @@ import org.jspecify.annotations.NullMarked;
 /**
  * @author balugaq
  */
-@Deprecated
 @NullMarked
 public class RuntimeBlocks {
     static {
-        PylonBlock.register(RuntimeKeys.item_hub, Material.PURPUR_PILLAR, ItemHub.class);
-        PylonBlock.register(RuntimeKeys.fluid_hub, Material.LAPIS_BLOCK, FluidHub.class);
-        PylonBlock.register(RuntimeKeys.page_hub, Material.QUARTZ_BLOCK, PageHub.class);
+        PylonBlock.register(RuntimeKeys.recipe_copier, Material.CRAFTING_TABLE, RecipeCopier.class);
     }
 
     public static void initialize() {

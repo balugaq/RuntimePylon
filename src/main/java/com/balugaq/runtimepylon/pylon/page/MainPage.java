@@ -11,7 +11,6 @@ import org.jspecify.annotations.NullMarked;
  * @author balugaq
  */
 @NullMarked
-@Deprecated
 public class MainPage {
     private static final SimpleStaticGuidePage MAIN = new SimpleStaticGuidePage(RuntimeKeys.main);
 

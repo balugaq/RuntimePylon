@@ -1,32 +1,16 @@
 package com.balugaq.runtimepylon.gui;
 
 import com.balugaq.runtimepylon.RuntimePylon;
-import com.balugaq.runtimepylon.exceptions.WrongStateException;
 import com.balugaq.runtimepylon.pylon.RuntimeKeys;
-import com.balugaq.runtimepylon.pylon.block.base.WithModel;
-import com.balugaq.runtimepylon.pylon.block.base.WithPage;
-import com.balugaq.runtimepylon.pylon.block.base.WithRecipe;
-import com.balugaq.runtimepylon.pylon.item.DataStack;
-import com.balugaq.runtimepylon.pylon.page.SearchPages;
-import com.balugaq.runtimepylon.util.RecipeAdapter;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
-import io.github.pylonmc.pylon.core.guide.button.ItemButton;
-import io.github.pylonmc.pylon.core.guide.button.PageButton;
-import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
-import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
-import io.github.pylonmc.pylon.core.recipe.PylonRecipe;
-import io.github.pylonmc.pylon.core.recipe.RecipeType;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -37,13 +21,9 @@ import xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
 import xyz.xenondevs.invui.window.Window;
 
-import java.lang.reflect.ParameterizedType;
-import java.util.Map;
 import java.util.Optional;
 
-import static com.balugaq.runtimepylon.gui.GuiItem.toNamespacedKey;
 import static com.balugaq.runtimepylon.gui.GuiItem.waitInput;
-import static com.balugaq.runtimepylon.util.Lang.*;
 
 /**
  * @author balugaq
@@ -57,15 +37,7 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
             blackBackground,
             grayBackground,
             inputBorder,
-            outputBorder,
-            setPage,
-            setRecipe,
-            unsetPage,
-            unsetRecipe,
-            setId,
-            page,
-            recipeType,
-            item;
+            outputBorder;
 
     public ButtonSet(T b2) {
         this.block = b2;
@@ -96,256 +68,6 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
                         RuntimeKeys.output_border
                 ))
                 .click(deny());
-
-        setPage = create()
-                .item(block -> ItemStackBuilder.pylon(
-                        Material.GREEN_STAINED_GLASS_PANE,
-                        RuntimeKeys.set_page
-                ))
-                .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithPage.class);
-
-                    assertNotNull(data.getItemId(), set_page_1);
-                    assertNotNull(data.getPageId(), set_page_2);
-
-                    Map<NamespacedKey, SimpleStaticGuidePage> pages = RuntimePylon.getPages();
-                    var page = assertNotNull(pages.get(data.getPageId()), set_page_3);
-
-                    assertNotNull(PylonRegistry.ITEMS.get(data.getItemId()), set_page_4);
-                    assertNotNull(data.getModel(), set_page_4);
-                    page.addItem(data.getModel());
-
-                    done(player, set_page_5, data.getItemId(), data.getPageId());
-                    return true;
-                });
-
-        setRecipe = create()
-                .item(block -> ItemStackBuilder.pylon(
-                        Material.GREEN_STAINED_GLASS_PANE,
-                        RuntimeKeys.set_recipe
-                ))
-                .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithRecipe.class);
-                    assertNotNull(data.getItemId(), set_recipe_1);
-                    assertNotNull(data.getModel(), set_recipe_2);
-                    assertNotNull(data.getRecipeTypeId(), set_recipe_3);
-
-                    RecipeType<? extends PylonRecipe> recipeType = assertNotNull(PylonRegistry.RECIPE_TYPES.get(data.getRecipeTypeId()), set_recipe_4);
-                    if (!(recipeType.getClass().getGenericSuperclass() instanceof ParameterizedType pt)) {
-                        return false;
-                    }
-
-                    Class<? extends PylonRecipe> pylonRecipeClass = (Class<? extends PylonRecipe>) pt.getActualTypeArguments()[0];
-                    var adapter = assertNotNull(RecipeAdapter.find(recipeType, pylonRecipeClass), set_recipe_5);
-                    assertTrue(adapter.noRecipe(data.getItemId(), data.getModel(), data.getRecipe()), set_recipe_6);
-                    assertTrue(adapter.apply(data.getItemId(), data.getModel(), data.getRecipe()), set_recipe_7);
-                    done(player, Component.text(set_recipe_8).append(data.getModel().displayName()));
-                    return true;
-                });
-
-        unsetPage = create()
-                .item(block -> ItemStackBuilder.pylon(
-                        Material.RED_STAINED_GLASS_PANE,
-                        RuntimeKeys.unset_page
-                ))
-                .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithPage.class);
-                    assertNotNull(data.getItemId(), unset_page_1);
-                    assertNotNull(data.getPageId(), unset_page_2);
-                    SimpleStaticGuidePage page = assertNotNull(RuntimePylon.getPages().get(data.getPageId()), unset_page_3);
-                    page.getButtons().removeIf(item -> {
-                        if (!(item instanceof ItemButton button)) {
-                            return false;
-                        }
-
-                        PylonItem pylon = PylonItem.fromStack(button.getCurrentStack());
-                        if (pylon == null) return false;
-
-                        return pylon.getKey().equals(data.getItemId());
-                    });
-                    done(player, unset_page_4, data.getItemId(), data.getPageId());
-                    return true;
-                });
-
-        unsetRecipe = create()
-                .item(block -> ItemStackBuilder.pylon(
-                        Material.RED_STAINED_GLASS_PANE,
-                        RuntimeKeys.unset_recipe
-                ))
-                .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithRecipe.class);
-                    assertNotNull(data.getItemId(), unset_recipe_1);
-                    assertNotNull(data.getRecipeTypeId(), unset_recipe_2);
-
-                    RecipeType<? extends PylonRecipe> recipeType = assertNotNull(PylonRegistry.RECIPE_TYPES.get(data.getRecipeTypeId()), unset_recipe_3);
-                    if (!(recipeType.getClass().getGenericSuperclass() instanceof ParameterizedType pt)) {
-                        return false;
-                    }
-
-                    Class<? extends PylonRecipe> pylonRecipeClass = (Class<? extends PylonRecipe>) pt.getActualTypeArguments()[0];
-                    RecipeAdapter<? extends PylonRecipe> adapter = assertNotNull(RecipeAdapter.find(recipeType, pylonRecipeClass), unset_recipe_4);
-                    adapter.removeRecipe(data.getItemId());
-                    done(player, unset_recipe_5, data.getItemId(), data.getRecipeTypeId());
-
-                    return true;
-                });
-
-        setId = create()
-                .item(block -> {
-                    var data = assertBlock(block, WithModel.class);
-                    var itemId = data.getItemId();
-                    if (itemId == null) {
-                        return ItemStackBuilder.pylon(
-                                Material.BLUE_STAINED_GLASS_PANE,
-                                RuntimeKeys.set_id
-                        );
-                    } else {
-                        return ItemStackBuilder.pylon(
-                                Material.BLUE_STAINED_GLASS_PANE,
-                                RuntimeKeys.set_id
-                        ).lore(set_id_1 + data.getItemId());
-                    }
-                })
-                .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithModel.class);
-
-                    waitInput(
-                            player, set_id_2, itemId -> {
-                                if (itemId.contains(":") && !itemId.startsWith(RuntimePylon.getInstance().getName().toLowerCase())) {
-                                    throw new WrongStateException(set_id_3 + RuntimePylon.getInstance().getName().toLowerCase());
-                                } else {
-                                    data.setItemId(assertNotNull(toNamespacedKey(itemId), set_id_4));
-                                    reopen(player);
-                                }
-                            }
-                    );
-
-                    return true;
-                });
-
-        page = create()
-                .item(block -> {
-                    var data = assertBlock(block, WithPage.class);
-                    if (data.getPageId() == null) {
-                        return ItemStackBuilder.pylon(
-                                Material.WHITE_STAINED_GLASS_PANE,
-                                RuntimeKeys.page
-                        );
-                    } else {
-                        return RuntimePylon.getPageButtons().get(data.getPageId()).getItemProvider();
-                    }
-                })
-                .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithPage.class);
-
-                    if (clickType.isLeftClick()) {
-                        if (clickType.isShiftClick()) {
-                            waitInput(
-                                    player, page_1, pageId -> {
-                                        data.setPageId(assertNotNull(toNamespacedKey(pageId), page_2));
-                                    }
-                            );
-                        } else {
-                            SearchPages.openPageSearchPage(
-                                    player, page -> {
-                                        data.setPageId(page.getKey());
-                                        done(player, page_3, page.getKey());
-                                        reopen(player);
-                                    }
-                            );
-                        }
-                    } else if (clickType.isRightClick()) {
-                        assertNotNull(data.getPageId(), page_4);
-                        // copy id
-
-                        player.sendMessage(Component.text()
-                                                   .content(page_5)
-                                                   .hoverEvent(HoverEvent.showText(Component.text(page_6)))
-                                                   .clickEvent(ClickEvent.copyToClipboard(data.getPageId().toString())));
-                    }
-
-                    return true;
-                });
-
-        recipeType = create()
-                .item(block -> {
-                    var data = assertBlock(block, WithRecipe.class);
-
-                    if (data.getRecipeTypeId() == null) {
-                        return ItemStackBuilder.pylon(
-                                Material.WHITE_STAINED_GLASS_PANE,
-                                RuntimeKeys.recipe_type
-                        );
-                    } else {
-                        return ItemStackBuilder.pylon(
-                                Material.CRAFTING_TABLE,
-                                RuntimeKeys.recipe_type
-                        ).lore(recipe_type_1 + data.getRecipeTypeId());
-                    }
-                })
-                .click((block, clickType, player, event) -> {
-                    var data = assertBlock(block, WithRecipe.class);
-                    if (clickType.isLeftClick()) {
-                        if (clickType.isShiftClick()) {
-                            waitInput(
-                                    player, recipe_type_2, recipeTypeId -> {
-                                        data.setRecipeTypeId(assertNotNull(toNamespacedKey(recipeTypeId), recipe_type_3));
-                                    }
-                            );
-                        } else {
-                            SearchPages.openRecipeTypeSearchPage(
-                                    player, recipeType -> {
-                                        data.setRecipeTypeId(recipeType.getKey());
-                                        done(player, recipe_type_4, recipeType.getKey());
-                                        reopen(player);
-                                    }
-                            );
-                        }
-                    } else if (clickType.isRightClick()) {
-                        assertNotNull(data.getRecipeTypeId(), recipe_type_5);
-                        // copy id
-
-                        player.sendMessage(Component.text()
-                                                   .content(recipe_type_6)
-                                                   .hoverEvent(HoverEvent.showText(Component.text(recipe_type_7)))
-                                                   .clickEvent(ClickEvent.copyToClipboard(data.getRecipeTypeId().toString()))
-                        );
-                    }
-
-                    return true;
-                });
-
-        item = create()
-                .item(block -> {
-                    var data = assertBlock(block, WithModel.class);
-                    var model = data.getModel();
-
-                    if (model == null || model.getType() == Material.AIR) {
-                        return ItemStackBuilder.EMPTY;
-                    } else {
-                        return ItemStackBuilder.of(model);
-                    }
-                })
-                .click((block, clickType, player, event) -> {
-                    handleClick(event);
-
-                    var data = assertBlock(block, WithModel.class);
-                    ItemStack currentItem = event.getCurrentItem();
-                    if (currentItem == null) {
-                        data.setModel(null);
-                        return true;
-                    }
-                    data.setModel(currentItem);
-                    done(player, Component.text(item_1).append(displayName(currentItem)));
-
-                    PylonItem pylon = PylonItem.fromStack(currentItem);
-                    if (pylon != null) {
-                        data.setItemId(pylon.getKey());
-                        done(player, item_2, pylon.getKey());
-                    }
-
-                    return true;
-                });
     }
 
     public GuiItem<T> create() {
@@ -479,37 +201,5 @@ public class ButtonSet<T extends PylonBlock & PylonGuiBlock> {
 
     public static boolean isOutput(int n) {
         return n > 1000;
-    }
-
-    public AbstractItem recipe(int n) {
-        return create()
-                .item(block -> {
-                    var data = assertBlock(block, WithRecipe.class);
-                    if (data.getRecipe().get(n) != null) {
-                        return ItemStackBuilder.of(data.getRecipe().get(n));
-                    } else {
-                        getItem().notifyWindows();
-                        return ItemStackBuilder.EMPTY;
-                    }
-                })
-                .click((block, clickType, player, event) -> {
-                    handleClick(event);
-
-                    ItemStack currentItem = event.getCurrentItem();
-                    PylonItem stack = PylonItem.fromStack(currentItem);
-                    if (stack instanceof DataStack data) {
-                        data.onClick(block, clickType, player, event, () -> reopen(player));
-                    }
-
-                    var data = assertBlock(block, WithRecipe.class);
-
-                    if (currentItem != null && currentItem.getType() != Material.AIR) {
-                        data.getRecipe().put(n, currentItem.clone());
-                    } else {
-                        data.getRecipe().remove(n);
-                    }
-
-                    return true;
-                });
     }
 }
