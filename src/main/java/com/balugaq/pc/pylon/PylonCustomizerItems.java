@@ -22,7 +22,7 @@ public class PylonCustomizerItems {
         PylonItem.register(
                 PylonItem.class,
                 recipe_copier,
-                PylonCustomizerKeys.item_hub // block signature
+                PylonCustomizerKeys.recipe_copier // block signature
         );
         MainPage.addItem(recipe_copier);
     }
