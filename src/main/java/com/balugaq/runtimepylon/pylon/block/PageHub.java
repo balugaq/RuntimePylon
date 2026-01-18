@@ -55,7 +55,7 @@ public class PageHub extends PylonBlock implements
     public PageHub(Block block, PersistentDataContainer pdc) {
         super(block, pdc);
         model = pdc.get(RuntimeKeys.model, PylonSerializers.ITEM_STACK);
-        pageId = pdc.get(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY);
+        pageId = pdc.get(RuntimeKeys.page_id, PylonSerializers.NAMESPACED_KEY);
         nestedPageId = pdc.get(RuntimeKeys.nested_page_id, PylonSerializers.NAMESPACED_KEY);
         displayInRoot = pdc.getOrDefault(RuntimeKeys.display_in_root, PylonSerializers.BOOLEAN, true);
     }
@@ -64,7 +64,7 @@ public class PageHub extends PylonBlock implements
     public void write(PersistentDataContainer pdc) {
         super.write(pdc);
         if (model != null) pdc.set(RuntimeKeys.model, PylonSerializers.ITEM_STACK, model);
-        if (pageId != null) pdc.set(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY, pageId);
+        if (pageId != null) pdc.set(RuntimeKeys.page_id, PylonSerializers.NAMESPACED_KEY, pageId);
         if (nestedPageId != null) pdc.set(RuntimeKeys.nested_page_id, PylonSerializers.NAMESPACED_KEY, nestedPageId);
         pdc.set(RuntimeKeys.display_in_root, PylonSerializers.BOOLEAN, displayInRoot);
     }
