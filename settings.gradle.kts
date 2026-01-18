@@ -1,1 +1,1 @@
-rootProject.name = "RuntimePylon"
+rootProject.name = "PylonCustomizer"

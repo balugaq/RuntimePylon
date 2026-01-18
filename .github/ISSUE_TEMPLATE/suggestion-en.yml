@@ -7,8 +7,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Welcome to the RuntimePylon Issue Tracker
-        You are submitting a development suggestion for RuntimePylon.
+        ## Welcome to the PylonCustomizer Issue Tracker
+        You are submitting a development suggestion for PylonCustomizer.
         
         <strong><i>You must fill out the fields marked with an asterisk (*)</i></strong>
 
@@ -18,7 +18,7 @@ body:
       label: Checklist
       description: Before reporting, you need to confirm
       options:
-        - label: You have searched the [list of known issues](https://github.com/balugaq/RuntimePylon/issues) and have not found the same suggestion
+        - label: You have searched the [list of known issues](https://github.com/balugaq/PylonCustomizer/issues) and have not found the same suggestion
           required: true
 
   - type: textarea
