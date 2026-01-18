@@ -22,6 +22,7 @@ import java.util.function.Consumer;
  */
 @Getter
 @NullMarked
+@Deprecated
 public class RecipeTypeSearchPage extends SearchPage {
     private final Consumer<RecipeType<? extends PylonRecipe>> consumer;
 

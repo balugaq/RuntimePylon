@@ -18,6 +18,7 @@ import static com.balugaq.runtimepylon.util.Lang.*;
  * @author balugaq
  */
 @NullMarked
+@Deprecated
 public class NumberStack extends PylonItem implements DataStack {
     @UnknownNullability
     public String internal;

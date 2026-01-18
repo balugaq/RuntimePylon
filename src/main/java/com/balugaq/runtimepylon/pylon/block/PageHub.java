@@ -40,6 +40,7 @@ import static com.balugaq.runtimepylon.util.Lang.*;
 @Getter
 @Setter
 @NullMarked
+@Deprecated
 public class PageHub extends PylonBlock implements
                                         PylonGuiBlock,
                                         WithModel {

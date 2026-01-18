@@ -8,6 +8,7 @@ import org.jspecify.annotations.NullMarked;
  * @author balugaq
  */
 @NullMarked
+@Deprecated
 public interface PylonFluidTagHolder<T extends PylonFluidTag> extends DataStack {
     T getTag();
 }

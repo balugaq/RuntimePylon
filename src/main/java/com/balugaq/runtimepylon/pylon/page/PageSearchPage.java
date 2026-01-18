@@ -22,6 +22,7 @@ import java.util.function.Consumer;
  */
 @Getter
 @NullMarked
+@Deprecated
 public class PageSearchPage extends SearchPage {
     private final Consumer<SimpleStaticGuidePage> consumer;
 

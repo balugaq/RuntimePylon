@@ -8,6 +8,7 @@ import org.jspecify.annotations.NullMarked;
  * @author balugaq
  */
 @NullMarked
+@Deprecated
 public interface WithFluidTag {
     @Nullable ItemStack getTag();
 

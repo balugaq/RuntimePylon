@@ -9,6 +9,7 @@ import org.jspecify.annotations.NullMarked;
  * @author balugaq
  */
 @NullMarked
+@Deprecated
 public interface WithModel {
     @Nullable ItemStack getModel();
 

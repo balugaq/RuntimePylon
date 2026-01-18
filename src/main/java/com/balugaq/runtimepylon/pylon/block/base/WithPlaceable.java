@@ -6,6 +6,7 @@ import org.jspecify.annotations.NullMarked;
  * @author balugaq
  */
 @NullMarked
+@Deprecated
 public interface WithPlaceable {
     boolean isPlaceable();
 

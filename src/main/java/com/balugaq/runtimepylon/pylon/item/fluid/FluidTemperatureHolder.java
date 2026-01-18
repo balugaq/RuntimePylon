@@ -22,6 +22,7 @@ import static com.balugaq.runtimepylon.util.Lang.set_temperature_1;
  * @author balugaq
  */
 @NullMarked
+@Deprecated
 public class FluidTemperatureHolder extends PylonItem implements PylonFluidTagHolder<FluidTemperature> {
     @Setter
     public FluidTemperature temperature = FluidTemperature.NORMAL;

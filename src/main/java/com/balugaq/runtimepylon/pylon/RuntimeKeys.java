@@ -8,6 +8,7 @@ import static com.balugaq.runtimepylon.util.Keys.create;
 /**
  * @author balugaq
  */
+@Deprecated
 @NullMarked
 public class RuntimeKeys {
     // @formatter:off

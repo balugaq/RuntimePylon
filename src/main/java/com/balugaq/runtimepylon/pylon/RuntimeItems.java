@@ -13,6 +13,7 @@ import org.jspecify.annotations.NullMarked;
 /**
  * @author balugaq
  */
+@Deprecated
 @NullMarked
 public class RuntimeItems {
     // @formatter:off

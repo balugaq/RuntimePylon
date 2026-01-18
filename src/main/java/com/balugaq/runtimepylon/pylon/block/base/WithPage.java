@@ -8,6 +8,7 @@ import org.jspecify.annotations.NullMarked;
  * @author balugaq
  */
 @NullMarked
+@Deprecated
 public interface WithPage extends WithModel {
     @Nullable NamespacedKey getPageId();
 

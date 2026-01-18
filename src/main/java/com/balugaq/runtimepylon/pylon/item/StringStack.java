@@ -17,6 +17,7 @@ import static com.balugaq.runtimepylon.util.Lang.string_input_1;
  * @author balugaq
  */
 @NullMarked
+@Deprecated
 public class StringStack extends PylonItem implements DataStack {
     @UnknownNullability
     public String internal;

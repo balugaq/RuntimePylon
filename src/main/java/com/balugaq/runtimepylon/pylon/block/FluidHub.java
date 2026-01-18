@@ -41,6 +41,7 @@ import static com.balugaq.runtimepylon.util.Lang.*;
 @Getter
 @Setter
 @NullMarked
+@Deprecated
 public class FluidHub extends PylonBlock implements
                                          PylonGuiBlock,
                                          WithModel,

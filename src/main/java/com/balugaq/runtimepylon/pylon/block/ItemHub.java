@@ -37,6 +37,7 @@ import static com.balugaq.runtimepylon.util.Lang.*;
 @Getter
 @Setter
 @NullMarked
+@Deprecated
 public class ItemHub extends PylonBlock implements
                                         PylonGuiBlock,
                                         WithModel,

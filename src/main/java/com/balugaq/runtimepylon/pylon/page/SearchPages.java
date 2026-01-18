@@ -16,6 +16,7 @@ import java.util.function.Consumer;
  * @author balugaq
  */
 @NullMarked
+@Deprecated
 public class SearchPages {
     public static void openPageSearchPage(Player player, Consumer<SimpleStaticGuidePage> consumer) {
         new PageSearchPage(consumer).open(player);
