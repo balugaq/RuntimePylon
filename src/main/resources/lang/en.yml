@@ -1,67 +1,13 @@
-addon: "RuntimePylon"
+addon: "PylonCustomizer"
 
 item:
-  set_id:
-    name: "Set ID"
-  set_page:
-    name: "Set Item Page"
-  set_recipe:
-    name: "Set Recipe"
   black_background:
     name: " "
   gray_background:
     name: " "
-  unset_page:
-    name: "Unset Item Page"
-  unset_recipe:
-    name: "Unset Recipe"
-  recipe_type:
-    name: "Recipe Type"
-  page:
-    name: "Item Page"
-  item:
-    name: "Item"
-  register_item:
-    name: "Register Item"
-  item_hub:
-    name: "<gold>Item Hub"
-  placeable_active:
-    name: "Placeable Active"
-  placeable_inactive:
-    name: "Placeable Inactive"
-  fluid_hub:
-    name: "<gold>Fluid Hub"
-  input_border:
-    name: "Input →"
-  output_border:
-    name: "Output →"
-  set_tag:
-    name: "Set Tag"
-  unset_tag:
-    name: "Unset Tag"
-  fluid_temperature_holder:
-    name: "Fluid Temperature Holder"
-  number_stack:
-    name: "Number Stack"
-  string_stack:
-    name: "String Stack"
-  register_fluid:
-    name: "Register Fluid"
-  tag:
-    name: "Tag"
-  page_hub:
-    name: "<gold>Page Hub"
-  set_nested_page:
-    name: "Set Nested Page"
-  nested_page:
-    name: "Nested Page"
-  unset_nested_page:
-    name: "Unset Nested Page"
-  register_page:
-    name: "Register Page"
+  recipe_copier:
+    name: "<gold>Recipe Copier"
 
 guide:
   page:
-    main: "Runtime Pylon"
-    page_search_page: "Search for a page"
-    recipe_type_search_page: "Search for a recipe type"
+    main: "Pylon Customizer"

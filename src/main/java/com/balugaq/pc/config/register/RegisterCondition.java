@@ -1,0 +1,139 @@
+package com.balugaq.pc.config.register;
+
+import com.balugaq.pc.config.ConfigReader;
+import com.balugaq.pc.config.Deserializer;
+import com.balugaq.pc.config.Pack;
+import com.balugaq.pc.config.PackDesc;
+import com.balugaq.pc.config.PluginDesc;
+import com.balugaq.pc.exceptions.UnknownFlagException;
+import com.balugaq.pc.util.MinecraftVersion;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NullMarked;
+
+import java.util.List;
+
+/**
+ * @author balugaq
+ */
+@NullMarked
+@NoArgsConstructor
+public class RegisterCondition implements Deserializer<RegisterCondition> {
+    @Override
+    public List<ConfigReader<?, RegisterCondition>> readers() {
+        return List.of(
+                ConfigReader.of(Boolean.class, BooleanRegisterCondition::new),
+                ConfigReader.of(Number.class, NumberRegisterCondition::new),
+                ConfigReader.of(String.class, StringRegisterCondition::new)
+        );
+    }
+
+    public boolean pass() {
+        return false;
+    }
+
+    /**
+     * @author balugaq
+     */
+    @EqualsAndHashCode(callSuper = true)
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @NullMarked
+    public static class BooleanRegisterCondition extends RegisterCondition {
+        private boolean value;
+
+        @Override
+        public boolean pass() {
+            return value;
+        }
+    }
+
+    /**
+     * @author balugaq
+     */
+    @EqualsAndHashCode(callSuper = true)
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @NullMarked
+    public static class NumberRegisterCondition extends RegisterCondition {
+        private Number value;
+
+        @Override
+        public boolean pass() {
+            return value.intValue() != 0;
+        }
+    }
+
+    /**
+     * @author balugaq
+     */
+    @EqualsAndHashCode(callSuper = true)
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @NullMarked
+    public static class StringRegisterCondition extends RegisterCondition {
+        private String value;
+
+        @Override
+        public boolean pass() {
+            if ("true".equalsIgnoreCase(value)) return true;
+            if ("false".equalsIgnoreCase(value)) return false;
+            try {
+                return new NumberRegisterCondition(Integer.parseInt(value)).pass();
+            } catch (NumberFormatException ignored) {
+            }
+
+            if (value.startsWith("version ")) {
+                String[] ss = value.split(" ");
+                if (ss.length < 3) throw new UnknownFlagException(value);
+                String symbol = ss[1];
+                MinecraftVersion version = MinecraftVersion.of(ss[2]);
+                return switch (symbol) {
+                    case ">=" -> MinecraftVersion.current().compareTo(version) >= 0;
+                    case ">" -> MinecraftVersion.current().compareTo(version) > 0;
+                    case "<=" -> MinecraftVersion.current().compareTo(version) <= 0;
+                    case "<" -> MinecraftVersion.current().compareTo(version) < 0;
+                    case "==" -> MinecraftVersion.current().equals(version);
+                    case "!=" -> !MinecraftVersion.current().equals(version);
+                    default -> throw new UnknownFlagException(value);
+                };
+            }
+
+            if (value.startsWith("hasPack ")) {
+                String packName = value.substring(8);
+                PackDesc desc = Deserializer.PACK_DESC.deserialize(packName);
+                Pack pack = desc.findPack();
+                return pack != null;
+            }
+
+            if (value.startsWith("!hasPack ")) {
+                String packName = value.substring(9);
+                PackDesc desc = Deserializer.PACK_DESC.deserialize(packName);
+                Pack pack = desc.findPack();
+                return pack == null;
+            }
+
+            if (value.startsWith("hasPlugin ")) {
+                String pluginName = value.substring(10);
+                PluginDesc desc = Deserializer.PLUGIN_DESC.deserialize(pluginName);
+                Plugin plugin = desc.findPlugin();
+                return plugin != null;
+            }
+
+            if (value.startsWith("!hasPlugin ")) {
+                String pluginName = value.substring(11);
+                PluginDesc desc = Deserializer.PLUGIN_DESC.deserialize(pluginName);
+                Plugin plugin = desc.findPlugin();
+                return plugin == null;
+            }
+
+            throw new UnknownFlagException(value);
+        }
+    }
+}

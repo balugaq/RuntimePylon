@@ -1,0 +1,56 @@
+package com.balugaq.pc.config.pack;
+
+import com.balugaq.pc.manager.PackManager;
+import com.balugaq.pc.util.Debug;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.jspecify.annotations.NullMarked;
+
+import java.io.File;
+import java.io.IOException;
+
+/**
+ * @author balugaq
+ */
+@Data
+@AllArgsConstructor
+@NullMarked
+public class Settings {
+    private File settingsFolder;
+    private PackNamespace namespace;
+
+    public void mergeTo(File to) {
+        merge(settingsFolder, to);
+    }
+
+    private void merge(File from, File to) {
+        if (!to.exists()) {
+            to.mkdir();
+        }
+
+        for (File file : from.listFiles()) {
+            if (file.isFile() && file.getName().matches("[a-z0-9_\\-\\./]+\\.yml$")) {
+                YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                File targetFile = new File(to, file.getName());
+
+                if (!targetFile.exists()) {
+                    try {
+                        targetFile.createNewFile();
+                        YamlConfiguration targetConfig = YamlConfiguration.loadConfiguration(targetFile);
+                        for (String key : targetConfig.getKeys(false)) {
+                            if (key.startsWith(namespace.getNamespace() + ":")) {
+                                targetConfig.set(key, null); // delete old key
+                            }
+                        }
+                        PackManager.saveConfig(config, targetConfig, targetFile);
+                    } catch (IOException e) {
+                        Debug.severe(e);
+                    }
+                }
+            } else if (file.isDirectory()) {
+                merge(file, new File(to, file.getName()));
+            }
+        }
+    }
+}
