@@ -2,6 +2,8 @@ package com.balugaq.runtimepylon.pylon.block;
 
 import com.balugaq.runtimepylon.RuntimePylon;
 import com.balugaq.runtimepylon.gui.ButtonSet;
+import com.balugaq.runtimepylon.object.CustomGuidePage;
+import com.balugaq.runtimepylon.object.CustomPageButton;
 import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import com.balugaq.runtimepylon.pylon.block.base.WithModel;
 import com.balugaq.runtimepylon.pylon.page.SearchPages;
@@ -11,9 +13,9 @@ import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
 import io.github.pylonmc.pylon.core.content.guide.PylonGuide;
 import io.github.pylonmc.pylon.core.datatypes.PylonSerializers;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
-import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import lombok.Getter;
+import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -36,6 +38,7 @@ import static com.balugaq.runtimepylon.gui.GuiItem.waitInput;
 import static com.balugaq.runtimepylon.util.Lang.*;
 
 @Getter
+@Setter
 @NullMarked
 public class PageHub extends PylonBlock implements
                                         PylonGuiBlock,
@@ -89,20 +92,13 @@ public class PageHub extends PylonBlock implements
     }
 
     @Override
-    public WithModel setModel(@Nullable ItemStack model) {
-        this.model = model;
-        return this;
-    }
-
-    @Override
     public @Nullable NamespacedKey getItemId() {
         return pageId;
     }
 
     @Override
-    public WithModel setItemId(@Nullable NamespacedKey itemId) {
+    public void setItemId(@Nullable NamespacedKey itemId) {
         this.pageId = itemId;
-        return this;
     }
 
     @Override
@@ -132,8 +128,8 @@ public class PageHub extends PylonBlock implements
                         assertNotNull(data.model, register_page_2);
                         assertTrue(!data.model.getType().isAir(), register_page_3);
 
-                        SimpleStaticGuidePage page = new SimpleStaticGuidePage(data.pageId);
-                        if (data.displayInRoot) PylonGuide.getRootPage().addPage(data.model.getType(), page);
+                        CustomGuidePage page = new CustomGuidePage(data.pageId);
+                        if (data.displayInRoot) PylonGuide.getRootPage().addButton(new CustomPageButton(data.model.getType(), page));
                         done(player, register_page_4, data.pageId);
                         return false;
                     });

@@ -3,6 +3,7 @@ package com.balugaq.runtimepylon.object;
 import com.balugaq.runtimepylon.util.Debug;
 import io.github.pylonmc.pylon.core.guide.button.PageButton;
 import io.github.pylonmc.pylon.core.guide.pages.base.GuidePage;
+import io.github.pylonmc.pylon.core.guide.pages.base.SimpleStaticGuidePage;
 import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -30,6 +31,14 @@ public class CustomPageButton extends PageButton implements Scriptable {
 
     public CustomPageButton(final NamespacedKey key, final Material material, final GuidePage page) {
         this(key, ItemStack.of(material), page);
+    }
+
+    public CustomPageButton(final ItemStack stack, final SimpleStaticGuidePage page) {
+        this(page.getKey(), stack, page);
+    }
+
+    public CustomPageButton(final Material material, final SimpleStaticGuidePage page) {
+        this(page.getKey(), material, page);
     }
 
     public void handleClick(ClickType clickType, Player player, InventoryClickEvent event) {

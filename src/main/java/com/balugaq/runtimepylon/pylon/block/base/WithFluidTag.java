@@ -11,5 +11,5 @@ import org.jspecify.annotations.NullMarked;
 public interface WithFluidTag {
     @Nullable ItemStack getTag();
 
-    WithFluidTag setTag(@Nullable ItemStack tag);
+    void setTag(@Nullable ItemStack tag);
 }

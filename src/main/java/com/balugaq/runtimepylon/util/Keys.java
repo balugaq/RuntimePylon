@@ -8,7 +8,7 @@ import org.jspecify.annotations.NullMarked;
  * @author balugaq
  */
 @NullMarked
-public class Key {
+public class Keys {
     public static NamespacedKey create(String key) {
         return new NamespacedKey(RuntimePylon.getInstance(), key);
     }

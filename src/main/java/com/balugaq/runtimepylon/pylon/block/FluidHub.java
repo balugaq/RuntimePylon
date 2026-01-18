@@ -6,7 +6,7 @@ import com.balugaq.runtimepylon.pylon.block.base.WithFluidTag;
 import com.balugaq.runtimepylon.pylon.block.base.WithModel;
 import com.balugaq.runtimepylon.pylon.block.base.WithRecipe;
 import com.balugaq.runtimepylon.pylon.item.fluid.PylonFluidTagHolder;
-import com.balugaq.runtimepylon.util.Key;
+import com.balugaq.runtimepylon.util.Keys;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
@@ -18,6 +18,7 @@ import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import io.github.pylonmc.pylon.core.registry.PylonRegistry;
 import kotlin.Pair;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
@@ -38,6 +39,7 @@ import static com.balugaq.runtimepylon.util.Lang.*;
 
 // todo: page.addFluid
 @Getter
+@Setter
 @NullMarked
 public class FluidHub extends PylonBlock implements
                                          PylonGuiBlock,
@@ -79,7 +81,7 @@ public class FluidHub extends PylonBlock implements
         if (tag != null) pdc.set(RuntimeKeys.tag, PylonSerializers.ITEM_STACK, tag);
         if (itemId != null) pdc.set(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY, itemId);
         if (recipeTypeId != null) pdc.set(RuntimeKeys.recipeType_id, PylonSerializers.NAMESPACED_KEY, recipeTypeId);
-        recipe.forEach((key, value) -> pdc.set(Key.create("recipe" + key), PylonSerializers.ITEM_STACK, value));
+        recipe.forEach((key, value) -> pdc.set(Keys.create("recipe" + key), PylonSerializers.ITEM_STACK, value));
     }
 
     @Override
@@ -120,36 +122,6 @@ public class FluidHub extends PylonBlock implements
                 .addIngredient('^', buttons.recipe(1006))
                 .addIngredient('s', buttons.registerFluid)
                 .build();
-    }
-
-    @Override
-    public WithRecipe setRecipeTypeId(@Nullable NamespacedKey recipeTypeId) {
-        this.recipeTypeId = recipeTypeId;
-        return this;
-    }
-
-    @Override
-    public WithRecipe setRecipe(Map<Integer, ItemStack> recipe) {
-        this.recipe = recipe;
-        return this;
-    }
-
-    @Override
-    public WithModel setModel(@Nullable ItemStack model) {
-        this.model = model;
-        return this;
-    }
-
-    @Override
-    public WithModel setItemId(@Nullable NamespacedKey itemId) {
-        this.itemId = itemId;
-        return this;
-    }
-
-    @Override
-    public WithFluidTag setTag(@Nullable ItemStack tag) {
-        this.tag = tag;
-        return this;
     }
 
     @Override

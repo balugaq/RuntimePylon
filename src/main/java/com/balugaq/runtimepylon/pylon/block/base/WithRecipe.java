@@ -14,9 +14,9 @@ import java.util.Map;
 public interface WithRecipe extends WithModel {
     @Nullable NamespacedKey getRecipeTypeId();
 
-    WithRecipe setRecipeTypeId(@Nullable NamespacedKey recipeTypeId);
+    void setRecipeTypeId(@Nullable NamespacedKey recipeTypeId);
 
     Map<Integer, ItemStack> getRecipe();
 
-    WithRecipe setRecipe(Map<Integer, ItemStack> recipe);
+    void setRecipe(Map<Integer, ItemStack> recipe);
 }

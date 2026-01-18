@@ -3,7 +3,7 @@ package com.balugaq.runtimepylon.pylon;
 import org.bukkit.NamespacedKey;
 import org.jspecify.annotations.NullMarked;
 
-import static com.balugaq.runtimepylon.util.Key.create;
+import static com.balugaq.runtimepylon.util.Keys.create;
 
 /**
  * @author balugaq

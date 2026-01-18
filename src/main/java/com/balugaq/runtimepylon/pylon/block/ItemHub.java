@@ -1,20 +1,21 @@
 package com.balugaq.runtimepylon.pylon.block;
 
 import com.balugaq.runtimepylon.gui.ButtonSet;
+import com.balugaq.runtimepylon.object.items.CustomItem;
 import com.balugaq.runtimepylon.pylon.RuntimeKeys;
 import com.balugaq.runtimepylon.pylon.block.base.WithModel;
 import com.balugaq.runtimepylon.pylon.block.base.WithPage;
 import com.balugaq.runtimepylon.pylon.block.base.WithPlaceable;
 import com.balugaq.runtimepylon.pylon.block.base.WithRecipe;
-import com.balugaq.runtimepylon.util.Key;
+import com.balugaq.runtimepylon.util.Keys;
 import io.github.pylonmc.pylon.core.block.PylonBlock;
 import io.github.pylonmc.pylon.core.block.base.PylonGuiBlock;
 import io.github.pylonmc.pylon.core.block.context.BlockCreateContext;
 import io.github.pylonmc.pylon.core.datatypes.PylonSerializers;
-import io.github.pylonmc.pylon.core.item.PylonItem;
 import io.github.pylonmc.pylon.core.item.builder.ItemStackBuilder;
 import kotlin.Pair;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 import static com.balugaq.runtimepylon.util.Lang.*;
 
 @Getter
+@Setter
 @NullMarked
 public class ItemHub extends PylonBlock implements
                                         PylonGuiBlock,
@@ -79,7 +81,7 @@ public class ItemHub extends PylonBlock implements
         if (itemId != null) pdc.set(RuntimeKeys.item_id, PylonSerializers.NAMESPACED_KEY, itemId);
         if (pageId != null) pdc.set(RuntimeKeys.page_id, PylonSerializers.NAMESPACED_KEY, pageId);
         if (recipeTypeId != null) pdc.set(RuntimeKeys.recipeType_id, PylonSerializers.NAMESPACED_KEY, recipeTypeId);
-        recipe.forEach((key, value) -> pdc.set(Key.create("recipe" + key), PylonSerializers.ITEM_STACK, value));
+        recipe.forEach((key, value) -> pdc.set(Keys.create("recipe" + key), PylonSerializers.ITEM_STACK, value));
     }
 
     @Override
@@ -115,42 +117,6 @@ public class ItemHub extends PylonBlock implements
                 .addIngredient('s', buttons.registerItem)
                 .addIngredient('p', buttons.placeable)
                 .build();
-    }
-
-    @Override
-    public WithPage setPageId(NamespacedKey key) {
-        this.pageId = key;
-        return this;
-    }
-
-    @Override
-    public WithRecipe setRecipeTypeId(@Nullable NamespacedKey recipeTypeId) {
-        this.recipeTypeId = recipeTypeId;
-        return this;
-    }
-
-    @Override
-    public WithRecipe setRecipe(Map<Integer, ItemStack> recipe) {
-        this.recipe = recipe;
-        return this;
-    }
-
-    @Override
-    public WithModel setModel(@Nullable ItemStack model) {
-        this.model = model;
-        return this;
-    }
-
-    @Override
-    public WithModel setItemId(@Nullable NamespacedKey itemId) {
-        this.itemId = itemId;
-        return this;
-    }
-
-    @Override
-    public WithPlaceable setPlaceable(boolean placeable) {
-        this.placeable = placeable;
-        return this;
     }
 
     @Override
@@ -197,10 +163,10 @@ public class ItemHub extends PylonBlock implements
                         assertNotNull(data.getItemId(), register_item_3);
                         if (assertBlock(data, WithPlaceable.class).isPlaceable()) {
                             assertTrue(data.getModel().getType().isBlock(), register_item_4);
-                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylon(data.getModel().getType(), data.getItemId()).build(), data.getItemId());
+                            CustomItem.register(CustomItem.class, ItemStackBuilder.pylon(data.getModel().getType(), data.getItemId()).build(), data.getItemId());
                             register(data.getItemId(), data.getModel().getType(), PylonBlock.class);
                         } else {
-                            PylonItem.register(PylonItem.class, ItemStackBuilder.pylon(data.getModel().getType(), data.getItemId()).build());
+                            CustomItem.register(CustomItem.class, ItemStackBuilder.pylon(data.getModel().getType(), data.getItemId()).build());
                         }
                         done(player, register_item_5, data.getItemId());
 

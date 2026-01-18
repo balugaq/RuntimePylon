@@ -9,5 +9,5 @@ import org.jspecify.annotations.NullMarked;
 public interface WithPlaceable {
     boolean isPlaceable();
 
-    WithPlaceable setPlaceable(boolean placeable);
+    void setPlaceable(boolean placeable);
 }

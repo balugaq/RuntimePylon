@@ -12,9 +12,9 @@ import org.jspecify.annotations.NullMarked;
 public interface WithModel {
     @Nullable ItemStack getModel();
 
-    WithModel setModel(@Nullable ItemStack model);
+    void setModel(@Nullable ItemStack model);
 
     @Nullable NamespacedKey getItemId();
 
-    WithModel setItemId(@Nullable NamespacedKey itemId);
+    void setItemId(@Nullable NamespacedKey itemId);
 }

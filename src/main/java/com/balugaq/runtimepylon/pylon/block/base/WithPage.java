@@ -11,5 +11,5 @@ import org.jspecify.annotations.NullMarked;
 public interface WithPage extends WithModel {
     @Nullable NamespacedKey getPageId();
 
-    WithPage setPageId(NamespacedKey key);
+    void setPageId(NamespacedKey key);
 }

@@ -27,7 +27,7 @@ public class ClassUtil {
         Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
 
         if (index < 0 || index >= actualTypeArguments.length) {
-            throw new IndexOutOfBoundsException("泛型参数索引超出范围：" + index);
+            throw new IndexOutOfBoundsException("Generic argument index out of range: " + index);
         }
         
         Type actualType = actualTypeArguments[index];
