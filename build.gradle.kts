@@ -46,7 +46,7 @@ val pylonVersion = project.properties["pylon.version"] as String
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
     compileOnly("io.github.pylonmc:rebar:$rebarVersion")
-    compileOnly("io.github.pylonmc:pylon:${pylonVersion}")
+    compileOnly("io.github.pylonmc:pylon:$pylonVersion")
     implementation("net.byteflux:libby-bukkit:1.3.1")
     compileOnly("com.caoccao.javet:javet:5.0.2")
     compileOnly("com.caoccao.javet:javet-node-linux-arm64:5.0.2")
